@@ -1,0 +1,146 @@
+[
+  {
+    "category_name": "GENERAL",
+    "source": {
+      "document": "1_ Chapter 1 (General).txt",
+      "document_type": "REGULATION",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "chapter": "Chapter 1"
+    }
+  },
+  {
+    "category_name": "FOOD PRODUCT STANDARDS",
+    "source": {
+      "document": "Chapter 2_1_Dairy_products_and_analogues.txt",
+      "document_type": "REGULATION",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "chapter": "Chapter 2"
+    }
+  },
+  {
+    "category_name": "FOOD PRODUCT STANDARDS",
+    "source": {
+      "document": "Chapter 2_3_Fruit_Vegetable_products.txt",
+      "document_type": "REGULATION",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "chapter": "Chapter 2"
+    }
+  },
+  {
+    "category_name": "FOOD PRODUCT STANDARDS",
+    "source": {
+      "document": "Chapter 2_4_Cereals_and_Cereal_products.txt",
+      "document_type": "REGULATION",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "chapter": "Chapter 2"
+    }
+  },
+  {
+    "category_name": "FOOD PRODUCT STANDARDS",
+    "source": {
+      "document": "Chapter 2_6_Fish_and_Fish_products.txt",
+      "document_type": "REGULATION",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "chapter": "Chapter 2"
+    }
+  },
+  {
+    "category_name": "FOOD PRODUCT STANDARDS",
+    "source": {
+      "document": "Chapter 2_7 (Sweets and Confectionary).txt",
+      "document_type": "REGULATION",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "chapter": "Chapter 2"
+    }
+  },
+  {
+    "category_name": "FOOD PRODUCT STANDARDS",
+    "source": {
+      "document": "Chapter 2_8 (Sweetening agents including Honey).txt",
+      "document_type": "REGULATION",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "chapter": "Chapter 2"
+    }
+  },
+  {
+    "category_name": "FOOD PRODUCT STANDARDS",
+    "source": {
+      "document": "Chapter 2_9_Salt_Spices_Condiments and related products.txt",
+      "document_type": "REGULATION",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "chapter": "Chapter 2"
+    }
+  },
+  {
+    "category_name": "FOOD PRODUCT STANDARDS",
+    "source": {
+      "document": "Chapter 2_10_BEVERAGES_Other than Dairy and Fruits Vegetables based.txt",
+      "document_type": "REGULATION",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "chapter": "Chapter 2"
+    }
+  },
+  {
+    "category_name": "FOOD PRODUCT STANDARDS",
+    "source": {
+      "document": "12_ Chapter 2_11 (Other food product and  ingredients).txt",
+      "document_type": "REGULATION",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "chapter": "Chapter 2"
+    }
+  },
+  {
+    "category_name": "FOOD PRODUCT STANDARDS",
+    "source": {
+      "document": "13_ Chapter 2_12 (Proprietary Food).txt",
+      "document_type": "REGULATION",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "chapter": "Chapter 2"
+    }
+  },
+  {
+    "category_name": "FOOD PRODUCT STANDARDS",
+    "source": {
+      "document": "Chapter 2_13_Radiation_processing_of_food.txt",
+      "document_type": "REGULATION",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "chapter": "Chapter 2"
+    }
+  },
+  {
+    "category_name": "FOOD PRODUCT STANDARDS",
+    "source": {
+      "document": "15_ Chapter 2_14 (Gluten free food).txt",
+      "document_type": "REGULATION",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "chapter": "Chapter 2"
+    }
+  },
+  {
+    "category_name": "relating to ‘Food specially processed to reduce gluten content to a",
+    "source": {
+      "document": "16_ Chapter 2_15.txt",
+      "document_type": "REGULATION",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "chapter": "Chapter 2.15"
+    }
+  },
+  {
+    "category_name": "FOOD PRODUCT STANDARDS",
+    "source": {
+      "document": "17_ Chapter 2_16 (Hemp seeds and seed products).txt",
+      "document_type": "REGULATION",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "chapter": "Chapter 2"
+    }
+  },
+  {
+    "category_name": "USFDA",
+    "source": {
+      "document": "Appendix B(1).txt",
+      "document_type": "REGULATION",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "chapter": "Chapter 9."
+    }
+  }
+]

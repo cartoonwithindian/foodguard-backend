@@ -1,0 +1,39 @@
+{
+  "name": "foodguard-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "FoodGuard AI — standalone Hono API server. Decoupled from the Vercel frontend; reuses the core services, lib and Prisma store.",
+  "type": "module",
+  "scripts": {
+    "postinstall": "prisma generate",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "build": "prisma generate && tsup",
+    "db:deploy": "prisma migrate deploy",
+    "db:generate": "prisma generate",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.17",
+    "@huggingface/transformers": "^4.2.0",
+    "@prisma/client": "^6.19.3",
+    "@zxing/browser": "^0.2.1",
+    "bcryptjs": "^3.0.2",
+    "clsx": "^2.1.1",
+    "hono": "^4.6.14",
+    "ioredis": "^5.4.2",
+    "jose": "^6.0.8",
+    "sharp": "^0.35.4",
+    "tesseract.js": "^7.0.0",
+    "zod": "^3.25.0",
+    "zxing-wasm": "^3.1.3"
+  },
+  "devDependencies": {
+    "prisma": "^6.8.0",
+    "tsup": "^8.3.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.5"
+  }
+}

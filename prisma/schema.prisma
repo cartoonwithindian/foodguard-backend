@@ -1,0 +1,616 @@
+// ─────────────────────────────────────────────────────────────
+// FoodGaurd AI — PostgreSQL schema
+// The application also ships an in-memory store (MOCK MODE) that
+// mirrors these models so it runs without a database. See README.
+// ─────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Language {
+  EN
+  HI
+}
+
+// ── Users ────────────────────────────────────────────────────
+model User {
+  id                String             @id @default(cuid())
+  email             String             @unique
+  name              String
+  passwordHash      String?
+  authProviderId    String?
+  role              Role               @default(USER)
+  language          Language           @default(EN)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  preference        UserPreference?
+  scans             HistoryEntry[]
+  adminActions      AdminAction[]
+  chatConversations ChatConversation[]
+  chatMessages      ChatMessage[]
+}
+
+model UserPreference {
+  id                     String   @id @default(cuid())
+  userId                 String   @unique
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vegetarian             Boolean  @default(false)
+  vegan                  Boolean  @default(false)
+  allergies              String[]
+  dietaryRestrictions    String[]
+  avoidIngredients       String[]
+  preferredIngredients   String[]
+  healthGoals            String[]
+  sensitivityPreferences String[]
+  updatedAt              DateTime @updatedAt
+}
+
+// ── Products ─────────────────────────────────────────────────
+model Product {
+  id                    String         @id @default(cuid())
+  barcode               String         @unique
+  name                  String
+  brand                 String?
+  category              String         @default("food")
+  country               String?
+  servingSize           String?
+  imageUrl              String?
+  ingredientsRaw        String         @db.Text
+  ingredientsNormalized String[] // normalized canonical ingredient names, in label order
+  source                String
+  sourceUrl             String?
+  verified              Boolean        @default(false)
+  productDataConfidence Float          @default(0.5)
+  isDemo                Boolean        @default(false)
+  lastVerifiedAt        DateTime?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  nutrition             Nutrition?
+  histories             HistoryEntry[]
+}
+
+// Nutrition facts for one product.
+// Nutrients are stored per-basis (PER_100G and PER_SERVING) so the
+// two bases are never mixed.
+model Nutrition {
+  id                   String              @id @default(cuid())
+  productId            String              @unique
+  product              Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  servingSize          String?
+  servingsPerContainer String?
+  source               String
+  sourceUrl            String?
+  confidence           Float               @default(0.5)
+  updatedAt            DateTime            @updatedAt
+  nutrients            NutritionNutrient[]
+}
+
+enum NutrientBasis {
+  PER_100G
+  PER_SERVING
+}
+
+model NutritionNutrient {
+  id          String        @id @default(cuid())
+  nutritionId String
+  nutrition   Nutrition     @relation(fields: [nutritionId], references: [id], onDelete: Cascade)
+  nutrientKey String // calories | energyKj | protein | carbohydrates | sugars | addedSugars | totalFat | saturatedFat | transFat | fiber | sodium | salt
+  value       Float
+  unit        String
+  basis       NutrientBasis
+  confidence  Float         @default(0.5)
+
+  @@unique([nutritionId, nutrientKey, basis])
+}
+
+// ── Ingredient knowledge base ────────────────────────────────
+model Ingredient {
+  id               String            @id @default(cuid())
+  canonicalName    String            @unique
+  insCode          String?
+  eNumber          String?
+  category         String
+  description      String            @db.Text
+  function         String
+  assessment       String // beneficial | neutral | generally_accepted | noteworthy | potentially_concerning | allergen | dietary_conflict | insufficient_evidence
+  allergenStatus   String?
+  dietaryStatus    String[]
+  regulatoryStatus String            @default("permitted")
+  regulatoryNotes  String?
+  evidenceLevel    String            @default("insufficient")
+  isAdditive       Boolean           @default(false)
+  hindiName        String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  aliases          IngredientAlias[]
+  evidence         Evidence[]
+
+  @@index([eNumber])
+  @@index([insCode])
+}
+
+model IngredientAlias {
+  id           String     @id @default(cuid())
+  ingredientId String
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  alias        String
+  aliasType    String // e_number | ins | common | scientific | abbreviation | hindi | spelling
+
+  @@unique([ingredientId, alias])
+  @@index([alias])
+}
+
+// ── Evidence ─────────────────────────────────────────────────
+model Evidence {
+  id              String      @id @default(cuid())
+  ingredientId    String?
+  ingredient      Ingredient? @relation(fields: [ingredientId], references: [id], onDelete: SetNull)
+  title           String
+  organization    String
+  url             String?
+  sourceType      String // government | regulator | scientific_paper | international_standard | academic_database | manufacturer | secondary_source
+  publicationDate String?
+  evidenceLevel   String // high | medium | low
+  summary         String      @db.Text
+  retrievedAt     DateTime    @default(now())
+
+  @@index([ingredientId])
+}
+
+// ── Analyses / History ───────────────────────────────────────
+model HistoryEntry {
+  id                 String   @id @default(cuid())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId          String?
+  product            Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  scannedAt          DateTime @default(now())
+  assessmentSnapshot Json     @db.Json // full frontend-compatible ProductAnalysisResult
+  source             String   @default("barcode") // barcode | label | manual | image
+
+  @@index([userId, scannedAt])
+}
+
+// ── Unknown ingredients (admin review queue) ─────────────────
+model UnknownIngredient {
+  id                   String   @id @default(cuid())
+  rawName              String
+  normalizedAttempt    String?
+  confidence           Float
+  status               String   @default("pending") // pending | resolved | dismissed
+  resolvedIngredientId String?
+  context              String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+// ── Admin ────────────────────────────────────────────────────
+model AdminAction {
+  id        String   @id @default(cuid())
+  adminId   String
+  admin     User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  action    String
+  entity    String
+  entityId  String?
+  detail    String?
+  createdAt DateTime @default(now())
+}
+
+// ── FSSAI Regulatory Knowledge Base ──────────────────────────
+
+enum DocumentType {
+  REGULATION
+  COMPENDIUM
+  AMENDMENT
+  CORRIGENDUM
+  GAZETTE_NOTIFICATION
+  DIRECTION
+  GUIDELINE
+  MANUAL
+  DRAFT
+  ADMINISTRATIVE
+  OTHER
+}
+
+enum DocumentRelevance {
+  CORE
+  SPECIALIZED
+  SUPPORTING
+  ADMINISTRATIVE
+  IRRELEVANT
+}
+
+enum DocumentStatus {
+  CURRENT
+  AMENDED
+  SUPERSEDED
+  DRAFT
+  HISTORICAL
+  CORRIGENDUM
+  REFERENCE
+  UNKNOWN
+}
+
+enum AdditivePermissionStatus {
+  PERMITTED
+  PERMITTED_WITH_CONDITIONS
+  RESTRICTED
+  NOT_PERMITTED
+  NOT_SPECIFIED
+  UNCLEAR
+}
+
+enum ContaminantSubstanceType {
+  HEAVY_METAL
+  MYCOTOXIN
+  PESTICIDE_RESIDUE
+  VETERINARY_DRUG_RESIDUE
+  NATURAL_TOXIN
+  CONTAMINANT
+  OTHER
+}
+
+// ── FSSAI Documents ──────────────────────────────────────────
+model RegulatoryDocument {
+  id               String              @id @default(cuid())
+  filename         String              @unique
+  title            String
+  documentType     DocumentType
+  relevance        DocumentRelevance
+  regulationName   String?
+  regulationYear   Int?
+  publicationDate  DateTime?
+  notificationDate DateTime?
+  effectiveDate    DateTime?
+  version          String?
+  status           DocumentStatus      @default(UNKNOWN)
+  language         String              @default("en")
+  sourceUrl        String?
+  supersedes       String[] // IDs of documents this supersedes
+  supersededBy     String[] // IDs of documents that supersede this
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  sections         RegulationSection[]
+
+  @@index([documentType])
+  @@index([relevance])
+  @@index([status])
+  @@index([regulationName])
+}
+
+// ── Regulation Sections ──────────────────────────────────────
+model RegulationSection {
+  id               String             @id @default(cuid())
+  documentId       String
+  document         RegulatoryDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  sectionNumber    String?
+  regulationNumber String?
+  tableNumber      String?
+  title            String?
+  content          String             @db.Text
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@index([documentId])
+  @@index([sectionNumber])
+}
+
+// ── FSSAI Food Categories ────────────────────────────────────
+model FoodCategory {
+  id                  String               @id @default(cuid())
+  categoryName        String               @unique
+  description         String?
+  chapter             String?
+  regulationName      String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  products            FoodProduct[]
+  additivePermissions AdditivePermission[]
+  specialFoodRules    SpecialFoodRule[]
+
+  @@index([categoryName])
+}
+
+// ── FSSAI Food Products ──────────────────────────────────────
+model FoodProduct {
+  id                      String       @id @default(cuid())
+  productName             String
+  sectionNumber           String?
+  categoryId              String
+  category                FoodCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  standardDefinition      String?      @db.Text
+  compositionRequirements Json? // Store as JSON array
+  qualityParameters       Json? // Store as JSON array
+  identityRequirements    Json? // Store as JSON array
+  purityRequirements      Json? // Store as JSON array
+  permittedIngredients    Json? // Store as JSON array
+  permittedAdditives      Json? // Store as JSON array
+  maximumLimits           Json? // Store as JSON array
+  processingRequirements  Json? // Store as JSON array
+  storageRequirements     Json? // Store as JSON array
+  packagingRequirements   Json? // Store as JSON array
+  labellingRequirements   Json? // Store as JSON array
+  exceptions              Json? // Store as JSON array
+  notes                   Json? // Store as JSON array
+  sourceDocument          String?
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
+
+  @@index([categoryId])
+  @@index([productName])
+  @@index([sectionNumber])
+}
+
+// ── FSSAI Additives ──────────────────────────────────────────
+model Additive {
+  id              String               @id @default(cuid())
+  name            String
+  insNumber       String?              @unique
+  additiveClass   String?
+  functionalClass String[]
+  synonyms        String[]
+  description     String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  permissions     AdditivePermission[]
+
+  @@index([name])
+  @@index([insNumber])
+  @@index([additiveClass])
+}
+
+// ── FSSAI Additive Permissions ───────────────────────────────
+model AdditivePermission {
+  id                  String                   @id @default(cuid())
+  additiveId          String
+  additive            Additive                 @relation(fields: [additiveId], references: [id], onDelete: Cascade)
+  foodCategoryId      String?
+  foodCategory        FoodCategory?            @relation(fields: [foodCategoryId], references: [id], onDelete: SetNull)
+  status              AdditivePermissionStatus
+  maximumLevel        String?
+  unit                String?
+  conditions          String?
+  restrictions        String[]
+  exceptions          String[]
+  regulationReference String?
+  sourceDocument      String?
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+
+  @@unique([additiveId, foodCategoryId])
+  @@index([additiveId])
+  @@index([foodCategoryId])
+  @@index([status])
+}
+
+// ── FSSAI Contaminant Limits ─────────────────────────────────
+model ContaminantLimit {
+  id                   String                   @id @default(cuid())
+  substance            String
+  substanceType        ContaminantSubstanceType
+  foodCategory         String?
+  maximumLimit         String?
+  unit                 String?
+  samplingRequirement  String?
+  applicableConditions String?
+  exceptions           String[]
+  regulationReference  String?
+  tableReference       String?
+  sourceDocument       String?
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+
+  @@index([substance])
+  @@index([substanceType])
+  @@index([foodCategory])
+}
+
+// ── FSSAI Labelling Rules ────────────────────────────────────
+model LabellingRule {
+  id                  String    @id @default(cuid())
+  labelElement        String
+  requirement         String    @db.Text
+  mandatory           Boolean   @default(true)
+  appliesTo           String[]
+  conditions          String?
+  exceptions          String[]
+  regulationReference String?
+  sectionReference    String?
+  effectiveDate       DateTime?
+  sourceDocument      String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([labelElement])
+  @@index([mandatory])
+}
+
+// ── FSSAI Claim Rules ────────────────────────────────────────
+model ClaimRule {
+  id                       String   @id @default(cuid())
+  claim                    String
+  claimType                String?
+  status                   String?
+  conditions               String[]
+  thresholds               String[]
+  requiredDeclaration      String?
+  prohibitedContexts       String[]
+  applicableFoodCategories String[]
+  regulationReference      String?
+  sourceDocument           String?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  @@index([claim])
+  @@index([claimType])
+  @@index([status])
+}
+
+// ── FSSAI Packaging Rules ────────────────────────────────────
+model PackagingRule {
+  id                  String   @id @default(cuid())
+  requirement         String   @db.Text
+  details             String?
+  foodCategory        String?
+  mandatory           Boolean  @default(true)
+  conditions          String?
+  exceptions          String[]
+  regulationReference String?
+  sourceDocument      String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([foodCategory])
+  @@index([mandatory])
+}
+
+// ── FSSAI Special Food Rules ─────────────────────────────────
+model SpecialFoodRule {
+  id                  String        @id @default(cuid())
+  category            String
+  subcategory         String?
+  requirement         String        @db.Text
+  foodCategoryId      String?
+  foodCategory        FoodCategory? @relation(fields: [foodCategoryId], references: [id], onDelete: SetNull)
+  conditions          String?
+  exceptions          String[]
+  regulationReference String?
+  sourceDocument      String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  @@index([category])
+  @@index([foodCategoryId])
+  @@index([subcategory])
+}
+
+// ── FSSAI Amendments ─────────────────────────────────────────
+model Amendment {
+  id                 String    @id @default(cuid())
+  originalRegulation String?
+  amendmentDocument  String?
+  amendmentDate      DateTime?
+  notificationNumber String?
+  affectedSection    String?
+  changeType         String?
+  oldText            String?   @db.Text
+  newText            String?   @db.Text
+  effectiveDate      DateTime?
+  sourceDocument     String?
+  needsHumanReview   Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([originalRegulation])
+  @@index([amendmentDate])
+  @@index([needsHumanReview])
+}
+
+// ── FSSAI Source References ──────────────────────────────────
+model SourceReference {
+  id                 String    @id @default(cuid())
+  documentId         String?
+  sectionId          String?
+  documentType       String?
+  regulation         String?
+  chapter            String?
+  sectionNumber      String?
+  regulationNumber   String?
+  tableNumber        String?
+  page               String?
+  paragraph          String?
+  notificationNumber String?
+  notificationDate   DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([documentId])
+  @@index([sectionId])
+  @@index([regulation])
+}
+
+// ── FSSAI Extraction Issues ──────────────────────────────────
+model ExtractionIssue {
+  id               String    @id @default(cuid())
+  documentFilename String
+  issueType        String // error, warning, low_confidence
+  description      String    @db.Text
+  confidence       String // HIGH, MEDIUM, LOW
+  needsHumanReview Boolean   @default(false)
+  resolvedAt       DateTime?
+  resolvedBy       String?
+  resolution       String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([documentFilename])
+  @@index([needsHumanReview])
+  @@index([resolvedAt])
+}
+
+// ── AI Assistant: conversations ──────────────────────────────
+model ChatConversation {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  messages  ChatMessage[]
+
+  @@index([userId, updatedAt])
+}
+
+model ChatMessage {
+  id             String           @id @default(cuid())
+  conversationId String
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           String // user | assistant
+  content        String           @db.Text
+  createdAt      DateTime         @default(now())
+
+  @@index([conversationId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model KnowledgeDocument {
+  id              String           @id
+  title           String
+  source          String
+  sourceUrl       String
+  category        String
+  documentVersion String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  chunks          KnowledgeChunk[]
+
+  @@index([category])
+}
+
+model KnowledgeChunk {
+  id         String            @id
+  documentId String
+  document   KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  content    String            @db.Text
+  section    String
+  pageNumber Int?
+  metadata   Json              @default("{}")
+  // Production pgvector: EXTENSION_VECTOR_ENABLED=true uses a vector(256)
+  // column + $queryRaw cosine; dev/test stores the vector as JSON.
+  embedding  Json?
+  createdAt  DateTime          @default(now())
+
+  @@index([documentId])
+}

@@ -1,0 +1,3927 @@
+[
+  {
+    "additive": "Saccharin Sodium",
+    "ins_number": "",
+    "food_category": "Carbonated Water",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "100",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6441
+    }
+  },
+  {
+    "additive": "Saccharin Sodium",
+    "ins_number": "",
+    "food_category": "Soft Drink Concentrate",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "100",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6442
+    }
+  },
+  {
+    "additive": "Saccharin Sodium",
+    "ins_number": "",
+    "food_category": "Supari",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "4000",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6443
+    }
+  },
+  {
+    "additive": "Saccharin Sodium",
+    "ins_number": "",
+    "food_category": "Pan Masala",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "8000",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6444
+    }
+  },
+  {
+    "additive": "Saccharin Sodium",
+    "ins_number": "",
+    "food_category": "Pan Flavouring Material",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "8.0",
+    "unit": "%",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6445
+    }
+  },
+  {
+    "additive": "Saccharin Sodium",
+    "ins_number": "",
+    "food_category": "Synthetic Syrup for dispenser",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "450",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6446
+    }
+  },
+  {
+    "additive": "Saccharin Sodium",
+    "ins_number": "",
+    "food_category": "Sweets (Carbohydrates based and Milk products based) : Halwa, Mysore Pak, Boondi Ladoo, Jalebi, Khoya Burfi, Peda, Gulab Jamun, Rasogolla and similar milk product based sweets sold by any name.",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "500",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6451
+    }
+  },
+  {
+    "additive": "Saccharin Sodium",
+    "ins_number": "",
+    "food_category": "Chocolate (White, Milk, Plain, Composite And Filled)",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "500",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6452
+    }
+  },
+  {
+    "additive": "Saccharin Sodium",
+    "ins_number": "",
+    "food_category": "Sugar based/ Sugar free confectionery",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "3000",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6453
+    }
+  },
+  {
+    "additive": "Saccharin Sodium",
+    "ins_number": "",
+    "food_category": "Chewing gum /Bubble gum",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "3000",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6454
+    }
+  },
+  {
+    "additive": "Aspartame (methylester)",
+    "ins_number": "951",
+    "food_category": "Carbonated Water",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "700",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6455
+    }
+  },
+  {
+    "additive": "Aspartame (methylester)",
+    "ins_number": "951",
+    "food_category": "Soft Drink concentrate",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "700",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6456
+    }
+  },
+  {
+    "additive": "Aspartame (methylester)",
+    "ins_number": "951",
+    "food_category": "Biscuits, Bread, Cakes and Pasteries",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "2200",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6457
+    }
+  },
+  {
+    "additive": "Aspartame (methylester)",
+    "ins_number": "951",
+    "food_category": "Sweets (Carbohydrates based and Milk products based) : Halwa, Mysore Pak, Boondi Ladoo, Jalebi, Khoya Burfi, Peda, Gulab Jamun, Rasogolla and similar milk product based sweets sold by any name",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "200",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6461
+    }
+  },
+  {
+    "additive": "Aspartame (methylester)",
+    "ins_number": "951",
+    "food_category": "Jam, Jellies, Marmalades",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "1000",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6462
+    }
+  },
+  {
+    "additive": "Aspartame (methylester)",
+    "ins_number": "951",
+    "food_category": "Chocolate (White, Milk, Plain, Composite And Filled)",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "2000",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6463
+    }
+  },
+  {
+    "additive": "Aspartame (methylester)",
+    "ins_number": "951",
+    "food_category": "Sugar based/ Sugar free confectionery",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "10000",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6464
+    }
+  },
+  {
+    "additive": "Aspartame (methylester)",
+    "ins_number": "951",
+    "food_category": "Chewing gum/ Bubble gum",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "10000",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6465
+    }
+  },
+  {
+    "additive": "Aspartame (methylester)",
+    "ins_number": "951",
+    "food_category": "Synthetic Syrup for dispenser",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "3000",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6466
+    }
+  },
+  {
+    "additive": "Aspartame (methylester)",
+    "ins_number": "951",
+    "food_category": "Custard powder mix",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "1000",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6467
+    }
+  },
+  {
+    "additive": "Aspartame (methylester)",
+    "ins_number": "951",
+    "food_category": "Vegetarian jelly crystals",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "3000",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6468
+    }
+  },
+  {
+    "additive": "Aspartame (methylester)",
+    "ins_number": "951",
+    "food_category": "Fruit Nectar",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "600",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6469
+    }
+  },
+  {
+    "additive": "Aspartame (methylester)",
+    "ins_number": "951",
+    "food_category": "Vegetable Nectar",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "600",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6470
+    }
+  },
+  {
+    "additive": "Aspartame (methylester)",
+    "ins_number": "951",
+    "food_category": "Ice Cream, Frozen Dessert and Pudding",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "1000",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6471
+    }
+  },
+  {
+    "additive": "Aspartame (methylester)",
+    "ins_number": "951",
+    "food_category": "Flavoured Milk",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "600",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6472
+    }
+  },
+  {
+    "additive": "Aspartame (methylester)",
+    "ins_number": "951",
+    "food_category": "Ready to Serve Tea and Coffee based Beverages",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "600",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6473
+    }
+  },
+  {
+    "additive": "Aspartame (methylester)",
+    "ins_number": "951",
+    "food_category": "Yoghurt",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "600",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6474
+    }
+  },
+  {
+    "additive": "Aspartame (methylester)",
+    "ins_number": "951",
+    "food_category": "Ready to eat Cereals",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "1000",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6475
+    }
+  },
+  {
+    "additive": "Aspartame (methylester)",
+    "ins_number": "951",
+    "food_category": "Non-Carbonated water based beverages (non-alcoholic)",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "600",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6476
+    }
+  },
+  {
+    "additive": "Acesulfame Potassium",
+    "ins_number": "950",
+    "food_category": "Carbonated water",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "300",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6477
+    }
+  },
+  {
+    "additive": "Acesulfame Potassium",
+    "ins_number": "950",
+    "food_category": "Soft Drink concentrate",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "300",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6478
+    }
+  },
+  {
+    "additive": "Acesulfame Potassium",
+    "ins_number": "950",
+    "food_category": "Biscuits, Bread, Cakes and Pasteries",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "1000",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6479
+    }
+  },
+  {
+    "additive": "Acesulfame Potassium",
+    "ins_number": "950",
+    "food_category": "Sweets (Carbohydrates based and Milk products based) : Halwa, Mysore Pak, Boondi Ladoo, Jalabi, Khoya Burfi, Peda, Gulab Jamun, Rasogolla and similar milk product based sweets sold by any name",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "500",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6483
+    }
+  },
+  {
+    "additive": "Acesulfame Potassium",
+    "ins_number": "950",
+    "food_category": "Chocolate (White, Milk, Plain, Composite and Filled)",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "500",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6488
+    }
+  },
+  {
+    "additive": "Acesulfame Potassium",
+    "ins_number": "950",
+    "food_category": "Sugar based/ Sugar free confectionery",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "3500",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6489
+    }
+  },
+  {
+    "additive": "Acesulfame Potassium",
+    "ins_number": "950",
+    "food_category": "Chewing gum/ Bubble gum",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "5000",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6490
+    }
+  },
+  {
+    "additive": "Acesulfame Potassium",
+    "ins_number": "950",
+    "food_category": "Synthetic Syrup for dispenser",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "1500",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6491
+    }
+  },
+  {
+    "additive": "Acesulfame Potassium",
+    "ins_number": "950",
+    "food_category": "Ready to serve tea and coffee based Beverages",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "600",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6492
+    }
+  },
+  {
+    "additive": "Acesulfame Potassium",
+    "ins_number": "950",
+    "food_category": "Ice lollies / ice candy",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "800",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6493
+    }
+  },
+  {
+    "additive": "Acesulfame Potassium",
+    "ins_number": "950",
+    "food_category": "cereal based beverages",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "500",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6494
+    }
+  },
+  {
+    "additive": "Acesulfame Potassium",
+    "ins_number": "950",
+    "food_category": "Fruit Nectars",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "300",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6495
+    }
+  },
+  {
+    "additive": "Acesulfame Potassium",
+    "ins_number": "950",
+    "food_category": "Concentrate for fruit nectars",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "300",
+    "unit": "ppm",
+    "conditions": "(in final Beverage for consumption)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6496
+    }
+  },
+  {
+    "additive": "Acesulfame Potassium",
+    "ins_number": "950",
+    "food_category": "Non carbonated water based beverages (non alcoholic)",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "300",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6499
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Carbonated water",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "300",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6500
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Soft drink concentrate",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "300",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6501
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Biscuits, breads, cakes and Pastries",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "750",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6502
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Sweets (Carbohydrates based and Milk products based) : Halwa, Mysore Pak, Boondi Ladoo, Jalebi, Khoya Burfi, Peda, Gulab Jamun, Rasogolla and similar milk product based sweets sold by any name",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "750",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6506
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Yoghurts",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "300",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6507
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Sweetened butter milk",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "300",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6508
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Ice Cream",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "400",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6509
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Jam, Jellies and Marmalades",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "450",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6510
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Frozen fruit",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "150",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6511
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Chutney",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "800",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6512
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Confectionery",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "1500",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6513
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Chewing gum",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "1250",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6514
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Cookies",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "750",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6515
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Doughnuts /scones /muffins",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "800",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6516
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Cake mixes",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "700",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6517
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Ready to serve tea and coffee beverages",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "600",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6518
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Ice lollies/Ice candy",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "800",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6519
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Vegetable juice",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "250",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6520
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Vegetable nectar",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "250",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6521
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Concentrates for vegetable juice",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "1250",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6522
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Concentrate for vegetable nectar",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "1250",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6523
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Lozenges",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "1500",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6524
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Non-carbonated water based beverages (non-alcoholic)",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "300",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6525
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Jelly Crystals",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "300",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6526
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Custard powder/ ready to eat custard dessert",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "260",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6527
+    }
+  },
+  {
+    "additive": "Sucralose",
+    "ins_number": "955",
+    "food_category": "Chocolate",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "800",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6528
+    }
+  },
+  {
+    "additive": "Neotame",
+    "ins_number": "",
+    "food_category": "Carbonated water",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "33",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6532
+    }
+  },
+  {
+    "additive": "Neotame",
+    "ins_number": "",
+    "food_category": "Soft drink concentrate",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "33",
+    "unit": "ppm",
+    "conditions": "Maximum limit in the product as specified; * = limit in reconstituted beverage/food (Explanation II)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(1)",
+      "table": "Artificial Sweeteners",
+      "line": 6533
+    }
+  },
+  {
+    "additive": "Isomalt",
+    "ins_number": "953",
+    "food_category": "(i) Traditional Indian sweets (carbohydrate based and milk based), halwa, mysore paag, boondi laddoo, jalebi, khoya burfi, peda, gulab jamun, rasgulla, and similar milk based sweets sold by any name (ii) Instant sweetmeat mixes (e.g. pongal mix, gulab jamun mix, jalebi mix) (iii) Bakery products (iv) Jams, jellies and Marmalades (v) Edible Ice (vi) Ice cream, frozen dessert, sweetened yoghurt",
+    "status": "PERMITTED",
+    "maximum_level": "GMP",
+    "unit": "",
+    "conditions": "GMP as per Appendix A; label declaration per Regulation 2.4.5(46)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(4)",
+      "table": "Polyols",
+      "line": 6620
+    }
+  },
+  {
+    "additive": "Erythritol",
+    "ins_number": "968",
+    "food_category": "Dairy drinks (chocolate and flavoured milk), Carbonated Beverages, Non-Cabonated Water based Beverages (non-alcoholic), Ice Cream, Yoghurt, Puddings, Non Dairy Toppings, Bakery Mixes, Cakes, cookies & pastries, Ready to eat breakfast cereals, soft candies, chocolate and hard candies",
+    "status": "PERMITTED",
+    "maximum_level": "GMP",
+    "unit": "",
+    "conditions": "GMP as per Appendix A; label declaration per Regulation 2.4.5(46)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(4)",
+      "table": "Polyols",
+      "line": 6625
+    }
+  },
+  {
+    "additive": "Maltitol / Maltitol syrup",
+    "ins_number": "965",
+    "food_category": "Bakery products, Ice Cream, Frozen Desserts, Jams, Jellies and Marmalades",
+    "status": "PERMITTED",
+    "maximum_level": "GMP",
+    "unit": "",
+    "conditions": "GMP as per Appendix A; label declaration per Regulation 2.4.5(46)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(4)",
+      "table": "Polyols",
+      "line": 6626
+    }
+  },
+  {
+    "additive": "Polydextrose",
+    "ins_number": "1200",
+    "food_category": "Ice Cream, Frozen Desserts, Cakes, Biscuits, Yoghurt, Whip topping, Sugar boiled Confectionery, Lozenges, Jam, fruit jelly, Traditional Indian sweets (carbohydrate based and milk based), halwa, mysore pak, boondi laddoo, jalebi, khoya Burfi, peda, gulab jamun, rasgulla, and similar milk product based sweets sold by any name",
+    "status": "PERMITTED",
+    "maximum_level": "GMP",
+    "unit": "",
+    "conditions": "GMP as per Appendix A; label declaration per Regulation 2.4.5(47)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.3(5)",
+      "table": "Polydextrose",
+      "line": 6627
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "Sausages and sausage meat containing raw meat , cereals and condiments",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "450",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6686
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "a) Cherries",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "2,000",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6690
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "b) Strawberries and raspberries",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "2,000",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6691
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "c) Other fruits",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "1,000",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6692
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "Fruit juice concentrate",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "1,500",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6693
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "a) Apricots, peaches, apples, pears and other fruits",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "2000",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6695
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "b) Raisins and Sultanas",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "750",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6696
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "Other non alcoholic wines, squashes, crushes, fruit syrups, cordials, fruit juices and barley water to be used after dilution",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "350",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6697
+    }
+  },
+  {
+    "additive": "Benzoic acid",
+    "ins_number": "210",
+    "food_category": "Other non alcoholic wines, squashes, crushes, fruit syrups, cordials, fruit juices and barley water to be used after dilution",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "600",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6699
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "Jam , marmalade, preserve canned cherry and fruit jelly",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "40",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6700
+    }
+  },
+  {
+    "additive": "Benzoic acid",
+    "ins_number": "210",
+    "food_category": "Jam , marmalade, preserve canned cherry and fruit jelly",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "200",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6702
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "Crystallized glace or cured fruit (including candid peel)",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "150",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6703
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "Fruit and fruit pulp not otherwise specified in the schedule",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "350",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6704
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "Plantation white sugar , cube sugar, dextrose, gur, jaggery, misri",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "70",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6705
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "Khandsari (Sulphur) and Bura",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "150",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6706
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "Refined sugar",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "40",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6707
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "Corn flour and such like starches",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "100",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6708
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "Corn syrup",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "450",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6709
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "Canned Rasgolla (The cans shall be internally lacquered with sulphur dioxide resistant laquer)",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "100",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6710
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "Gelatine",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "1000",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6712
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "Beer",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "70",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6713
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "Cider",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "200",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6714
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "Alcoholic Wines",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "450",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6715
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "Ready to serve beverages",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "70",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6716
+    }
+  },
+  {
+    "additive": "Benzoic Acid",
+    "ins_number": "210",
+    "food_category": "Ready to serve beverages",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "120",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6717
+    }
+  },
+  {
+    "additive": "Benzoic Acid",
+    "ins_number": "210",
+    "food_category": "Brewed ginger beer",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "120",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6718
+    }
+  },
+  {
+    "additive": "Benzoic Acid",
+    "ins_number": "210",
+    "food_category": "Coffee extract",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "450",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6719
+    }
+  },
+  {
+    "additive": "Benzoic Acid",
+    "ins_number": "210",
+    "food_category": "Pickles and chutneys made from fruits or vegetables",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "250",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6720
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "Pickles and chutneys made from fruits or vegetables",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "100",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6721
+    }
+  },
+  {
+    "additive": "Benzoic Acid",
+    "ins_number": "210",
+    "food_category": "Tomato and other sauces",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "750",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6722
+    }
+  },
+  {
+    "additive": "Sodium and/or Potassium Nitrite expressed as Sodium Nitrite",
+    "ins_number": "",
+    "food_category": "Pickled meat and bacon",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "200",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6727
+    }
+  },
+  {
+    "additive": "Sodium and/or Potassium Nitrite expressed as Sodium Nitrite",
+    "ins_number": "",
+    "food_category": "Corned Beef",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "100",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6729
+    }
+  },
+  {
+    "additive": "Sodium and /or Potassium Nitrite expressed as Sodium Nitrite",
+    "ins_number": "",
+    "food_category": "Meat Food Products",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "200",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6731
+    }
+  },
+  {
+    "additive": "Benzoic acid",
+    "ins_number": "210",
+    "food_category": "Danish tinned caviar",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "50",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6733
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "Dehydrated vegetables",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "2,000",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6734
+    }
+  },
+  {
+    "additive": "Benzoic acid",
+    "ins_number": "210",
+    "food_category": "Tomato puree and paste",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "750",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6735
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "Syrups and sharbats",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "350",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6736
+    }
+  },
+  {
+    "additive": "Benzoic acid",
+    "ins_number": "210",
+    "food_category": "Syrups and sharbats",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "600",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6738
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "Dried ginger",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "2,000",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6739
+    }
+  },
+  {
+    "additive": "Sorbic acid including its sodium, potassium and calcium salt (calculated as sorbic acid )",
+    "ins_number": "200",
+    "food_category": "Cheese or processed cheese",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "3,000",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6740
+    }
+  },
+  {
+    "additive": "Nisin",
+    "ins_number": "234",
+    "food_category": "Cheese or processed cheese",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "12.5",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6744
+    }
+  },
+  {
+    "additive": "Sorbic acid including its sodium potassium and calcium salt (calculated as sorbic acid )",
+    "ins_number": "200",
+    "food_category": "Flour confectionery",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "1,500",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6745
+    }
+  },
+  {
+    "additive": "Sorbic acid may be impregnated with sorbic acid",
+    "ins_number": "200",
+    "food_category": "Smoked fish (in wrappers)",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "Only wrappers",
+    "unit": "",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6748
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "Dry mixes of rasgollas",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "100",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6755
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "a ) Soups (other than canned )",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "150",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6756
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "b) Dried Soups",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "1,500",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6757
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "c) Dehydrated soup mix when packed in containers other than cans",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "1,500",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6758
+    }
+  },
+  {
+    "additive": "Sulphur dioxide",
+    "ins_number": "220",
+    "food_category": "Fruits, vegetables , flakes, powder, figs",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "600",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6759
+    }
+  },
+  {
+    "additive": "Sodium diacetates",
+    "ins_number": "262(ii)",
+    "food_category": "Flour for baked food",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "2,500",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6760
+    }
+  },
+  {
+    "additive": "propionates",
+    "ins_number": "",
+    "food_category": "Flour for baked food",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "3,200",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6761
+    }
+  },
+  {
+    "additive": "methyl propyl hydroxy benzoate",
+    "ins_number": "",
+    "food_category": "Flour for baked food",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "500",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6762
+    }
+  },
+  {
+    "additive": "Sorbic acid",
+    "ins_number": "200",
+    "food_category": "Preserved chappatis",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "1,500",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6763
+    }
+  },
+  {
+    "additive": "Sorbic acid and its sodium potassium or calcium salts (calculated as sorbic acid)",
+    "ins_number": "200",
+    "food_category": "Paneer or channa",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "2,000",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6764
+    }
+  },
+  {
+    "additive": "Propionic acid and its sodium or potassium salts (calculated as propionic acid)",
+    "ins_number": "280",
+    "food_category": "Paneer or channa",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "2,000",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6774
+    }
+  },
+  {
+    "additive": "Sorbic acid and its sodium potassium and calcium salts (calculated as sorbic acid)",
+    "ins_number": "200",
+    "food_category": "Fat spread",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "1,000",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6777
+    }
+  },
+  {
+    "additive": "Benzoic acid and its sodium or potassium salts (calculated as benzoic acid) or both",
+    "ins_number": "210",
+    "food_category": "Fat spread",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "1,000",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6781
+    }
+  },
+  {
+    "additive": "Sorbic acid and its sodium potassium or calcium salts (calculated as sorbic acid)",
+    "ins_number": "200",
+    "food_category": "Jams, jellies, marmalades, preserve, crystallized glazed or candid fruits including candid peels fruit bars",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "500",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6785
+    }
+  },
+  {
+    "additive": "Sorbic acid and its sodium potassium or calcium salts (calculated as sorbic acid) les/",
+    "ins_number": "200",
+    "food_category": "Fruit juice concentrates with preservatives for conversion in juices, nectars for ready to serve beverages in bott pouches selling through dispensers",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "100",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6788
+    }
+  },
+  {
+    "additive": "Sorbic acid and its sodium potassium or calcium salts (calculated as sorbic acid) les/",
+    "ins_number": "200",
+    "food_category": "Fruit juices (tin , bottles or pouches )",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "200",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6791
+    }
+  },
+  {
+    "additive": "Sorbic acid and its sodium potassium or calcium salts (calculated as sorbic acid) les/",
+    "ins_number": "200",
+    "food_category": "Nectars, ready to serve beverages in bottles/pouches selling through dispensers",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "50",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6792
+    }
+  },
+  {
+    "additive": "Potassium Sorbate (calculated as sorbic acid)",
+    "ins_number": "202",
+    "food_category": "Prunes 4) Use of Class II preservatives in mixed foods",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "1000",
+    "unit": "ppm",
+    "conditions": "Class II preservative; as per Regulation 3.1.4(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(3)",
+      "table": "Class II Preservatives",
+      "line": 6794
+    }
+  },
+  {
+    "additive": "Acetic Acid",
+    "ins_number": "260",
+    "food_category": "(i) Acidulant, buffering and neutralizing agents in beverages soft drinks",
+    "status": "PERMITTED",
+    "maximum_level": "GMP",
+    "unit": "",
+    "conditions": "Maximum level of use: GMP",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.12",
+      "table": "Sequestering/Buffering",
+      "line": 7070
+    }
+  },
+  {
+    "additive": "Acetic Acid",
+    "ins_number": "260",
+    "food_category": "(ii) in canned baby foods",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "5000",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 5000",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.12",
+      "table": "Sequestering/Buffering",
+      "line": 7071
+    }
+  },
+  {
+    "additive": "Adipic acid",
+    "ins_number": "355",
+    "food_category": "Salt substitute and dietary food",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "250",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 250",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.12",
+      "table": "Sequestering/Buffering",
+      "line": 7072
+    }
+  },
+  {
+    "additive": "Calcium Gluconate",
+    "ins_number": "578",
+    "food_category": "In confections",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "2500",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 2500",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.12",
+      "table": "Sequestering/Buffering",
+      "line": 7073
+    }
+  },
+  {
+    "additive": "Calcium Carbonate",
+    "ins_number": "170(i)",
+    "food_category": "As a neutralizer in number of foods",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "10000",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 10000",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.12",
+      "table": "Sequestering/Buffering",
+      "line": 7074
+    }
+  },
+  {
+    "additive": "Calcium oxide",
+    "ins_number": "529",
+    "food_category": "As a neutralizer in specified dairy product",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "2500",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 2500",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.12",
+      "table": "Sequestering/Buffering",
+      "line": 7075
+    }
+  },
+  {
+    "additive": "Citric acid malic acid",
+    "ins_number": "330",
+    "food_category": "Carbonated beverage and as an acidulant in miscellaneous foods",
+    "status": "PERMITTED",
+    "maximum_level": "GMP",
+    "unit": "",
+    "conditions": "Maximum level of use: GMP",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.12",
+      "table": "Sequestering/Buffering",
+      "line": 7077
+    }
+  },
+  {
+    "additive": "DL Lactic Acid (food grade)",
+    "ins_number": "",
+    "food_category": "As acidulant in miscellaneous foods",
+    "status": "PERMITTED",
+    "maximum_level": "GMP",
+    "unit": "",
+    "conditions": "Maximum level of use: GMP",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.12",
+      "table": "Sequestering/Buffering",
+      "line": 7079
+    }
+  },
+  {
+    "additive": "L(+) Lactic Acid (food grade)",
+    "ins_number": "",
+    "food_category": "As acidulant in miscellaneous foods",
+    "status": "PERMITTED",
+    "maximum_level": "GMP",
+    "unit": "",
+    "conditions": "Maximum level of use: GMP",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.12",
+      "table": "Sequestering/Buffering",
+      "line": 7081
+    }
+  },
+  {
+    "additive": "Phosphoric acid",
+    "ins_number": "",
+    "food_category": "Beverages, soft drinks",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "600",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 600",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.12",
+      "table": "Sequestering/Buffering",
+      "line": 7082
+    }
+  },
+  {
+    "additive": "Polyphosphate containing less than 6 Phosphate moieties",
+    "ins_number": "",
+    "food_category": "(a) Processed cheese, bread",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "40000",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 40000",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.12",
+      "table": "Sequestering/Buffering",
+      "line": 7083
+    }
+  },
+  {
+    "additive": "Polyphosphate containing less than 6 Phosphate moieties",
+    "ins_number": "",
+    "food_category": "(b) Milk Preparations",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "4000",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 4000",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.12",
+      "table": "Sequestering/Buffering",
+      "line": 7084
+    }
+  },
+  {
+    "additive": "Polyphosphate containing less than 6 Phosphate moieties",
+    "ins_number": "",
+    "food_category": "(c) Cake Mixes",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "10000",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 10000",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.12",
+      "table": "Sequestering/Buffering",
+      "line": 7085
+    }
+  },
+  {
+    "additive": "Polyphosphate containing less than 6 Phosphate moieties",
+    "ins_number": "",
+    "food_category": "(d) Protein foods",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "4000",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 4000",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.12",
+      "table": "Sequestering/Buffering",
+      "line": 7086
+    }
+  },
+  {
+    "additive": "L (+) Tartaric acid",
+    "ins_number": "",
+    "food_category": "Acidulants",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "600",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 600",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.12",
+      "table": "Sequestering/Buffering",
+      "line": 7087
+    }
+  },
+  {
+    "additive": "Calcium Disodium, Ethylene, Diamine tetra acetate",
+    "ins_number": "383",
+    "food_category": "(i) Emulsions containing refined vegetable oils, eggs, vinegar, salt, sugar and spices;",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "50",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 50",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.12",
+      "table": "Sequestering/Buffering",
+      "line": 7089
+    }
+  },
+  {
+    "additive": "Calcium Disodium, Ethylene, Diamine tetra acetate",
+    "ins_number": "383",
+    "food_category": "(ii) Salad dressing;",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "50",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 50",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.12",
+      "table": "Sequestering/Buffering",
+      "line": 7090
+    }
+  },
+  {
+    "additive": "Calcium Disodium, Ethylene, Diamine tetra acetate",
+    "ins_number": "383",
+    "food_category": "(iii) Sandwich spread or fat Spread",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "50",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 50",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.12",
+      "table": "Sequestering/Buffering",
+      "line": 7091
+    }
+  },
+  {
+    "additive": "Fumaric acid",
+    "ins_number": "297",
+    "food_category": "As acidulant in Miscellaneous foods",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "3000",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 3000",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.12",
+      "table": "Sequestering/Buffering",
+      "line": 7091
+    }
+  },
+  {
+    "additive": "Ammonium Carbonate",
+    "ins_number": "503(i)",
+    "food_category": "Baked food confections",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "5000",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 5000 ppm",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.17",
+      "table": "Other Substances in Specified Limits",
+      "line": 7121
+    }
+  },
+  {
+    "additive": "Ammonium bicarbonate",
+    "ins_number": "",
+    "food_category": "Baked food confections",
+    "status": "PERMITTED",
+    "maximum_level": "GMP",
+    "unit": "",
+    "conditions": "Maximum level of use: GMP",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.17",
+      "table": "Other Substances in Specified Limits",
+      "line": 7122
+    }
+  },
+  {
+    "additive": "Baking powder",
+    "ins_number": "",
+    "food_category": "Baked foods",
+    "status": "PERMITTED",
+    "maximum_level": "GMP",
+    "unit": "",
+    "conditions": "Maximum level of use: GMP",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.17",
+      "table": "Other Substances in Specified Limits",
+      "line": 7123
+    }
+  },
+  {
+    "additive": "Ammonium Phosphate Monobasic",
+    "ins_number": "",
+    "food_category": "Bread",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "2500",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 2500 ppm",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.17",
+      "table": "Other Substances in Specified Limits",
+      "line": 7124
+    }
+  },
+  {
+    "additive": "Ammonium persulphate",
+    "ins_number": "923",
+    "food_category": "Bread",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "2500",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 2500 ppm",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.17",
+      "table": "Other Substances in Specified Limits",
+      "line": 7126
+    }
+  },
+  {
+    "additive": "Calcium Phosphate",
+    "ins_number": "341",
+    "food_category": "Bread",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "2500",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 2500 ppm",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.17",
+      "table": "Other Substances in Specified Limits",
+      "line": 7127
+    }
+  },
+  {
+    "additive": "Calcium Carbonate",
+    "ins_number": "170(i)",
+    "food_category": "Bread",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "5000",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 5000 ppm",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.17",
+      "table": "Other Substances in Specified Limits",
+      "line": 7128
+    }
+  },
+  {
+    "additive": "Potassium Bromate and /or Potassium Iodate",
+    "ins_number": "924a",
+    "food_category": "Bread",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "50",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 50 ppm",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.17",
+      "table": "Other Substances in Specified Limits",
+      "line": 7129
+    }
+  },
+  {
+    "additive": "Ammonium Chloride",
+    "ins_number": "510",
+    "food_category": "Bread",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "500",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 500 ppm",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.17",
+      "table": "Other Substances in Specified Limits",
+      "line": 7131
+    }
+  },
+  {
+    "additive": "Fungal Alpha-amylase",
+    "ins_number": "",
+    "food_category": "Bread",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "100",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 100 ppm",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.17",
+      "table": "Other Substances in Specified Limits",
+      "line": 7132
+    }
+  },
+  {
+    "additive": "Sodium Stearoyl-2 Lactylate or Calcium Stearoyl-2 Lactylate (Singly or in combination)",
+    "ins_number": "",
+    "food_category": "Bread",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "5000",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 5000 ppm",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.17",
+      "table": "Other Substances in Specified Limits",
+      "line": 7133
+    }
+  },
+  {
+    "additive": "L-Cystein Mono Hydrochloride",
+    "ins_number": "",
+    "food_category": "Bread",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "90",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 90 ppm",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.17",
+      "table": "Other Substances in Specified Limits",
+      "line": 7136
+    }
+  },
+  {
+    "additive": "Benzoyl Peroxide",
+    "ins_number": "928",
+    "food_category": "Flour for bakery",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "40",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 40 ppm",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.17",
+      "table": "Other Substances in Specified Limits",
+      "line": 7137
+    }
+  },
+  {
+    "additive": "Potassium bromate",
+    "ins_number": "924a",
+    "food_category": "Flour for bakery",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "20",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 20 ppm",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.17",
+      "table": "Other Substances in Specified Limits",
+      "line": 7138
+    }
+  },
+  {
+    "additive": "Ascorbic acid",
+    "ins_number": "300",
+    "food_category": "Flour for bakery",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "200",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 200 ppm",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.17",
+      "table": "Other Substances in Specified Limits",
+      "line": 7139
+    }
+  },
+  {
+    "additive": "Gluconodelta Lactone",
+    "ins_number": "",
+    "food_category": "Cured meat or meat products",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "5000",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 5000 ppm",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.17",
+      "table": "Other Substances in Specified Limits",
+      "line": 7140
+    }
+  },
+  {
+    "additive": "Chlorine",
+    "ins_number": "925",
+    "food_category": "Flour for bakery",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "2000",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 2000 ppm",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.17",
+      "table": "Other Substances in Specified Limits",
+      "line": 7141
+    }
+  },
+  {
+    "additive": "Ascorbic acid/Iso Ascorbic acid and its salts singly or in combination Choppe and Goat Meat.",
+    "ins_number": "",
+    "food_category": "Corned beef, Luncheon Meat, Cooked Ham, d Meat, Canned Chicken, Canned Mutton",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "500",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 500 ppm",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.17",
+      "table": "Other Substances in Specified Limits",
+      "line": 7142
+    }
+  },
+  {
+    "additive": "Phosphates (Naturally present and added) expressed as P2O5",
+    "ins_number": "",
+    "food_category": "Luncheon Meat,Cooked Ham, Chopped Meat.",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "8000",
+    "unit": "ppm",
+    "conditions": "Maximum level of use: 8000 ppm",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.17",
+      "table": "Other Substances in Specified Limits",
+      "line": 7145
+    }
+  },
+  {
+    "additive": "Hydroxypropyl Methyl Cellulose",
+    "ins_number": "464",
+    "food_category": "Non dairy whip topping",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "2.0",
+    "unit": "%",
+    "conditions": "Maximum level of use; as per Regulation 3.1.6(8)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.6(8)",
+      "table": "HPMC",
+      "line": 6906
+    }
+  },
+  {
+    "additive": "Hydroxypropyl Methyl Cellulose",
+    "ins_number": "464",
+    "food_category": "Snacks, savouries, luncheon meat and poultry products, instant mixes such as idli mix,",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "1.0",
+    "unit": "%",
+    "conditions": "Maximum level of use; as per Regulation 3.1.6(8)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.6(8)",
+      "table": "HPMC",
+      "line": 6907
+    }
+  },
+  {
+    "additive": "Hydroxypropyl Methyl Cellulose",
+    "ins_number": "464",
+    "food_category": "Mixes for dairy based drinks",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "0.5",
+    "unit": "%",
+    "conditions": "Maximum level of use; as per Regulation 3.1.6(8)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.6(8)",
+      "table": "HPMC",
+      "line": 6911
+    }
+  },
+  {
+    "additive": "Xanthan gum",
+    "ins_number": "415",
+    "food_category": "Non dairy whip toppings",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "0.5",
+    "unit": "%",
+    "conditions": "Maximum 0.5% by weight; as per Regulation 3.1.6(9)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.6(9)",
+      "table": "Xanthan gum",
+      "line": 6913
+    }
+  },
+  {
+    "additive": "Xanthan gum",
+    "ins_number": "415",
+    "food_category": "Bakery mixes",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "0.5",
+    "unit": "%",
+    "conditions": "Maximum 0.5% by weight; as per Regulation 3.1.6(9)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.6(9)",
+      "table": "Xanthan gum",
+      "line": 6914
+    }
+  },
+  {
+    "additive": "Monosodium glutamate",
+    "ins_number": "621",
+    "food_category": "All foods except those listed in restrictions",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "GMP",
+    "unit": "",
+    "conditions": "May be added to foods as per Appendix A subject to Good Manufacturing Practices (GMP) level and proper label declaration (Regulation 2.4.5(18)); shall not be added to food for use by infants below twelve months.",
+    "restrictions": [
+      "Milk and Milk Products including Buttermilk",
+      "Fermented and renneted milk products (plain) excluding dairy based drink",
+      "Pasteurized cream",
+      "Sterilised, UHT, whipping or whipped and reduced fat creams",
+      "Fats and Oils, Foodgrains, Pulses, Oil seeds and grounded/powdered foodgrains",
+      "Butter and concentrated butter",
+      "Fresh fruit",
+      "Surface treated fruit",
+      "Peeled or cut fruit",
+      "Fresh vegetables",
+      "Frozen vegetables",
+      "Whole, broken or flaked grains, including rice",
+      "Flours of cereals, pulses and starches",
+      "Pastas and noodles (only dried products)",
+      "Fresh meat, poultry and game, whole pieces or cuts or comminuted",
+      "Fresh fish and fish products, including mollusks, crustaceans and echinoderms",
+      "Processed fish and fish products, including mollusks, crustaceans and echinoderms",
+      "Fresh eggs, Liquid egg products, Frozen egg products",
+      "White and semi-white sugar (sucrose and saccharose, fructose, glucose (dextrose), xylose, sugar solutions and syrups, also (partially) inverted sugars, including molasses, treacle and sugar toppings",
+      "Other sugars and syrups (e.g. brown sugar and maple syrup)",
+      "Honey",
+      "Salt",
+      "Herbs, spices and condiments, seasoning (including salt substitutes) except seasoning for Noodles and Pastas, meat tenderizers, onion salt, garlic salt, oriental seasoning mix, topping to sprinkle on rice, fermented soyabean paste, Yeast",
+      "Infant food and Infant milk substitute including infant formulae and follow-on formulae",
+      "Foods for young children (weaning foods)",
+      "Natural Minerals water and Packaged Drinking water",
+      "Concentrates (liquid and solid) for fruit juices",
+      "Canned or bottled (pasteurized) fruit nectar",
+      "Coffee and coffee substitutes, tea, herbal infusions, and other cereal beverages excluding cocoa",
+      "Wines",
+      "Margarine",
+      "Fat Spread",
+      "Fruits and Vegetables products except those where Monosodium Glutamate is permitted under Appendix A",
+      "Carbonated Water",
+      "Baking Powder",
+      "Arrowroot",
+      "Sago",
+      "Plantation Sugar, Jaggery and Bura",
+      "Ice-Candies",
+      "Ice cream and Frozen desserts",
+      "Cocoa Butter",
+      "Saccharine",
+      "Malted Milk Food and Milk based foods",
+      "Bread",
+      "Vinegar",
+      "Sugar Confectionery, Toffee, Lozenges",
+      "Chocolate",
+      "Pan Masala",
+      "Alcoholic Beverages"
+    ],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.11",
+      "table": "Flavour enhancers",
+      "line": 6982
+    }
+  },
+  {
+    "additive": "Beta-carotene",
+    "ins_number": "160a(i)",
+    "food_category": "Any article of food",
+    "status": "PERMITTED",
+    "maximum_level": "GMP",
+    "unit": "",
+    "conditions": "Natural colouring matter; permitted as per Regulation 3.1.2(2)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.2(2)",
+      "table": "Natural Colours",
+      "line": 6363
+    }
+  },
+  {
+    "additive": "Beta-apo 8'-carotenal",
+    "ins_number": "",
+    "food_category": "Any article of food",
+    "status": "PERMITTED",
+    "maximum_level": "GMP",
+    "unit": "",
+    "conditions": "Natural colouring matter; permitted as per Regulation 3.1.2(2)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.2(2)",
+      "table": "Natural Colours",
+      "line": 6363
+    }
+  },
+  {
+    "additive": "Methylester of Beta-apo 8' carotenoic acid",
+    "ins_number": "",
+    "food_category": "Any article of food",
+    "status": "PERMITTED",
+    "maximum_level": "GMP",
+    "unit": "",
+    "conditions": "Natural colouring matter; permitted as per Regulation 3.1.2(2)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.2(2)",
+      "table": "Natural Colours",
+      "line": 6363
+    }
+  },
+  {
+    "additive": "Ethylester of Beta-apo 8' carotenoic acid",
+    "ins_number": "",
+    "food_category": "Any article of food",
+    "status": "PERMITTED",
+    "maximum_level": "GMP",
+    "unit": "",
+    "conditions": "Natural colouring matter; permitted as per Regulation 3.1.2(2)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.2(2)",
+      "table": "Natural Colours",
+      "line": 6363
+    }
+  },
+  {
+    "additive": "Canthaxanthin",
+    "ins_number": "161g",
+    "food_category": "Any article of food",
+    "status": "PERMITTED",
+    "maximum_level": "GMP",
+    "unit": "",
+    "conditions": "Natural colouring matter; permitted as per Regulation 3.1.2(2)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.2(2)",
+      "table": "Natural Colours",
+      "line": 6363
+    }
+  },
+  {
+    "additive": "Chlorophyll",
+    "ins_number": "140",
+    "food_category": "Any article of food",
+    "status": "PERMITTED",
+    "maximum_level": "GMP",
+    "unit": "",
+    "conditions": "Natural colouring matter; permitted as per Regulation 3.1.2(2)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.2(2)",
+      "table": "Natural Colours",
+      "line": 6363
+    }
+  },
+  {
+    "additive": "Riboflavin (Lactoflavin)",
+    "ins_number": "101(i)",
+    "food_category": "Any article of food",
+    "status": "PERMITTED",
+    "maximum_level": "GMP",
+    "unit": "",
+    "conditions": "Natural colouring matter; permitted as per Regulation 3.1.2(2)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.2(2)",
+      "table": "Natural Colours",
+      "line": 6363
+    }
+  },
+  {
+    "additive": "Caramel",
+    "ins_number": "150a",
+    "food_category": "Any article of food",
+    "status": "PERMITTED",
+    "maximum_level": "GMP",
+    "unit": "",
+    "conditions": "Natural colouring matter; permitted as per Regulation 3.1.2(2)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.2(2)",
+      "table": "Natural Colours",
+      "line": 6363
+    }
+  },
+  {
+    "additive": "Annatto",
+    "ins_number": "160b",
+    "food_category": "Any article of food",
+    "status": "PERMITTED",
+    "maximum_level": "GMP",
+    "unit": "",
+    "conditions": "Natural colouring matter; permitted as per Regulation 3.1.2(2)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.2(2)",
+      "table": "Natural Colours",
+      "line": 6363
+    }
+  },
+  {
+    "additive": "Saffron",
+    "ins_number": "",
+    "food_category": "Any article of food",
+    "status": "PERMITTED",
+    "maximum_level": "GMP",
+    "unit": "",
+    "conditions": "Natural colouring matter; permitted as per Regulation 3.1.2(2)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.2(2)",
+      "table": "Natural Colours",
+      "line": 6363
+    }
+  },
+  {
+    "additive": "Curcumin or turmeric",
+    "ins_number": "100(i)",
+    "food_category": "Any article of food",
+    "status": "PERMITTED",
+    "maximum_level": "GMP",
+    "unit": "",
+    "conditions": "Natural colouring matter; permitted as per Regulation 3.1.2(2)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.2(2)",
+      "table": "Natural Colours",
+      "line": 6363
+    }
+  },
+  {
+    "additive": "Ponceau 4R",
+    "ins_number": "124",
+    "food_category": "Ice-cream, milk lollies, frozen desserts, flavoured milk, yoghurt, ice-cream mix-powder; Biscuits including biscuit wafer, pastries, cakes, confectionery, thread candies, sweets, savouries (dalmoth, mongia, phululab, sago papad, dal biji only); Peas, strawberries and cherries in hermetically sealed containers, preserved or processed papaya, canned tomato juice, fruit syrup, fruit squash, fruit crushes, fruit cordial, jellies, jam, marmalade, candied crystallised or glazed fruits; Non-alcoholic carbonated and non-carbonated ready to serve synthetic beverages including synthetic syrups, sharbats, fruit bar, fruit beverages, fruit drinks, synthetic soft-drink concentrates; Custard powder; Jelly crystal and ice-candy; Flavour emulsion and flavour paste for use in carbonated or non-carbonated beverages only under label declaration (Regulation 2.4.5(35))",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "100",
+    "unit": "ppm",
+    "conditions": "Synthetic food colour permitted ONLY in the food articles enumerated in Regulation 3.1.2(6); maximum limit 100 ppm of the final food/beverage (200 ppm for clause (iii) items) per Regulation 3.1.2(7)",
+    "restrictions": [
+      "Foods other than those enumerated in Regulation 3.1.2(6)"
+    ],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.2(4)/3.1.2(6)/3.1.2(7)",
+      "table": "Synthetic Food Colours",
+      "line": 6389
+    }
+  },
+  {
+    "additive": "Carmoisine",
+    "ins_number": "122",
+    "food_category": "Ice-cream, milk lollies, frozen desserts, flavoured milk, yoghurt, ice-cream mix-powder; Biscuits including biscuit wafer, pastries, cakes, confectionery, thread candies, sweets, savouries (dalmoth, mongia, phululab, sago papad, dal biji only); Peas, strawberries and cherries in hermetically sealed containers, preserved or processed papaya, canned tomato juice, fruit syrup, fruit squash, fruit crushes, fruit cordial, jellies, jam, marmalade, candied crystallised or glazed fruits; Non-alcoholic carbonated and non-carbonated ready to serve synthetic beverages including synthetic syrups, sharbats, fruit bar, fruit beverages, fruit drinks, synthetic soft-drink concentrates; Custard powder; Jelly crystal and ice-candy; Flavour emulsion and flavour paste for use in carbonated or non-carbonated beverages only under label declaration (Regulation 2.4.5(35))",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "100",
+    "unit": "ppm",
+    "conditions": "Synthetic food colour permitted ONLY in the food articles enumerated in Regulation 3.1.2(6); maximum limit 100 ppm of the final food/beverage (200 ppm for clause (iii) items) per Regulation 3.1.2(7)",
+    "restrictions": [
+      "Foods other than those enumerated in Regulation 3.1.2(6)"
+    ],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.2(4)/3.1.2(6)/3.1.2(7)",
+      "table": "Synthetic Food Colours",
+      "line": 6389
+    }
+  },
+  {
+    "additive": "Erythrosine",
+    "ins_number": "127",
+    "food_category": "Ice-cream, milk lollies, frozen desserts, flavoured milk, yoghurt, ice-cream mix-powder; Biscuits including biscuit wafer, pastries, cakes, confectionery, thread candies, sweets, savouries (dalmoth, mongia, phululab, sago papad, dal biji only); Peas, strawberries and cherries in hermetically sealed containers, preserved or processed papaya, canned tomato juice, fruit syrup, fruit squash, fruit crushes, fruit cordial, jellies, jam, marmalade, candied crystallised or glazed fruits; Non-alcoholic carbonated and non-carbonated ready to serve synthetic beverages including synthetic syrups, sharbats, fruit bar, fruit beverages, fruit drinks, synthetic soft-drink concentrates; Custard powder; Jelly crystal and ice-candy; Flavour emulsion and flavour paste for use in carbonated or non-carbonated beverages only under label declaration (Regulation 2.4.5(35))",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "100",
+    "unit": "ppm",
+    "conditions": "Synthetic food colour permitted ONLY in the food articles enumerated in Regulation 3.1.2(6); maximum limit 100 ppm of the final food/beverage (200 ppm for clause (iii) items) per Regulation 3.1.2(7)",
+    "restrictions": [
+      "Foods other than those enumerated in Regulation 3.1.2(6)"
+    ],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.2(4)/3.1.2(6)/3.1.2(7)",
+      "table": "Synthetic Food Colours",
+      "line": 6389
+    }
+  },
+  {
+    "additive": "Tartrazine",
+    "ins_number": "102",
+    "food_category": "Ice-cream, milk lollies, frozen desserts, flavoured milk, yoghurt, ice-cream mix-powder; Biscuits including biscuit wafer, pastries, cakes, confectionery, thread candies, sweets, savouries (dalmoth, mongia, phululab, sago papad, dal biji only); Peas, strawberries and cherries in hermetically sealed containers, preserved or processed papaya, canned tomato juice, fruit syrup, fruit squash, fruit crushes, fruit cordial, jellies, jam, marmalade, candied crystallised or glazed fruits; Non-alcoholic carbonated and non-carbonated ready to serve synthetic beverages including synthetic syrups, sharbats, fruit bar, fruit beverages, fruit drinks, synthetic soft-drink concentrates; Custard powder; Jelly crystal and ice-candy; Flavour emulsion and flavour paste for use in carbonated or non-carbonated beverages only under label declaration (Regulation 2.4.5(35))",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "100",
+    "unit": "ppm",
+    "conditions": "Synthetic food colour permitted ONLY in the food articles enumerated in Regulation 3.1.2(6); maximum limit 100 ppm of the final food/beverage (200 ppm for clause (iii) items) per Regulation 3.1.2(7)",
+    "restrictions": [
+      "Foods other than those enumerated in Regulation 3.1.2(6)"
+    ],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.2(4)/3.1.2(6)/3.1.2(7)",
+      "table": "Synthetic Food Colours",
+      "line": 6389
+    }
+  },
+  {
+    "additive": "Sunset Yellow FCF",
+    "ins_number": "110",
+    "food_category": "Ice-cream, milk lollies, frozen desserts, flavoured milk, yoghurt, ice-cream mix-powder; Biscuits including biscuit wafer, pastries, cakes, confectionery, thread candies, sweets, savouries (dalmoth, mongia, phululab, sago papad, dal biji only); Peas, strawberries and cherries in hermetically sealed containers, preserved or processed papaya, canned tomato juice, fruit syrup, fruit squash, fruit crushes, fruit cordial, jellies, jam, marmalade, candied crystallised or glazed fruits; Non-alcoholic carbonated and non-carbonated ready to serve synthetic beverages including synthetic syrups, sharbats, fruit bar, fruit beverages, fruit drinks, synthetic soft-drink concentrates; Custard powder; Jelly crystal and ice-candy; Flavour emulsion and flavour paste for use in carbonated or non-carbonated beverages only under label declaration (Regulation 2.4.5(35))",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "100",
+    "unit": "ppm",
+    "conditions": "Synthetic food colour permitted ONLY in the food articles enumerated in Regulation 3.1.2(6); maximum limit 100 ppm of the final food/beverage (200 ppm for clause (iii) items) per Regulation 3.1.2(7)",
+    "restrictions": [
+      "Foods other than those enumerated in Regulation 3.1.2(6)"
+    ],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.2(4)/3.1.2(6)/3.1.2(7)",
+      "table": "Synthetic Food Colours",
+      "line": 6389
+    }
+  },
+  {
+    "additive": "Indigo Carmine",
+    "ins_number": "132",
+    "food_category": "Ice-cream, milk lollies, frozen desserts, flavoured milk, yoghurt, ice-cream mix-powder; Biscuits including biscuit wafer, pastries, cakes, confectionery, thread candies, sweets, savouries (dalmoth, mongia, phululab, sago papad, dal biji only); Peas, strawberries and cherries in hermetically sealed containers, preserved or processed papaya, canned tomato juice, fruit syrup, fruit squash, fruit crushes, fruit cordial, jellies, jam, marmalade, candied crystallised or glazed fruits; Non-alcoholic carbonated and non-carbonated ready to serve synthetic beverages including synthetic syrups, sharbats, fruit bar, fruit beverages, fruit drinks, synthetic soft-drink concentrates; Custard powder; Jelly crystal and ice-candy; Flavour emulsion and flavour paste for use in carbonated or non-carbonated beverages only under label declaration (Regulation 2.4.5(35))",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "100",
+    "unit": "ppm",
+    "conditions": "Synthetic food colour permitted ONLY in the food articles enumerated in Regulation 3.1.2(6); maximum limit 100 ppm of the final food/beverage (200 ppm for clause (iii) items) per Regulation 3.1.2(7)",
+    "restrictions": [
+      "Foods other than those enumerated in Regulation 3.1.2(6)"
+    ],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.2(4)/3.1.2(6)/3.1.2(7)",
+      "table": "Synthetic Food Colours",
+      "line": 6389
+    }
+  },
+  {
+    "additive": "Brilliant Blue FCF",
+    "ins_number": "133",
+    "food_category": "Ice-cream, milk lollies, frozen desserts, flavoured milk, yoghurt, ice-cream mix-powder; Biscuits including biscuit wafer, pastries, cakes, confectionery, thread candies, sweets, savouries (dalmoth, mongia, phululab, sago papad, dal biji only); Peas, strawberries and cherries in hermetically sealed containers, preserved or processed papaya, canned tomato juice, fruit syrup, fruit squash, fruit crushes, fruit cordial, jellies, jam, marmalade, candied crystallised or glazed fruits; Non-alcoholic carbonated and non-carbonated ready to serve synthetic beverages including synthetic syrups, sharbats, fruit bar, fruit beverages, fruit drinks, synthetic soft-drink concentrates; Custard powder; Jelly crystal and ice-candy; Flavour emulsion and flavour paste for use in carbonated or non-carbonated beverages only under label declaration (Regulation 2.4.5(35))",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "100",
+    "unit": "ppm",
+    "conditions": "Synthetic food colour permitted ONLY in the food articles enumerated in Regulation 3.1.2(6); maximum limit 100 ppm of the final food/beverage (200 ppm for clause (iii) items) per Regulation 3.1.2(7)",
+    "restrictions": [
+      "Foods other than those enumerated in Regulation 3.1.2(6)"
+    ],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.2(4)/3.1.2(6)/3.1.2(7)",
+      "table": "Synthetic Food Colours",
+      "line": 6389
+    }
+  },
+  {
+    "additive": "Fast Green FCF",
+    "ins_number": "143",
+    "food_category": "Ice-cream, milk lollies, frozen desserts, flavoured milk, yoghurt, ice-cream mix-powder; Biscuits including biscuit wafer, pastries, cakes, confectionery, thread candies, sweets, savouries (dalmoth, mongia, phululab, sago papad, dal biji only); Peas, strawberries and cherries in hermetically sealed containers, preserved or processed papaya, canned tomato juice, fruit syrup, fruit squash, fruit crushes, fruit cordial, jellies, jam, marmalade, candied crystallised or glazed fruits; Non-alcoholic carbonated and non-carbonated ready to serve synthetic beverages including synthetic syrups, sharbats, fruit bar, fruit beverages, fruit drinks, synthetic soft-drink concentrates; Custard powder; Jelly crystal and ice-candy; Flavour emulsion and flavour paste for use in carbonated or non-carbonated beverages only under label declaration (Regulation 2.4.5(35))",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "100",
+    "unit": "ppm",
+    "conditions": "Synthetic food colour permitted ONLY in the food articles enumerated in Regulation 3.1.2(6); maximum limit 100 ppm of the final food/beverage (200 ppm for clause (iii) items) per Regulation 3.1.2(7)",
+    "restrictions": [
+      "Foods other than those enumerated in Regulation 3.1.2(6)"
+    ],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.2(4)/3.1.2(6)/3.1.2(7)",
+      "table": "Synthetic Food Colours",
+      "line": 6389
+    }
+  },
+  {
+    "additive": "Ethyl gallate / Propyl gallate / Octyl gallate / Dodecyl gallate (or mixture)",
+    "ins_number": "313",
+    "food_category": "Edible oils and fats (except ghee and butter)",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "0.01",
+    "unit": "%",
+    "conditions": "Anti-oxidant; not exceeding concentration; as per Regulation 3.1.5(2)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.5(2)",
+      "table": "Anti-oxidants",
+      "line": 6825
+    }
+  },
+  {
+    "additive": "Ascorbyl palmitate",
+    "ins_number": "304",
+    "food_category": "Edible oils and fats (except ghee and butter)",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "0.02",
+    "unit": "%",
+    "conditions": "Anti-oxidant; as per Regulation 3.1.5(2)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.5(2)",
+      "table": "Anti-oxidants",
+      "line": 6829
+    }
+  },
+  {
+    "additive": "Butylated hydroxyanisole (BHA)",
+    "ins_number": "320",
+    "food_category": "Edible oils and fats (except ghee and butter)",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "0.02",
+    "unit": "%",
+    "conditions": "Anti-oxidant; as per Regulation 3.1.5(2)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.5(2)",
+      "table": "Anti-oxidants",
+      "line": 6830
+    }
+  },
+  {
+    "additive": "Tertiary Butyl Hydro Quinone (TBHQ)",
+    "ins_number": "319",
+    "food_category": "Edible oils and fats (except ghee and butter)",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "0.02",
+    "unit": "%",
+    "conditions": "Anti-oxidant; as per Regulation 3.1.5(2)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.5(2)",
+      "table": "Anti-oxidants",
+      "line": 6835
+    }
+  },
+  {
+    "additive": "Butylated hydroxyanisole (BHA)",
+    "ins_number": "320",
+    "food_category": "Dry mixes of rasgollas and vadas",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "0.02",
+    "unit": "%",
+    "conditions": "Calculated on the basis of fat content; as per Regulation 3.1.5(2)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.5(2)",
+      "table": "Anti-oxidants",
+      "line": 6836
+    }
+  },
+  {
+    "additive": "Butylated hydroxyanisole (BHA)",
+    "ins_number": "320",
+    "food_category": "Ghee and Butter",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "0.02",
+    "unit": "%",
+    "conditions": "Anti-oxidant; as per Regulation 3.1.5(2)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.5(2)",
+      "table": "Anti-oxidants",
+      "line": 6843
+    }
+  },
+  {
+    "additive": "Butylated hydroxyanisole (BHA) or Tertiary butyl hydro quinone (TBHQ)",
+    "ins_number": "320",
+    "food_category": "Fat spread",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "0.02",
+    "unit": "%",
+    "conditions": "By weight on fat basis; as per Regulation 3.1.5(2)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.5(2)",
+      "table": "Anti-oxidants",
+      "line": 6845
+    }
+  },
+  {
+    "additive": "Butylated Hydroxyanisole (BHA)",
+    "ins_number": "320",
+    "food_category": "Ready-to-eat dry breakfast cereals",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "0.005",
+    "unit": "%",
+    "conditions": "Not exceeding 0.005 percent (50 ppm); as per Regulation 3.1.5(2)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.5(2)",
+      "table": "Anti-oxidants",
+      "line": 6847
+    }
+  },
+  {
+    "additive": "Butylated hydroxyanisol (BHA)",
+    "ins_number": "320",
+    "food_category": "Chewing gum / bubble gum",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "250",
+    "unit": "ppm",
+    "conditions": "As per Regulation 3.1.5(2)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.5(2)",
+      "table": "Anti-oxidants",
+      "line": 6851
+    }
+  },
+  {
+    "additive": "Carbonates of calcium and magnesium / phosphates of calcium and magnesium / silicates of calcium, magnesium, aluminium or sodium or silicon dioxide / myristates, palmitates or stearates of aluminium, ammonium, calcium, potassium or sodium",
+    "ins_number": "",
+    "food_category": "Table salt, onion powder, garlic powder, fruit powder and soup powder",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "2.0",
+    "unit": "%",
+    "conditions": "Singly or in combination, not exceeding 2.0 per cent; as per Regulation 3.1.7(1)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.7(1)",
+      "table": "Anticaking Agents",
+      "line": 6923
+    }
+  },
+  {
+    "additive": "Calcium, potassium or sodium ferrocyanide",
+    "ins_number": "535/536/538",
+    "food_category": "Common salt, iodised salt and iron fortified salt",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "10",
+    "unit": "mg/kg",
+    "conditions": "As crystal modifier and anti-caking agent, singly or in combination expressed as ferrocyanide; as per Regulation 3.1.7(1)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.7(1)",
+      "table": "Anticaking Agents",
+      "line": 6929
+    }
+  },
+  {
+    "additive": "Dimethyl Polysiloxane (food grade)",
+    "ins_number": "900a",
+    "food_category": "Edible oils and fats for deep fat frying",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "10",
+    "unit": "ppm",
+    "conditions": "Antifoaming agent; as per Regulation 3.1.8(1)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.8(1)",
+      "table": "Antifoaming Agents",
+      "line": 6934
+    }
+  },
+  {
+    "additive": "Dimethyl Polysiloxane (Spreadasil silicon spray)",
+    "ins_number": "900a",
+    "food_category": "Confectionery",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "10",
+    "unit": "ppm",
+    "conditions": "Release agent; not exceeding 10 ppm of the finished product; as per Regulation 3.1.9(1)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.9(1)",
+      "table": "Release Agents",
+      "line": 6942
+    }
+  },
+  {
+    "additive": "Glycerol esters of wood resins (ester gum)",
+    "ins_number": "445",
+    "food_category": "Flavour emulsions, soft drink concentrate and carbonated water",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "100",
+    "unit": "ppm",
+    "conditions": "Of the final beverage for consumption; as per Regulation 3.1.13",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.13",
+      "table": "Ester Gum",
+      "line": 7096
+    }
+  },
+  {
+    "additive": "Sucrose Acetate Isobutyrate",
+    "ins_number": "444",
+    "food_category": "Non-alcoholic beverages",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "300",
+    "unit": "ppm",
+    "conditions": "As clouding agent; as per Regulation 3.1.14",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.14",
+      "table": "Sucrose Acetate Isobutyrate",
+      "line": 7098
+    }
+  },
+  {
+    "additive": "Lactulose syrup",
+    "ins_number": "",
+    "food_category": "Special milk based infant food formulations",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "0.5",
+    "unit": "%",
+    "conditions": "To be taken under medical advice, subject to label declaration; as per Regulation 3.1.15(1)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.15(1)",
+      "table": "Lactulose Syrup",
+      "line": 7103
+    }
+  },
+  {
+    "additive": "Lactulose syrup",
+    "ins_number": "",
+    "food_category": "Bakery products",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "0.5",
+    "unit": "%",
+    "conditions": "Maximum by weight; as per Regulation 3.1.15(2)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.15(2)",
+      "table": "Lactulose Syrup",
+      "line": 7105
+    }
+  },
+  {
+    "additive": "Dimethyl Dicarbonate",
+    "ins_number": "242",
+    "food_category": "Fruit drinks, ready to drink tea beverages, isotonic/sports drinks and flavoured water",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "250",
+    "unit": "mg/litre",
+    "conditions": "Subject to a maximum methanol content in final product as 200 mg/litre; as per Regulation 3.1.16",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.16",
+      "table": "Dimethyl Dicarbonate",
+      "line": 7108
+    }
+  },
+  {
+    "additive": "Natamycin",
+    "ins_number": "235",
+    "food_category": "Cheese (hard) — surface treatment",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "2",
+    "unit": "mg/dm3",
+    "conditions": "Surface treatment under label declaration (Regulation 2.4.5(33)); penetration depth not to exceed 2mm; maximum residue level in finished cheese not to exceed 1 mg/dm3; as per Regulation 3.1.4(6)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(6)",
+      "table": "Natamycin",
+      "line": 6808
+    }
+  },
+  {
+    "additive": "Nitrates / Nitrites of Sodium or Potassium",
+    "ins_number": "250/251",
+    "food_category": "Infant food",
+    "status": "RESTRICTED",
+    "maximum_level": "",
+    "unit": "",
+    "conditions": "No nitrate or nitrite shall be added to any infant food; as per Regulation 3.1.4(5)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.4(5)",
+      "table": "Nitrate/Nitrite Restriction",
+      "line": 6806
+    }
+  },
+  {
+    "additive": "Monoglycerides or diglycerides of fatty acids, synthetic lecithin, propylene glycol stearate, propylene glycol alginate, methyl ethyl cellulose, methylcellulose, sodium carboxymethyl cellulose, stearyl tartaric acid, esters of monoglycerides and diglycerides of fatty acids, monostearin sodium sulphoacetate, sorbitan esters of fatty acids",
+    "ins_number": "",
+    "food_category": "Milk and cream",
+    "status": "RESTRICTED",
+    "maximum_level": "",
+    "unit": "",
+    "conditions": "Shall not be used in milk and cream; as per Regulation 3.1.6(1) proviso",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.6(1)",
+      "table": "Emulsifying/Stabilising",
+      "line": 6875
+    }
+  },
+  {
+    "additive": "Polyglycerol esters of fatty acids and Polyglycerol ester of interesterified Ricinoleic acid",
+    "ins_number": "475/476",
+    "food_category": "Bakery products and chocolate",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "0.2",
+    "unit": "%",
+    "conditions": "To the extent of 0.2 per cent by weight; as per Regulation 3.1.6(1)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.6(1)",
+      "table": "Emulsifying/Stabilising",
+      "line": 6880
+    }
+  },
+  {
+    "additive": "Diacetyl Tartaric acid esters of Mono and Diglycerides",
+    "ins_number": "472e",
+    "food_category": "Bread and Cakes",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "GMP",
+    "unit": "",
+    "conditions": "May be used in Bread and Cakes; as per Regulation 3.1.6(1)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.6(1)",
+      "table": "Emulsifying/Stabilising",
+      "line": 6882
+    }
+  },
+  {
+    "additive": "Starch phosphate",
+    "ins_number": "1410",
+    "food_category": "Syrup, ice-cream powder, salad dressing and pudding",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "0.5",
+    "unit": "%",
+    "conditions": "Gum arabic substitute; as per Regulation 3.1.6(3)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.6(3)",
+      "table": "Emulsifying/Stabilising",
+      "line": 6883
+    }
+  },
+  {
+    "additive": "Modified food starches (derivative starches)",
+    "ins_number": "",
+    "food_category": "Confectionery, flavours, dairy products (where use of emulsifier/stabiliser is allowed in Appendix A and Chapter 2), glazes, icings, gravies, sauces, soups, coatings",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "0.5",
+    "unit": "%",
+    "conditions": "Maximum concentration 0.5 per cent by weight; as per Regulation 3.1.6(4)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.6(4)",
+      "table": "Modified Starches",
+      "line": 6885
+    }
+  },
+  {
+    "additive": "Modified food starches (derivative starches)",
+    "ins_number": "",
+    "food_category": "Snacks, frozen potato products, baked foods, salad dressing/mayonnaise",
+    "status": "PERMITTED_WITH_CONDITIONS",
+    "maximum_level": "5",
+    "unit": "%",
+    "conditions": "Maximum concentration 5 per cent by weight; as per Regulation 3.1.6(4)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.6(4)",
+      "table": "Modified Starches",
+      "line": 6888
+    }
+  },
+  {
+    "additive": "Coumarin and dihydrocoumarin",
+    "ins_number": "",
+    "food_category": "Any article of food",
+    "status": "NOT_PERMITTED",
+    "maximum_level": "",
+    "unit": "",
+    "conditions": "Prohibited as flavouring agents in any article of food; as per Regulation 3.1.10(4)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.10(4)",
+      "table": "Flavouring Agents",
+      "line": 6965
+    }
+  },
+  {
+    "additive": "Saffrole and Isosaffrole",
+    "ins_number": "",
+    "food_category": "Any article of food",
+    "status": "NOT_PERMITTED",
+    "maximum_level": "",
+    "unit": "",
+    "conditions": "Prohibited as flavouring agents; as per Regulation 3.1.10(4)(x)",
+    "restrictions": [],
+    "source": {
+      "document": "Food_Additives_Regulations.txt",
+      "regulation": "Food Safety and Standards (Food Product Standards and Food Additives) Regulation, 2011",
+      "section": "3.1.10(4)",
+      "table": "Flavouring Agents",
+      "line": 6976
+    }
+  }
+]

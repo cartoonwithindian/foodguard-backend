@@ -1,0 +1,68 @@
+# dependencies
+/node_modules
+
+# production build
+/dist
+
+# testing
+/coverage
+
+# misc
+.DS_Store
+*.pem
+
+# SQLite database (never shipped — Supabase only)
+/data/foodguard/*.db
+/data/foodguard/*.db-wal
+/data/foodguard/*.db-shm
+*.sqlite
+*.sqlite3
+
+# archived bundles / local zips
+*.zip
+*.rar
+*.tar.gz
+*.7z
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# typescript
+*.tsbuildinfo
+
+# downloaded OCR language data
+*.traineddata
+
+# home-directory tool caches / VM dotdirs (not part of the project)
+/.npm/
+/.cache/
+/.local/
+/.nuget/
+/.dotnet/
+/.jcode/
+/.config/
+/.opencode/
+/.gemini/
+/.codeoss/
+/.claude/
+/.docker/
+
+# temp / scratch files
+bin/phase*
+bin/result*
+
+# webpack / build cache
+.next/cache/
+.cache/

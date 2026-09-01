@@ -1,0 +1,314 @@
+{
+  "version": "1.0.0",
+  "description": "FoodGuard four-component health scoring configuration",
+
+  "componentWeights": {
+    "nutrient": 0.25,
+    "ingredientProfile": 0.25,
+    "ingredientConcern": 0.25,
+    "processing": 0.25
+  },
+
+  "ratingThresholds": [
+    { "min": 0.0, "max": 0.9, "label": "Very Poor" },
+    { "min": 1.0, "max": 1.9, "label": "Poor" },
+    { "min": 2.0, "max": 2.9, "label": "Okay" },
+    { "min": 3.0, "max": 3.9, "label": "Good" },
+    { "min": 4.0, "max": 5.0, "label": "Excellent" }
+  ],
+
+  "servingSizeRules": {
+    "solid_foods": {
+      "defaultGrams": 100,
+      "categoryOverrides": {
+        "snacks": 30,
+        "biscuits": 30,
+        "chips": 30,
+        "namkeen": 30,
+        "chocolate": 25,
+        "sweets": 50,
+        "candy": 25,
+        "cookies": 30,
+        "breads": 50,
+        "cereals": 40,
+        "oats": 40,
+        "dairy": 100,
+        "cheese": 30,
+        "butter": 10,
+        "ghee": 10,
+        "spices": 5,
+        "condiments": 15,
+        "sauces": 15,
+        "pickles": 15,
+        "jams": 20,
+        "honey": 20,
+        "sugar": 10,
+        "rice": 75,
+        "flour": 30,
+        "pulses": 30,
+        "nuts": 30,
+        "dried_fruits": 30,
+        "instant": 70,
+        "noodles": 70,
+        "pasta": 70
+      }
+    },
+    "beverages": {
+      "defaultMl": 200,
+      "categoryOverrides": {
+        "juice": 200,
+        "soda": 330,
+        "energy_drink": 250,
+        "tea": 200,
+        "coffee": 200,
+        "water": 500,
+        "milk": 200,
+        "lassi": 200
+      }
+    },
+    "spreads": {
+      "defaultGrams": 15,
+      "categoryOverrides": {
+        "jam": 20,
+        "honey": 20,
+        "butter": 10,
+        "ghee": 10,
+        "peanut_butter": 15,
+        "nutella": 15
+      }
+    }
+  },
+
+  "nutrientScoring": {
+    "negativeNutrients": {
+      "calories": {
+        "unit": "kcal",
+        "thresholds": {
+          "veryLow": { "max": 50, "score": 5.0 },
+          "low": { "max": 150, "score": 4.0 },
+          "moderate": { "max": 300, "score": 3.0 },
+          "high": { "max": 500, "score": 2.0 },
+          "veryHigh": { "max": 9999, "score": 1.0 }
+        }
+      },
+      "sugars": {
+        "unit": "g",
+        "thresholds": {
+          "veryLow": { "max": 1.0, "score": 5.0 },
+          "low": { "max": 5.0, "score": 4.0 },
+          "moderate": { "max": 12.5, "score": 3.0 },
+          "high": { "max": 22.5, "score": 2.0 },
+          "veryHigh": { "max": 9999, "score": 1.0 }
+        }
+      },
+      "addedSugars": {
+        "unit": "g",
+        "thresholds": {
+          "absent": { "max": 0, "score": 5.0 },
+          "veryLow": { "max": 2.5, "score": 4.5 },
+          "low": { "max": 5.0, "score": 4.0 },
+          "moderate": { "max": 12.5, "score": 2.5 },
+          "high": { "max": 22.5, "score": 1.5 },
+          "veryHigh": { "max": 9999, "score": 1.0 }
+        }
+      },
+      "saturatedFat": {
+        "unit": "g",
+        "thresholds": {
+          "veryLow": { "max": 0.5, "score": 5.0 },
+          "low": { "max": 1.5, "score": 4.0 },
+          "moderate": { "max": 5.0, "score": 3.0 },
+          "high": { "max": 10.0, "score": 2.0 },
+          "veryHigh": { "max": 9999, "score": 1.0 }
+        }
+      },
+      "transFat": {
+        "unit": "g",
+        "thresholds": {
+          "absent": { "max": 0.1, "score": 5.0 },
+          "low": { "max": 0.5, "score": 3.0 },
+          "moderate": { "max": 1.0, "score": 2.0 },
+          "high": { "max": 9999, "score": 1.0 }
+        }
+      },
+      "sodium": {
+        "unit": "mg",
+        "thresholds": {
+          "veryLow": { "max": 40, "score": 5.0 },
+          "low": { "max": 120, "score": 4.0 },
+          "moderate": { "max": 400, "score": 3.0 },
+          "high": { "max": 600, "score": 2.0 },
+          "veryHigh": { "max": 9999, "score": 1.0 }
+        }
+      },
+      "salt": {
+        "unit": "g",
+        "thresholds": {
+          "veryLow": { "max": 0.1, "score": 5.0 },
+          "low": { "max": 0.3, "score": 4.0 },
+          "moderate": { "max": 1.0, "score": 3.0 },
+          "high": { "max": 1.5, "score": 2.0 },
+          "veryHigh": { "max": 9999, "score": 1.0 }
+        }
+      }
+    },
+    "positiveNutrients": {
+      "protein": {
+        "unit": "g",
+        "thresholds": {
+          "absent": { "min": 0, "score": 2.0 },
+          "low": { "min": 3, "score": 2.5 },
+          "moderate": { "min": 8, "score": 3.5 },
+          "high": { "min": 12, "score": 4.5 },
+          "veryHigh": { "min": 20, "score": 5.0 }
+        }
+      },
+      "fiber": {
+        "unit": "g",
+        "thresholds": {
+          "absent": { "min": 0, "score": 2.0 },
+          "low": { "min": 1.5, "score": 2.5 },
+          "moderate": { "min": 3, "score": 3.5 },
+          "high": { "min": 6, "score": 4.5 },
+          "veryHigh": { "min": 10, "score": 5.0 }
+        }
+      }
+    },
+    "negativeWeight": 0.65,
+    "positiveWeight": 0.35,
+    "missingNutrientPenalty": 0.15
+  },
+
+  "ingredientProfileScoring": {
+    "categories": {
+      "wholeFood": {
+        "score": 5.0,
+        "keywords": [
+          "whole wheat", "oats", "brown rice", "quinoa", "millet", "ragi",
+          "almonds", "cashews", "peanuts", "walnuts", "pistachios", "sesame",
+          "chana", "moong", "masoor", "toor", "rajma", "chickpea", "lentil",
+          "apple", "banana", "mango", "coconut", "dates", "figs", "raisins",
+          "milk", "curd", "yogurt", "paneer", "ghee", "butter",
+          "turmeric", "cumin", "coriander", "ginger", "garlic", "black pepper",
+          "tomato", "onion", "spinach", "potato", "carrot",
+          "fish", "chicken", "egg", "honey", "jaggery"
+        ]
+      },
+      "minimallyProcessed": {
+        "score": 4.0,
+        "keywords": [
+          "wheat flour", "maida", "sugar", "salt", "oil", "sunflower oil",
+          "palm oil", "vegetable oil", "rice flour", "gram flour", "besan",
+          "semolina", "sooji", "rava", "corn flour", "maize flour",
+          "milk powder", "cream", "whey", "starch"
+        ]
+      },
+      "processed": {
+        "score": 3.0,
+        "keywords": [
+          "glucose", "dextrose", "fructose", "invert sugar", "maltose",
+          "hydrolysed", "modified starch", "corn starch", "tapioca starch",
+          "palm kernel oil", "hydrogenated", "interesterified",
+          "protein isolate", "soy protein", "caseinate"
+        ]
+      },
+      "highlyProcessed": {
+        "score": 2.0,
+        "keywords": [
+          "high fructose corn syrup", "HFCS", "maltodextrin",
+          "partially hydrogenated", "fractionated",
+          "artificial flavor", "natural flavor", "flavouring",
+          "colour", "color", "artificial colour"
+        ]
+      },
+      "ultraProcessed": {
+        "score": 1.0,
+        "keywords": [
+          "aspartame", "acesulfame", "sucralose", "saccharin",
+          "msg", "monosodium glutamate",
+          "sodium nitrite", "sodium nitrate",
+          "tbhq", "bha", "bht",
+          "azo dye", "tartrazine", "sunset yellow", "allura red",
+          "brilliant blue", "ponceau"
+        ]
+      }
+    },
+    "positionDecay": {
+      "first5Weight": 1.0,
+      "position6to10Weight": 0.6,
+      "position11plusWeight": 0.3
+    }
+  },
+
+  "ingredientConcernScoring": {
+    "concernWeights": {
+      "high": 1.0,
+      "moderate": 0.5,
+      "low": 0.1
+    },
+    "scoreFormula": {
+      "baseScore": 5.0,
+      "deductionPerHighConcern": 1.0,
+      "deductionPerModerateConcern": 0.4,
+      "deductionPerLowConcern": 0.1,
+      "minScore": 0.0
+    }
+  },
+
+  "processingClassification": {
+    "levels": {
+      "1": {
+        "label": "Minimally Processed",
+        "score": 5.0,
+        "description": "Whole or minimally altered foods that retain their original nutritional profile."
+      },
+      "2": {
+        "label": "Processed",
+        "score": 3.5,
+        "description": "Simple processing techniques applied to whole-food ingredients."
+      },
+      "3": {
+        "label": "Highly Processed",
+        "score": 2.0,
+        "description": "Substantial refinement and industrial formulation with multiple functional ingredients."
+      },
+      "4": {
+        "label": "Ultra-processed",
+        "score": 1.0,
+        "description": "Industrial formulations containing multiple functional additives, highly refined ingredients, and cosmetic enhancers."
+      }
+    },
+    "additiveThresholds": {
+      "fewAdditives": { "max": 1, "levelModifier": 0 },
+      "someAdditives": { "max": 3, "levelModifier": 1 },
+      "manyAdditives": { "max": 9999, "levelModifier": 2 }
+    },
+    "refinedIngredientThresholds": {
+      "low": { "max": 1, "levelModifier": 0 },
+      "moderate": { "max": 3, "levelModifier": 1 },
+      "high": { "max": 9999, "levelModifier": 2 }
+    }
+  },
+
+  "confidenceScoring": {
+    "weights": {
+      "nutritionCompleteness": 0.30,
+      "ingredientCompleteness": 0.25,
+      "categoryCertainty": 0.15,
+      "processingCertainty": 0.15,
+      "evidenceAvailability": 0.15
+    },
+    "nutritionCompleteness": {
+      "allPresent": 1.0,
+      "mostPresent": 0.7,
+      "somePresent": 0.4,
+      "nonePresent": 0.1
+    },
+    "ingredientCompleteness": {
+      "allMatched": 1.0,
+      "mostMatched": 0.7,
+      "someMatched": 0.4,
+      "noneMatched": 0.1
+    }
+  }
+}

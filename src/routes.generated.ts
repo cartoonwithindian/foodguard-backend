@@ -42,8 +42,9 @@ import * as m37 from "@/app/api/products/route";
 import * as m38 from "@/app/api/products/search/route";
 import * as m39 from "@/app/api/regulatory/analyze/route";
 import * as m40 from "@/app/api/scan/label/route";
-import * as m41 from "@/app/api/users/me/preferences/route";
-import * as m42 from "@/app/api/users/me/route";
+import * as m41 from "@/app/api/temp/[id]/route";
+import * as m42 from "@/app/api/users/me/preferences/route";
+import * as m43 from "@/app/api/users/me/route";
 
 export const ROUTES: Array<{ path: string; mod: Record<string, unknown> }> = [
   { path: "/api/admin/dashboard", mod: m0 as unknown as Record<string, unknown> },
@@ -87,6 +88,7 @@ export const ROUTES: Array<{ path: string; mod: Record<string, unknown> }> = [
   { path: "/api/products/search", mod: m38 as unknown as Record<string, unknown> },
   { path: "/api/regulatory/analyze", mod: m39 as unknown as Record<string, unknown> },
   { path: "/api/scan/label", mod: m40 as unknown as Record<string, unknown> },
-  { path: "/api/users/me/preferences", mod: m41 as unknown as Record<string, unknown> },
-  { path: "/api/users/me", mod: m42 as unknown as Record<string, unknown> },
+  { path: "/api/temp/:id", mod: m41 as unknown as Record<string, unknown> },
+  { path: "/api/users/me/preferences", mod: m42 as unknown as Record<string, unknown> },
+  { path: "/api/users/me", mod: m43 as unknown as Record<string, unknown> },
 ];

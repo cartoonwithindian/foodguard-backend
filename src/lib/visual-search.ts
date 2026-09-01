@@ -104,6 +104,33 @@ export async function searchByVector(
   }
 }
 
+// ── Search by image URL ───────────────────────────────────────────────────
+
+/**
+ * Ask the visual search service to fetch an image at `imageUrl` and return
+ * top-K similar products (`POST /api/v1/search_by_url`). The image must be
+ * reachable by the service over plain HTTP(S). Never throws — returns
+ * `{ ok: false, serviceUnavailable: true }` when the service is down, and
+ * `{ ok: false, code, message }` on a service error response.
+ */
+export async function searchByImageUrl(
+  imageUrl: string,
+  topK = 5,
+  options?: { signal?: AbortSignal },
+): Promise<VisualSearchResponse> {
+  try {
+    const res = await fetch(`${API_URL}/api/v1/search_by_url`, {
+      method: "POST",
+      headers: { ...headers(true), "Content-Type": "application/json" },
+      body: JSON.stringify({ image_url: imageUrl, top_k: topK }),
+      signal: options?.signal ?? AbortSignal.timeout(TIMEOUT_MS),
+    });
+    return await normalizeResponse(res);
+  } catch (error) {
+    return toUnavailable(error);
+  }
+}
+
 // ── Search by uploaded image ──────────────────────────────────────────────
 
 /**

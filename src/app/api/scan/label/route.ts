@@ -9,9 +9,25 @@ import { getSession } from "@/lib/auth";
 import { decodeBarcodeFromImage, validateBarcode } from "@/lib/barcode";
 import { decodeBarcodeInNode } from "@/lib/barcode/node-decoder";
 import { lookupProductByBarcode } from "@/lib/product-lookup";
-import { searchByVector, searchSimilarByImage } from "@/lib/visual-search";
+import { searchByVector, searchByImageUrl } from "@/lib/visual-search";
+import { storeTempImage, deleteTempImage } from "@/lib/temp-images";
 
 export const runtime = "nodejs";
+
+/**
+ * The visual search service searches by image URL (`/api/v1/search_by_url`),
+ * so the photo buffer received here is exposed at a short-lived public
+ * `GET /api/temp/:id` URL first, then handed to the service. `x-forwarded-*`
+ * headers (set by the Render/Vercel proxying tiers) win over the request URL
+ * so the temp URL is publicly fetchable even when the request itself went
+ * through a gateway.
+ */
+function publicOrigin(request: Request): string {
+  const proto = request.headers.get("x-forwarded-proto");
+  const host = request.headers.get("x-forwarded-host");
+  if (proto && host) return `${proto}://${host}`;
+  return new URL(request.url).origin;
+}
 
 /**
  * POST /api/scan/label
@@ -145,22 +161,35 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 1b. Visual-similarity fallback (browser CLIP embeds, backend FAISS
-    // searches). When the image has a detectable barcode but no product could
-    // be matched (or no barcode at all), ask the visual search service for
-    // top-K similar products so the caller can still suggest candidates.
-    // Never throws and never blocks the scan on an unavailable service.
+    // 1b. Visual-similarity fallback. When the image has a detectable barcode
+    // but no product could be matched (or no barcode at all), ask the visual
+    // search service for top-K similar products so the caller can still
+    // suggest candidates. Browser CLIP embeddings go to `search_by_vector`;
+    // otherwise the photo is hosted at a short-lived public URL and sent to
+    // `search_by_url`. Never throws and never blocks the scan on an
+    // unavailable service.
     if (!productObj && blob) {
+      let tempId: string | null = null;
       try {
-        const vis = embedding
-          ? await searchByVector(embedding, 5)
-          : await searchSimilarByImage(new Uint8Array(buffer), "label.png", mimeType, 5);
-        if (vis.ok && vis.results.length > 0) {
-          similarProducts = vis.results.slice(0, 5);
-          sourcesSet.add("visual_search");
+        if (embedding) {
+          const vis = await searchByVector(embedding, 5);
+          if (vis.ok && vis.results.length > 0) {
+            similarProducts = vis.results.slice(0, 5);
+            sourcesSet.add("visual_search");
+          }
+        } else {
+          tempId = storeTempImage(buffer, mimeType);
+          const imageUrl = `${publicOrigin(request)}/api/temp/${tempId}`;
+          const vis = await searchByImageUrl(imageUrl, 5);
+          if (vis.ok && vis.results.length > 0) {
+            similarProducts = vis.results.slice(0, 5);
+            sourcesSet.add("visual_search");
+          }
         }
       } catch (visErr) {
         console.error("[LabelRoute] Visual search error:", visErr);
+      } finally {
+        if (tempId) deleteTempImage(tempId);
       }
     }
 

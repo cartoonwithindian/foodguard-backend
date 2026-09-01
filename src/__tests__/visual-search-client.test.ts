@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   searchByVector,
   searchSimilarByImage,
+  searchByImageUrl,
   visualSearchAvailable,
 } from "@/lib/visual-search";
 
@@ -108,6 +109,67 @@ describe("searchSimilarByImage", () => {
     expect(res.ok).toBe(true);
     if (!res.ok) return;
     expect(res.results).toEqual([]);
+  });
+});
+
+describe("searchByImageUrl", () => {
+  const IMAGE_URL = "https://foodguard-backend-f7xq.onrender.com/api/temp/abc-123";
+
+  it("POSTs {image_url, top_k} JSON to /search_by_url and camelCases results", async () => {
+    const fetchMock = stubVisualSearch((url, init) => {
+      expect(url).toBe(`${BASE}/api/v1/search_by_url`);
+      expect(init.method).toBe("POST");
+      expect(init.headers).toMatchObject({ "Content-Type": "application/json" });
+      const body = JSON.parse(init.body as string);
+      expect(body).toEqual({ image_url: IMAGE_URL, top_k: 5 });
+      return okResponse({
+        query: "image_url_search",
+        results: [
+          {
+            rank: 1,
+            product_name: "Coca Cola Zero Sugar 750ml_new12728",
+            product_id: "Coca Cola Zero Sugar 750ml_new12728",
+            score: 24.856857299804688,
+            image_path: "products_images/Coca Cola Zero Sugar 750ml/image_1.webp",
+          },
+        ],
+      });
+    });
+
+    const res = await searchByImageUrl(IMAGE_URL, 5);
+
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.query).toBe("image_url_search");
+    expect(res.results[0]).toEqual({
+      rank: 1,
+      productName: "Coca Cola Zero Sugar 750ml_new12728",
+      productId: "Coca Cola Zero Sugar 750ml_new12728",
+      score: 24.856857299804688,
+      imagePath: "products_images/Coca Cola Zero Sugar 750ml/image_1.webp",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns serviceUnavailable on network failure", async () => {
+    stubVisualSearch(() => {
+      throw new TypeError("fetch failed");
+    });
+    const res = await searchByImageUrl(IMAGE_URL);
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.serviceUnavailable).toBe(true);
+  });
+
+  it("returns code/message on HTTP error response", async () => {
+    stubVisualSearch(() =>
+      errResponse(422, { error: { code: "INVALID_INPUT", message: "could not fetch image URL" } }),
+    );
+    const res = await searchByImageUrl(IMAGE_URL);
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.serviceUnavailable).toBe(false);
+    expect(res.code).toBe("INVALID_INPUT");
   });
 });
 

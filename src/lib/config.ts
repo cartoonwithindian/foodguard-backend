@@ -72,6 +72,17 @@ export const config = {
       baseUrl: process.env.AGENT_REACH_BASE_URL || "",
       apiKey: process.env.AGENT_REACH_API_KEY || "",
     },
+    // Gemini with built-in Google Search grounding (search + read + summarize)
+    gemini: {
+      apiKey: process.env.GEMINI_API_KEY || "",
+      model: process.env.GEMINI_MODEL || "gemini-2.0-flash",
+      baseUrl: process.env.GEMINI_BASE_URL || "https://generativelanguage.googleapis.com/v1beta",
+    },
+    // Brave Search API (independent index, free tier available)
+    brave: {
+      apiKey: process.env.BRAVE_SEARCH_API_KEY || "",
+      baseUrl: process.env.BRAVE_SEARCH_BASE_URL || "https://api.search.brave.com/res/v1",
+    },
   },
   // ── Web Search Configuration ──
   webSearch: {
@@ -131,7 +142,7 @@ export const config = {
   // scanned barcode cannot be matched. When unreachable, similar-product
   // results are simply omitted — scanning never crashes or blocks on it.
   visualSearch: {
-    apiUrl: process.env.VISUAL_SEARCH_API_URL || "http://127.0.0.1:8001",
+    apiUrl: process.env.VISUAL_SEARCH_API_URL || "https://foodguard-visual-search.onrender.com",
     apiKey: process.env.VISUAL_SEARCH_API_KEY || "",
     timeoutMs: Number(process.env.VISUAL_SEARCH_TIMEOUT_MS || 30_000),
     // Embed product photos in the browser (transformers.js) so the backend

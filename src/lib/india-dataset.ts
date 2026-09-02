@@ -207,6 +207,20 @@ function scoreProduct(queryLower: string, nameLower: string): number {
     }
   }
 
+  // All name words found in query → strong match even if query has extras
+  let nameMatched = 0;
+  for (const nw of nameWords) {
+    for (const qw of queryWords) {
+      if (nw === qw || nw.startsWith(qw) || qw.startsWith(nw)) {
+        nameMatched++;
+        break;
+      }
+    }
+  }
+  const nameCoverage = nameWords.length > 0 ? nameMatched / nameWords.length : 0;
+  if (nameCoverage >= 1) return 80; // all DB name words present in query
+  if (nameCoverage >= 0.75) return 65;
+
   const wordOverlap = matchedWords / queryWords.length;
   if (wordOverlap >= 1) return 60;
   if (wordOverlap >= 0.5) return 40;

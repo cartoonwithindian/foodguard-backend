@@ -218,8 +218,13 @@ export async function POST(request: NextRequest) {
       ocrStatus = "failed";
     }
 
-    // 3. Partial success validation: If both failed, return clear 422 error
-    if (barcodeStatus !== "success" && ocrStatus !== "success") {
+    // 3. Partial success validation: If both barcode and OCR failed, return a
+    //    clear 422 error — UNLESS the visual search produced similar-product
+    //    candidates. A photo with no readable barcode/ingredient text can
+    //    still be rescued by "did you mean one of these?" visual matches, so
+    //    those results must not be discarded.
+    const hasVisualCandidates = Array.isArray(similarProducts) && similarProducts.length > 0;
+    if (barcodeStatus !== "success" && ocrStatus !== "success" && !hasVisualCandidates) {
       throw new AppError(
         ErrorCodes.OCR_FAILED,
         "Neither barcode nor readable ingredient text could be detected from the provided image. Please try a clearer, well-lit photo.",

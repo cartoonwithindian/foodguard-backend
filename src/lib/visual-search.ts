@@ -22,6 +22,7 @@ export interface VisualSearchResult {
   productId?: string;
   score: number;
   imagePath?: string;
+  sourceImageUrl?: string;
 }
 
 export interface VisualSearchResponseOk {

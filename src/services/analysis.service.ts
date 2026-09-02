@@ -34,6 +34,7 @@ import type { RegulatoryCompliance } from "@/types/domain";
 import { isServiceAvailable as isLegalMetrologyAvailable, analyze as analyzeLegalMetrology } from "@/services/regulatory/legal-metrology";
 import type { LegalMetrologyResult } from "@/services/regulatory/legal-metrology";
 import { researchIngredient, researchProduct, isWebResearchAvailable, shouldPerformWebResearch, needsWebResearch } from "@/services/web-research.service";
+import { enrichProductFromWeb, saveEnrichedProduct } from "@/services/web-product-enrichment";
 import { getAIProvider } from "@/lib/ai";
 import { normalizeNutritionFacts } from "@/lib/nutrition/units";
 import type { AIAnalysisExplanation } from "@/lib/ai";
@@ -322,6 +323,38 @@ export async function runAnalysis(input: AnalyzeInput): Promise<{ frontend: Fron
     }
   }
 
+  // ── 1c. Web enrichment for missing data ──
+  // When we have a product but no ingredients, search the web to fetch them.
+  if (product && !product.ingredientsRaw && (input.barcode || input.productName)) {
+    try {
+      const enrichment = await enrichProductFromWeb(
+        product.name,
+        product.barcode || undefined,
+        product.brand ?? undefined,
+      );
+      if (enrichment.success) {
+        warnings.push(`Ingredients/nutrition fetched from web: ${enrichment.sourceUrl ?? "web search"}`);
+        // Save enriched product to DB
+        const saved = await saveEnrichedProduct(enrichment, product.name, product.barcode || undefined);
+        if (saved?.product) {
+          product = saved.product;
+          if (saved.nutrition) productNutrition = normalizeNutritionFacts(saved.nutrition);
+        } else if (enrichment.ingredientsRaw) {
+          // Update product in-memory for this analysis
+          product = {
+            ...product,
+            ingredientsRaw: enrichment.ingredientsRaw,
+            ingredientsNormalized: enrichment.ingredientsRaw.split(/[,;]/).map(i => i.trim()).filter(Boolean),
+            source: "web_enrichment",
+            sourceUrl: enrichment.sourceUrl,
+          };
+        }
+      }
+    } catch (error) {
+      logger.warn("web_enrichment_failed", { error: String(error) });
+    }
+  }
+
   // ── 2. Ingredient text sources: label text > OCR > stored raw ──
   let ingredientsText = input.ingredientsText?.trim() || "";
   const ocrConfidence = input.ocrConfidence ?? null;
@@ -474,20 +507,36 @@ export async function runAnalysis(input: AnalyzeInput): Promise<{ frontend: Fron
   const webResearchQueries: string[] = [];
   let webResearchPerformed = false;
 
-  // Check if web research is needed and available
+  // Always try web research when ingredients are missing but we have a product name
+  const missingIngredients = !ingredientsText && product?.name;
   const shouldResearch = shouldPerformWebResearch(
     ingredientAnalysis.items,
     !!regulatoryCompliance,
     !!productNutrition,
   );
 
-  if (isWebResearchAvailable() && shouldResearch.needed) {
+  if (isWebResearchAvailable() && (shouldResearch.needed || missingIngredients)) {
     logger.info("web_research_triggered", {
-      reasons: shouldResearch.reasons,
+      reasons: missingIngredients ? ["Missing ingredients - fetching from web"] : shouldResearch.reasons,
       product: product?.name,
     });
 
     try {
+      if (missingIngredients && product) {
+        // No ingredients found locally - search the web for them
+        const productResearch = await researchProduct({
+          productName: product.name,
+          brand: product.brand ?? undefined,
+          category: product.category,
+          barcode: product.barcode,
+        });
+        if (productResearch.performed) {
+          webResearchResults.push(...productResearch.sources);
+          webResearchQueries.push(...productResearch.queries);
+          webResearchPerformed = true;
+        }
+      }
+
       // Research ingredients that need more evidence (selective)
       const ingredientsNeedingEvidence = ingredientAnalysis.items.filter(needsWebResearch);
 
@@ -505,7 +554,7 @@ export async function runAnalysis(input: AnalyzeInput): Promise<{ frontend: Fron
         }
       }
 
-      // Only research product if we have very few results and it's a concerning product
+      // Also research product if assessment is concerning
       if (product && webResearchResults.length < 2 && assessment === "high") {
         const productResearch = await researchProduct({
           productName: product.name,

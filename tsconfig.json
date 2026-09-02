@@ -14,7 +14,8 @@
     "types": ["node"],
     "paths": {
       "@/*": ["./src/*"],
-      "server-only": ["./src/stubs/server-only.ts"]
+      "server-only": ["./src/stubs/server-only.ts"],
+      "next/server": ["./src/stubs/next-server.ts"]
     }
   },
   "include": ["src/**/*.ts", "tsup.config.ts"],

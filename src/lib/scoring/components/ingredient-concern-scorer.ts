@@ -1,6 +1,17 @@
-import type { IngredientAnalysisItem } from "@/types/domain";
+import type { IngredientAnalysisItem, IngredientAssessmentLabel } from "@/types/domain";
 import { lookupIngredientConcern, type IngredientConcernEntry } from "../ingredients-evidence-db";
 import { getScoringRules } from "../config";
+
+const HIGH_ASSESSMENTS: ReadonlySet<IngredientAssessmentLabel> = new Set([
+  "potentially_concerning",
+  "allergen",
+]);
+
+const MODERATE_ASSESSMENTS: ReadonlySet<IngredientAssessmentLabel> = new Set([
+  "noteworthy",
+  "dietary_conflict",
+  "insufficient_evidence",
+]);
 
 export type DetectedConcern = {
   ingredient: string;
@@ -42,51 +53,53 @@ export function scoreIngredientConcerns(
   // Check each matched ingredient against the concern database
   const checkedIngredients = ingredients.filter((i) => i.matched);
 
+  const pushDbEntry = (item: IngredientAnalysisItem, dbEntry: IngredientConcernEntry) => {
+    concerns.push({
+      ingredient: item.name,
+      severity: dbEntry.riskLevel,
+      reason: dbEntry.reason,
+      evidenceLevel: dbEntry.evidenceLevel,
+      regulatoryStatus: dbEntry.regulatoryStatus,
+      sources: dbEntry.sources,
+    });
+    if (dbEntry.riskLevel === "high") highConcernCount++;
+    else if (dbEntry.riskLevel === "moderate") moderateConcernCount++;
+    else lowConcernCount++;
+  };
+
+  const pushAnalysisConcern = (item: IngredientAnalysisItem, severity: "moderate" | "high") => {
+    concerns.push({
+      ingredient: item.name,
+      severity,
+      reason: item.explanation,
+      evidenceLevel: item.evidence.length > 0 ? "moderate" : "limited",
+      regulatoryStatus: "Unknown",
+      sources: item.evidence.map((e) => e.organization),
+    });
+    if (severity === "high") highConcernCount++;
+    else moderateConcernCount++;
+  };
+
   for (const item of checkedIngredients) {
-    // First check if the existing analysis already flagged it
-    if (item.assessment === "potentially_concerning") {
-      const dbEntry = lookupIngredientConcern(item.name);
-      if (dbEntry) {
-        concerns.push({
-          ingredient: item.name,
-          severity: dbEntry.riskLevel,
-          reason: dbEntry.reason,
-          evidenceLevel: dbEntry.evidenceLevel,
-          regulatoryStatus: dbEntry.regulatoryStatus,
-          sources: dbEntry.sources,
-        });
-        if (dbEntry.riskLevel === "high") highConcernCount++;
-        else if (dbEntry.riskLevel === "moderate") moderateConcernCount++;
-        else lowConcernCount++;
-        continue;
-      }
-      // Flagged by analysis but not in DB — moderate concern
-      concerns.push({
-        ingredient: item.name,
-        severity: "moderate",
-        reason: item.explanation,
-        evidenceLevel: item.evidence.length > 0 ? "moderate" : "limited",
-        regulatoryStatus: "Unknown",
-        sources: item.evidence.map((e) => e.organization),
-      });
-      moderateConcernCount++;
+    const dbEntry = lookupIngredientConcern(item.name);
+
+    // Flagged by the analysis as a high-severity concern
+    if (HIGH_ASSESSMENTS.has(item.assessment)) {
+      if (dbEntry) pushDbEntry(item, dbEntry);
+      else pushAnalysisConcern(item, "moderate");
       continue;
     }
 
-    // Check the concern database for all matched ingredients
-    const dbEntry = lookupIngredientConcern(item.name);
+    // Flagged by the analysis as a moderate ("Attention") concern
+    if (MODERATE_ASSESSMENTS.has(item.assessment)) {
+      if (dbEntry && dbEntry.riskLevel !== "low") pushDbEntry(item, dbEntry);
+      else pushAnalysisConcern(item, "moderate");
+      continue;
+    }
+
+    // Not flagged by the analysis — check the concern DB for all matched ingredients
     if (dbEntry && dbEntry.riskLevel !== "low") {
-      // Only add non-low concerns from the DB to avoid noise
-      concerns.push({
-        ingredient: item.name,
-        severity: dbEntry.riskLevel,
-        reason: dbEntry.reason,
-        evidenceLevel: dbEntry.evidenceLevel,
-        regulatoryStatus: dbEntry.regulatoryStatus,
-        sources: dbEntry.sources,
-      });
-      if (dbEntry.riskLevel === "high") highConcernCount++;
-      else if (dbEntry.riskLevel === "moderate") moderateConcernCount++;
+      pushDbEntry(item, dbEntry);
     }
   }
 

@@ -1,4 +1,4 @@
-import { PrismaClient, Role, Language, NutrientBasis } from "@prisma/client";
+import { PrismaClient, Prisma, Role, Language, NutrientBasis } from "@prisma/client";
 import type {
   EvidenceRef,
   HistoryEntryInfo,
@@ -16,12 +16,19 @@ import type {
   KnowledgeDocumentRecord,
   KnowledgeSearchHit,
 } from "@/types/knowledge";
+import type {
+  GamificationActivityResult,
+  GamificationProfileRecord,
+  GamificationRules,
+  SuccessfulProductScanInput,
+} from "@/gamification/models/gamification";
 import { cosineSimilarity, STOPWORDS } from "@/lib/embeddings";
 import type { ChatConversationRecord, ChatMessageRecord, ChatRole } from "@/types/chat";
 import { preferencesToRecord } from "./types";
 import { EVIDENCE_SEED } from "@/data/seed/evidence";
 import type { ProductLookupResult } from "@/lib/product-provider";
 import { normalizeNutritionFacts } from "@/lib/nutrition/units";
+import { AppError, ErrorCodes } from "@/lib/errors";
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
@@ -84,6 +91,7 @@ function mapUser(row: {
   passwordHash: string | null;
   role: Role;
   language: Language;
+  timezone: string;
   createdAt: Date;
 }): UserRecord {
   return {
@@ -93,7 +101,128 @@ function mapUser(row: {
     passwordHash: row.passwordHash,
     role: row.role === "ADMIN" ? "ADMIN" : "USER",
     language: row.language === "HI" ? "HI" : "EN",
+    timezone: row.timezone,
     createdAt: row.createdAt.toISOString(),
+  };
+}
+
+function mapGamificationProfile(row: {
+  userId: string;
+  totalXp: number;
+  currentStreak: number;
+  longestStreak: number;
+  lastActivityDate: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}): GamificationProfileRecord {
+  return {
+    userId: row.userId,
+    totalXp: row.totalXp,
+    currentStreak: row.currentStreak,
+    longestStreak: row.longestStreak,
+    lastActivityDate: row.lastActivityDate,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
+function mapGamificationActivity(row: {
+  id: string;
+  userId: string;
+  actionType: string;
+  productId: string;
+  activityDate: string;
+  timestamp: Date;
+  xpAwarded: number;
+  eventId: string;
+}) {
+  return {
+    activityId: row.id,
+    userId: row.userId,
+    actionType: row.actionType,
+    productId: row.productId,
+    activityDate: row.activityDate,
+    timestamp: row.timestamp.toISOString(),
+    xpAwarded: row.xpAwarded,
+    eventId: row.eventId,
+  };
+}
+
+function isRetryableTransactionError(error: unknown): boolean {
+  return Boolean(
+    error &&
+      typeof error === "object" &&
+      "code" in error &&
+      (error as { code?: unknown }).code === "P2034",
+  );
+}
+
+async function serializableTransaction<T>(
+  callback: (tx: Prisma.TransactionClient) => Promise<T>,
+): Promise<T> {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return await prisma.$transaction(callback, {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+        maxWait: 5_000,
+        timeout: 15_000,
+      });
+    } catch (error) {
+      if (attempt === 2 || !isRetryableTransactionError(error)) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 25 * (attempt + 1)));
+    }
+  }
+  throw new Error("Serializable transaction retry limit reached");
+}
+
+async function readGamificationProfileTx(
+  tx: Prisma.TransactionClient,
+  userId: string,
+  rules: GamificationRules,
+  timezone: string,
+): Promise<GamificationProfileRecord> {
+  const profileRow = await tx.userGamification.findUnique({ where: { userId } });
+  const activityRows = await tx.gamificationActivity.findMany({
+    where: { userId, actionType: "product_scan" },
+    select: { activityDate: true, xpAwarded: true },
+  });
+  const activityDates = activityRows.map((row) => row.activityDate);
+  const calculated = rules.streakService.calculateForProfile(
+    activityDates,
+    rules.streakService.today(timezone, rules.now()),
+  );
+  const totalXp = profileRow?.totalXp ?? activityRows.reduce((sum, row) => sum + row.xpAwarded, 0);
+  const profile = {
+    userId,
+    totalXp,
+    currentStreak: calculated.currentStreak,
+    longestStreak: Math.max(profileRow?.longestStreak ?? 0, calculated.longestStreak),
+    lastActivityDate: calculated.lastActivityDate,
+    createdAt: profileRow?.createdAt ?? new Date(),
+    updatedAt: profileRow?.updatedAt ?? new Date(),
+  };
+
+  if (
+    profileRow &&
+    (profileRow.currentStreak !== profile.currentStreak ||
+      profileRow.longestStreak !== profile.longestStreak ||
+      profileRow.lastActivityDate !== profile.lastActivityDate)
+  ) {
+    const updated = await tx.userGamification.update({
+      where: { userId },
+      data: {
+        currentStreak: profile.currentStreak,
+        longestStreak: profile.longestStreak,
+        lastActivityDate: profile.lastActivityDate,
+      },
+    });
+    return mapGamificationProfile(updated);
+  }
+
+  return {
+    ...profile,
+    createdAt: profile.createdAt.toISOString(),
+    updatedAt: profile.updatedAt.toISOString(),
   };
 }
 
@@ -365,6 +494,7 @@ export class PrismaStore implements DataStore {
     passwordHash: string | null;
     role?: "USER" | "ADMIN";
     language?: "EN" | "HI";
+    timezone?: string;
   }): Promise<UserRecord> {
     const row = await prisma.user.create({
       data: {
@@ -373,17 +503,19 @@ export class PrismaStore implements DataStore {
         passwordHash: input.passwordHash,
         role: input.role === "ADMIN" ? Role.ADMIN : Role.USER,
         language: input.language === "HI" ? Language.HI : Language.EN,
+        timezone: input.timezone?.trim() || "UTC",
       },
     });
     return mapUser(row);
   }
 
-  async updateUser(id: string, fields: { name?: string; language?: "EN" | "HI" }): Promise<UserRecord | null> {
+  async updateUser(id: string, fields: { name?: string; language?: "EN" | "HI"; timezone?: string }): Promise<UserRecord | null> {
     const row = await prisma.user.update({
       where: { id },
       data: {
         ...(fields.name ? { name: fields.name } : {}),
         ...(fields.language ? { language: fields.language === "HI" ? Language.HI : Language.EN } : {}),
+        ...(fields.timezone?.trim() ? { timezone: fields.timezone.trim() } : {}),
       },
     });
     return mapUser(row);
@@ -481,6 +613,153 @@ export class PrismaStore implements DataStore {
   async deleteHistoryEntry(userId: string, entryId: string): Promise<boolean> {
     const result = await prisma.historyEntry.deleteMany({ where: { id: entryId, userId } });
     return result.count > 0;
+  }
+
+  // ── gamification (XP + daily streak) ───────────────────────
+  async getGamificationProfile(
+    userId: string,
+    rules: GamificationRules,
+  ): Promise<GamificationProfileRecord> {
+    return serializableTransaction(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        select: { id: true, timezone: true },
+      });
+      if (!user) {
+        throw new AppError(ErrorCodes.UNAUTHORIZED, "User not found", 401);
+      }
+      // Serialize profile reconciliation with activity writes for this user.
+      await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${userId} FOR UPDATE`;
+      return readGamificationProfileTx(tx, userId, rules, user.timezone);
+    });
+  }
+
+  async recordSuccessfulProductScan(
+    input: SuccessfulProductScanInput,
+    rules: GamificationRules,
+  ): Promise<GamificationActivityResult> {
+    return serializableTransaction(async (tx) => {
+      if (input.actionType !== "product_scan") {
+        throw new AppError(ErrorCodes.VALIDATION_ERROR, "Unsupported gamification action");
+      }
+      const user = await tx.user.findUnique({
+        where: { id: input.userId },
+        select: { id: true, timezone: true },
+      });
+      if (!user) {
+        throw new AppError(ErrorCodes.UNAUTHORIZED, "User not found", 401);
+      }
+      // Lock the parent user row. This serializes concurrent requests even
+      // before the optional one-to-one profile row exists.
+      await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${input.userId} FOR UPDATE`;
+
+      const product = await tx.product.findUnique({
+        where: { id: input.productId },
+        select: { id: true, isDemo: true },
+      });
+      if (!product || product.isDemo) {
+        throw new AppError(ErrorCodes.PRODUCT_NOT_FOUND, "Product was not found", 404);
+      }
+
+      const existingByEvent = input.eventIdProvided
+        ? await tx.gamificationActivity.findUnique({
+            where: {
+              userId_eventId: {
+                userId: input.userId,
+                eventId: input.eventId,
+              },
+            },
+          })
+        : null;
+      if (existingByEvent) {
+        const profile = await readGamificationProfileTx(tx, input.userId, rules, user.timezone);
+        return {
+          activity: mapGamificationActivity(existingByEvent),
+          profile,
+          idempotent: true,
+        };
+      }
+
+      const existingRecent = input.eventIdProvided
+        ? null
+        : await tx.gamificationActivity.findFirst({
+            where: {
+              userId: input.userId,
+              actionType: input.actionType,
+              productId: input.productId,
+              timestamp: {
+                gte: new Date(input.timestamp.getTime() - rules.duplicateRequestWindowMs),
+              },
+            },
+            orderBy: { timestamp: "desc" },
+          });
+      if (existingRecent) {
+        const profile = await readGamificationProfileTx(tx, input.userId, rules, user.timezone);
+        return {
+          activity: mapGamificationActivity(existingRecent),
+          profile,
+          idempotent: true,
+        };
+      }
+
+      const priorRows = await tx.gamificationActivity.findMany({
+        where: { userId: input.userId, actionType: input.actionType },
+        select: { activityDate: true, productId: true },
+      });
+      const activityDate = rules.streakService.activityDate(input.timestamp, user.timezone);
+      const isNewProduct = !priorRows.some(
+        (row) => row.productId === input.productId,
+      );
+      const hasPriorProductOnDate = priorRows.some(
+        (row) => row.productId === input.productId && row.activityDate === activityDate,
+      );
+      const xpAwarded = rules.xpService.calculateProductScanXp({
+        isNewProduct,
+        hasPriorProductOnDate,
+      });
+      const activityRow = await tx.gamificationActivity.create({
+        data: {
+          userId: input.userId,
+          actionType: input.actionType,
+          productId: input.productId,
+          activityDate,
+          timestamp: input.timestamp,
+          xpAwarded,
+          eventId: input.eventId,
+        },
+      });
+      const streak = rules.streakService.calculateAfterActivity(
+        [...priorRows.map((row) => row.activityDate), activityDate],
+        activityDate,
+      );
+      const existingProfile = await tx.userGamification.findUnique({
+        where: { userId: input.userId },
+        select: { longestStreak: true },
+      });
+      const longestStreak = Math.max(existingProfile?.longestStreak ?? 0, streak.longestStreak);
+      const profileRow = await tx.userGamification.upsert({
+        where: { userId: input.userId },
+        create: {
+          userId: input.userId,
+          totalXp: xpAwarded,
+          currentStreak: streak.currentStreak,
+          longestStreak,
+          lastActivityDate: streak.lastActivityDate,
+        },
+        update: {
+          totalXp: { increment: xpAwarded },
+          currentStreak: streak.currentStreak,
+          longestStreak,
+          lastActivityDate: streak.lastActivityDate,
+        },
+      });
+
+      return {
+        activity: mapGamificationActivity(activityRow),
+        profile: mapGamificationProfile(profileRow),
+        idempotent: false,
+      };
+    });
   }
 
   // ── chat conversations ────────────────────────────────────

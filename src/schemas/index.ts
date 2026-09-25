@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ISSUE_TYPES, QUESTION_FIELDS } from "./food-safety-assistant-schema";
+import { isValidTimezone } from "@/gamification/services/streak.service";
 
 export const barcodeSchema = z.string().trim().min(4).max(32).regex(/^\d+$/, "Barcode must be numeric");
 
@@ -16,11 +17,13 @@ export const signupSchema = z.object({
     .regex(/[A-Z]/, "Password must contain an uppercase letter")
     .regex(/[0-9]/, "Password must contain a number"),
   language: languageSchema,
+  timezone: z.string().trim().min(1).max(64).refine(isValidTimezone, "Invalid IANA timezone").optional(),
 });
 
 export const loginSchema = z.object({
   email: z.string().trim().min(1, "Email is required").max(254),
   password: z.string().min(1, "Password is required").max(128),
+  timezone: z.string().trim().min(1).max(64).refine(isValidTimezone, "Invalid IANA timezone").optional(),
 });
 
 export const nutrientValueSchema = z.object({
@@ -47,7 +50,8 @@ export const analyzeSchema = z.object({
   nutrition: nutritionInputSchema,
   ocrText: z.string().max(20_000).optional(),
   ocrConfidence: z.number().min(0).max(1).optional(),
-  userId: z.string().max(100).optional(),
+  userId: z.string().max(100).optional(), // ignored; identity comes from the verified session
+  scan_event_id: z.string().trim().min(8).max(128).optional(),
   language: languageSchema,
 });
 
@@ -82,6 +86,7 @@ export const historyPostSchema = z.object({
 export const profilePatchSchema = z.object({
   name: z.string().trim().min(2).max(80).optional(),
   language: z.enum(["EN", "HI"]).optional(),
+  timezone: z.string().trim().min(1).max(64).refine(isValidTimezone, "Invalid IANA timezone").optional(),
 });
 
 export const preferencesPatchSchema = z.object({

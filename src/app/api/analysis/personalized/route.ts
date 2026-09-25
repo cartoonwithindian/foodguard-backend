@@ -26,8 +26,9 @@ export async function POST(request: NextRequest) {
 
     const session = await requireAuth(request);
     const store = getStore();
-    const { productId, userId } = parsed.data;
-    const resolvedUserId = userId ?? session.id;
+    const { productId } = parsed.data;
+    // Identity is always taken from the verified session.
+    const resolvedUserId = session.id;
 
     const [product, user] = await Promise.all([
       store.getProductById(productId),

@@ -14,6 +14,13 @@ import type {
   KnowledgeDocumentRecord,
   KnowledgeSearchHit,
 } from "@/types/knowledge";
+import type {
+  GamificationActivityResult,
+  GamificationProfileRecord,
+  GamificationRules,
+  SuccessfulProductScanInput,
+} from "@/gamification/models/gamification";
+import { AppError, ErrorCodes } from "@/lib/errors";
 import { cosineSimilarity, STOPWORDS } from "@/lib/embeddings";
 import type { DataStore, ProductSearchResult, UserPreferencesRecord, UserRecord } from "./types";
 import { preferencesToRecord } from "./types";
@@ -55,6 +62,7 @@ function seedUser(
   role: "USER" | "ADMIN",
   language: "EN" | "HI",
   passwordHash: string,
+  timezone = "UTC",
 ): UserRecord {
   return {
     id: `usr-${email.split("@")[0]}-demo`,
@@ -63,6 +71,7 @@ function seedUser(
     passwordHash,
     role,
     language,
+    timezone,
     createdAt: new Date().toISOString(),
   };
 }
@@ -80,6 +89,9 @@ export class InMemoryStore implements DataStore {
   private users: Map<string, UserRecord>;
   private preferences = new Map<string, UserPreferencesRecord>();
   private history: HistoryEntryInfo[] = [];
+  private gamificationProfiles = new Map<string, GamificationProfileRecord>();
+  private gamificationActivities: GamificationActivityResult["activity"][] = [];
+  private gamificationLock: Promise<void> = Promise.resolve();
   private conversations = new Map<string, ChatConversationRecord>();
   private chatMessages: ChatMessageRecord[] = [];
   private knowledgeDocuments = new Map<string, KnowledgeDocumentRecord>();
@@ -121,6 +133,44 @@ export class InMemoryStore implements DataStore {
   private nextId(prefix: string): string {
     this.counter += 1;
     return `${prefix}-${Date.now()}-${this.counter}`;
+  }
+
+  private async withGamificationLock<T>(work: () => Promise<T>): Promise<T> {
+    let release!: () => void;
+    const next = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const previous = this.gamificationLock;
+    this.gamificationLock = previous.then(() => next);
+    await previous;
+    try {
+      return await work();
+    } finally {
+      release();
+    }
+  }
+
+  private gamificationProfileForUser(
+    user: UserRecord,
+    rules: GamificationRules,
+  ): GamificationProfileRecord {
+    const activities = this.gamificationActivities.filter(
+      (activity) => activity.userId === user.id && activity.actionType === "product_scan",
+    );
+    const existing = this.gamificationProfiles.get(user.id);
+    const calculated = rules.streakService.calculateForProfile(
+      activities.map((activity) => activity.activityDate),
+      rules.streakService.today(user.timezone, rules.now()),
+    );
+    return {
+      userId: user.id,
+      totalXp: existing?.totalXp ?? activities.reduce((sum, activity) => sum + activity.xpAwarded, 0),
+      currentStreak: calculated.currentStreak,
+      longestStreak: Math.max(existing?.longestStreak ?? 0, calculated.longestStreak),
+      lastActivityDate: calculated.lastActivityDate,
+      createdAt: existing?.createdAt ?? new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
   }
 
   // ── products ──────────────────────────────────────────────
@@ -271,6 +321,7 @@ export class InMemoryStore implements DataStore {
     passwordHash: string | null;
     role?: "USER" | "ADMIN";
     language?: "EN" | "HI";
+    timezone?: string;
   }): Promise<UserRecord> {
     const user: UserRecord = {
       id: this.nextId("usr"),
@@ -279,17 +330,19 @@ export class InMemoryStore implements DataStore {
       passwordHash: input.passwordHash,
       role: input.role ?? "USER",
       language: input.language ?? "EN",
+      timezone: input.timezone?.trim() || "UTC",
       createdAt: new Date().toISOString(),
     };
     this.users.set(user.id, user);
     return user;
   }
 
-  async updateUser(id: string, fields: { name?: string; language?: "EN" | "HI" }): Promise<UserRecord | null> {
+  async updateUser(id: string, fields: { name?: string; language?: "EN" | "HI"; timezone?: string }): Promise<UserRecord | null> {
     const user = this.users.get(id);
     if (!user) return null;
     if (fields.name) user.name = fields.name;
     if (fields.language) user.language = fields.language;
+    if (fields.timezone?.trim()) user.timezone = fields.timezone.trim();
     return user;
   }
 
@@ -333,6 +386,117 @@ export class InMemoryStore implements DataStore {
     if (index === -1) return false;
     this.history.splice(index, 1);
     return true;
+  }
+
+  // ── gamification (XP + daily streak) ───────────────────────
+  async getGamificationProfile(
+    userId: string,
+    rules: GamificationRules,
+  ): Promise<GamificationProfileRecord> {
+    return this.withGamificationLock(async () => {
+      const user = this.users.get(userId);
+      if (!user) {
+        throw new AppError(ErrorCodes.UNAUTHORIZED, "User not found", 401);
+      }
+      const profile = this.gamificationProfileForUser(user, rules);
+      const existing = this.gamificationProfiles.get(userId);
+      // A profile row is created only after real activity; reads never create
+      // a fake activity or a fake XP balance.
+      if (existing) this.gamificationProfiles.set(userId, profile);
+      return profile;
+    });
+  }
+
+  async recordSuccessfulProductScan(
+    input: SuccessfulProductScanInput,
+    rules: GamificationRules,
+  ): Promise<GamificationActivityResult> {
+    return this.withGamificationLock(async () => {
+      if (input.actionType !== "product_scan") {
+        throw new AppError(ErrorCodes.VALIDATION_ERROR, "Unsupported gamification action");
+      }
+      const user = this.users.get(input.userId);
+      if (!user) {
+        throw new AppError(ErrorCodes.UNAUTHORIZED, "User not found", 401);
+      }
+      const product = this.products.find((candidate) => candidate.id === input.productId);
+      if (!product || product.isDemo) {
+        throw new AppError(ErrorCodes.PRODUCT_NOT_FOUND, "Product was not found", 404);
+      }
+
+      const userActivities = this.gamificationActivities.filter(
+        (activity) => activity.userId === input.userId && activity.actionType === input.actionType,
+      );
+      const existingByEvent = input.eventIdProvided
+        ? userActivities.find((activity) => activity.eventId === input.eventId)
+        : undefined;
+      if (existingByEvent) {
+        return {
+          activity: { ...existingByEvent },
+          profile: this.gamificationProfileForUser(user, rules),
+          idempotent: true,
+        };
+      }
+
+      const existingRecent = input.eventIdProvided
+        ? undefined
+        : userActivities.find(
+            (activity) =>
+              activity.productId === input.productId &&
+              new Date(activity.timestamp).getTime() >=
+                input.timestamp.getTime() - rules.duplicateRequestWindowMs,
+          );
+      if (existingRecent) {
+        return {
+          activity: { ...existingRecent },
+          profile: this.gamificationProfileForUser(user, rules),
+          idempotent: true,
+        };
+      }
+
+      const activityDate = rules.streakService.activityDate(input.timestamp, user.timezone);
+      const isNewProduct = !userActivities.some(
+        (activity) => activity.productId === input.productId,
+      );
+      const hasPriorProductOnDate = userActivities.some(
+        (activity) =>
+          activity.productId === input.productId && activity.activityDate === activityDate,
+      );
+      const xpAwarded = rules.xpService.calculateProductScanXp({
+        isNewProduct,
+        hasPriorProductOnDate,
+      });
+      const activity = {
+        activityId: this.nextId("activity"),
+        userId: input.userId,
+        actionType: input.actionType,
+        productId: input.productId,
+        activityDate,
+        timestamp: input.timestamp.toISOString(),
+        xpAwarded,
+        eventId: input.eventId,
+      };
+      const streak = rules.streakService.calculateAfterActivity(
+        [...userActivities.map((entry) => entry.activityDate), activityDate],
+        activityDate,
+      );
+      const previous = this.gamificationProfiles.get(input.userId);
+      const now = new Date().toISOString();
+      const profile: GamificationProfileRecord = {
+        userId: input.userId,
+        totalXp: (previous?.totalXp ?? 0) + xpAwarded,
+        currentStreak: streak.currentStreak,
+        longestStreak: Math.max(previous?.longestStreak ?? 0, streak.longestStreak),
+        lastActivityDate: streak.lastActivityDate,
+        createdAt: previous?.createdAt ?? now,
+        updatedAt: now,
+      };
+
+      // Mutate only after all validation and calculations have succeeded.
+      this.gamificationActivities.push(activity);
+      this.gamificationProfiles.set(input.userId, profile);
+      return { activity: { ...activity }, profile: { ...profile }, idempotent: false };
+    });
   }
 
   // ── chat conversations ────────────────────────────────────

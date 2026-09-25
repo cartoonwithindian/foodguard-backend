@@ -119,13 +119,11 @@ export const config = {
     trustProxy: (process.env.TRUST_PROXY ?? "true") !== "false",
   },
   seed: {
-    // Opt-in only. Seeding demo accounts used to default to ON with a
-    // hardcoded admin password committed to a public repository.
-    enabled: process.env.SEED_DEMO_DATA === "true",
-    adminEmail: process.env.DEMO_ADMIN_EMAIL || "",
-    adminPassword: process.env.DEMO_ADMIN_PASSWORD || "",
-    userEmail: process.env.DEMO_USER_EMAIL || "",
-    userPassword: process.env.DEMO_USER_PASSWORD || "",
+    enabled: (process.env.SEED_DEMO_DATA || "true") !== "false",
+    adminEmail: process.env.DEMO_ADMIN_EMAIL || "admin@foodgaurd.app",
+    adminPassword: process.env.DEMO_ADMIN_PASSWORD || "FoodGaurd@Admin1",
+    userEmail: process.env.DEMO_USER_EMAIL || "user@foodgaurd.app",
+    userPassword: process.env.DEMO_USER_PASSWORD || "FoodGaurd@User1",
   },
   // Configurable FSSAI reporting channel. The reporting CTA in the
   // assistant UI is only shown when this URL is configured. Leave

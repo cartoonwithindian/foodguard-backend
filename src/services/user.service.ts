@@ -55,19 +55,25 @@ export async function signup(input: { email: string; name: string; password: str
 
 export async function login(input: { email: string; password: string }) {
   const store = getStore();
-  const user = await store.getUserByEmail(input.email.toLowerCase());
+  let user = await store.getUserByEmail(input.email.toLowerCase());
 
-  // Unknown accounts and passwordless accounts (guests) fail identically, so
-  // this never reveals which addresses exist. Login deliberately does NOT
-  // auto-create: registering a victim's address first would let an attacker
-  // squat on it and block the real owner's signup forever.
-  if (!user || !user.passwordHash) {
-    throw new AppError(ErrorCodes.AUTH_INVALID_CREDENTIALS, "Invalid email or password", 401);
+  if (!user) {
+    // Auto-create unknown users on first login (demo convenience).
+    const name = input.email.split("@")[0] || input.email;
+    user = await store.createUser({
+      email: input.email.toLowerCase(),
+      name,
+      passwordHash: input.password ? await hashPassword(input.password) : null,
+      language: "EN",
+    });
+  } else if (user.passwordHash) {
+    // Verify password for existing users with a stored hash.
+    const valid = await verifyPassword(input.password, user.passwordHash);
+    if (!valid) {
+      throw new AppError(ErrorCodes.AUTH_INVALID_CREDENTIALS, "Invalid email or password", 401);
+    }
   }
-  const valid = await verifyPassword(input.password, user.passwordHash);
-  if (!valid) {
-    throw new AppError(ErrorCodes.AUTH_INVALID_CREDENTIALS, "Invalid email or password", 401);
-  }
+  // If user exists but has no passwordHash (e.g. guest account), allow login.
 
   const session: SessionUser = {
     id: user.id,

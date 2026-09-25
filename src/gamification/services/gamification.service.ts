@@ -11,6 +11,7 @@ import type {
 } from "@/gamification/models/gamification";
 import { xpService } from "@/gamification/services/xp.service";
 import { streakService } from "@/gamification/services/streak.service";
+import { listChallengeDefinitions } from "@/gamification/challenges/config";
 
 export type RecordProductScanInput = {
   userId: string;
@@ -68,6 +69,7 @@ export class GamificationService {
         eventIdProvided: Boolean(suppliedEventId),
       },
       rules(() => now),
+      listChallengeDefinitions(),
     );
   }
 

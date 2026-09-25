@@ -21,7 +21,17 @@ import type {
   GamificationProfileRecord,
   GamificationRules,
   SuccessfulProductScanInput,
+  ValidatedGamificationActivityInput,
 } from "@/gamification/models/gamification";
+import type { ChallengeDefinition } from "@/gamification/challenges/config";
+import { challengePeriodService } from "@/gamification/challenges/period.service";
+import { evaluateChallenges, type ChallengeActivityRow } from "@/gamification/challenges/progress.service";
+import {
+  challengeDefinitionToRow,
+  challengeRowToDefinition,
+  type ChallengeDefinitionRow,
+} from "@/gamification/challenges/store-utils";
+import type { ChallengeDefinitionView, ChallengeHistoryView, ChallengeListResult } from "@/gamification/challenges/models";
 import { cosineSimilarity, STOPWORDS } from "@/lib/embeddings";
 import type { ChatConversationRecord, ChatMessageRecord, ChatRole } from "@/types/chat";
 import { preferencesToRecord } from "./types";
@@ -29,6 +39,8 @@ import { EVIDENCE_SEED } from "@/data/seed/evidence";
 import type { ProductLookupResult } from "@/lib/product-provider";
 import { normalizeNutritionFacts } from "@/lib/nutrition/units";
 import { AppError, ErrorCodes } from "@/lib/errors";
+import { xpService } from "@/gamification/services/xp.service";
+import { streakService } from "@/gamification/services/streak.service";
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
@@ -131,6 +143,7 @@ function mapGamificationActivity(row: {
   userId: string;
   actionType: string;
   productId: string;
+  ingredientId: string | null;
   activityDate: string;
   timestamp: Date;
   xpAwarded: number;
@@ -141,6 +154,7 @@ function mapGamificationActivity(row: {
     userId: row.userId,
     actionType: row.actionType,
     productId: row.productId,
+    ingredientId: row.ingredientId,
     activityDate: row.activityDate,
     timestamp: row.timestamp.toISOString(),
     xpAwarded: row.xpAwarded,
@@ -224,6 +238,197 @@ async function readGamificationProfileTx(
     createdAt: profile.createdAt.toISOString(),
     updatedAt: profile.updatedAt.toISOString(),
   };
+}
+
+type ChallengeUserRow = {
+  id: string;
+  userId: string;
+  challengeId: string;
+  periodStart: Date;
+  periodEnd: Date;
+  progress: number;
+  completed: boolean;
+  completedAt: Date | null;
+  rewardClaimed: boolean;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type ChallengeInstance = { definition: ChallengeDefinition; row: ChallengeUserRow };
+
+async function syncChallengeDefinitionsTx(
+  tx: Prisma.TransactionClient,
+  definitions: readonly ChallengeDefinition[],
+): Promise<void> {
+  for (const definition of definitions) {
+    const row = challengeDefinitionToRow(definition);
+    await tx.challengeDefinition.upsert({
+      where: { challengeId: row.challengeId },
+      create: row,
+      update: {
+        name: row.name,
+        description: row.description,
+        challengeType: row.challengeType,
+        conditionType: row.conditionType,
+        targetValue: row.targetValue,
+        xpReward: row.xpReward,
+        startRule: row.startRule,
+        endRule: row.endRule,
+        enabled: row.enabled,
+      },
+    });
+  }
+}
+
+async function ensureChallengeInstancesTx(
+  tx: Prisma.TransactionClient,
+  userId: string,
+  definitions: readonly ChallengeDefinition[],
+  now: Date,
+  timezone: string,
+): Promise<ChallengeInstance[]> {
+  await syncChallengeDefinitionsTx(tx, definitions);
+  await tx.userChallenge.updateMany({
+    where: { userId, status: "active", periodEnd: { lte: now } },
+    data: { status: "expired" },
+  });
+
+  const result: ChallengeInstance[] = [];
+  for (const definition of definitions) {
+    const window = challengePeriodService.windowFor(now, timezone, definition.period);
+    const row = await tx.userChallenge.upsert({
+      where: {
+        userId_challengeId_periodStart: {
+          userId,
+          challengeId: definition.id,
+          periodStart: window.startInstant,
+        },
+      },
+      create: {
+        userId,
+        challengeId: definition.id,
+        periodStart: window.startInstant,
+        periodEnd: window.endInstant,
+        status: "active",
+      },
+      update: { periodEnd: window.endInstant },
+    });
+    result.push({ definition, row: row as ChallengeUserRow });
+  }
+  return result;
+}
+
+function challengeView(
+  definition: ChallengeDefinition,
+  row: ChallengeUserRow,
+  periodStart: string,
+  periodEnd: string,
+): ChallengeDefinitionView {
+  return {
+    challenge_id: definition.id,
+    name: definition.title,
+    description: definition.description,
+    challenge_type: definition.period === "weekly" ? "WEEKLY" : "DAILY",
+    condition_type: definition.condition.type,
+    progress: row.progress,
+    target: definition.condition.target,
+    xp_reward: definition.rewardXp,
+    completed: row.completed,
+    reward_claimed: row.rewardClaimed,
+    period_start: periodStart,
+    period_end: periodEnd,
+  };
+}
+
+async function evaluateChallengeInstancesTx(
+  tx: Prisma.TransactionClient,
+  userId: string,
+  timezone: string,
+  now: Date,
+  instances: ChallengeInstance[],
+  rules: GamificationRules,
+  profile: GamificationProfileRecord,
+): Promise<{ completed: ChallengeInstance[]; rewardXp: number; instances: ChallengeInstance[] }> {
+  const completed: ChallengeInstance[] = [];
+  let rewardXp = 0;
+  const updated: ChallengeInstance[] = [];
+  for (const instance of instances) {
+    const window = challengePeriodService.windowFor(now, timezone, instance.definition.period);
+    const activities = await tx.gamificationActivity.findMany({
+      where: {
+        userId,
+        timestamp: { gte: window.startInstant, lt: window.endInstant },
+      },
+      select: { actionType: true, activityDate: true, productId: true, ingredientId: true, eventId: true },
+    });
+    const rows: ChallengeActivityRow[] = activities.map((activity) => ({
+      activityType: activity.actionType,
+      activityDate: activity.activityDate,
+      productId: activity.productId,
+      ingredientId: activity.ingredientId,
+      eventId: activity.eventId,
+    }));
+    const evaluation = evaluateChallenges([instance.definition], {
+      activities: rows,
+      currentStreakDays: profile.currentStreak,
+    })[0];
+    const row = await tx.userChallenge.update({
+      where: { id: instance.row.id },
+      data: { progress: evaluation.progress },
+    });
+    const next: ChallengeInstance = { definition: instance.definition, row: row as ChallengeUserRow };
+    if (!next.row.completed && evaluation.completed) {
+      const finished = await tx.userChallenge.update({
+        where: { id: next.row.id },
+        data: {
+          progress: evaluation.progress,
+          completed: true,
+          completedAt: now,
+          rewardClaimed: true,
+          status: "completed",
+        },
+      });
+      next.row = finished as ChallengeUserRow;
+      rewardXp += rules.xpService.calculateChallengeReward(instance.definition.rewardXp);
+      completed.push(next);
+    }
+    updated.push(next);
+  }
+  return { completed, rewardXp, instances: updated };
+}
+
+async function challengeHistoryTx(
+  tx: Prisma.TransactionClient,
+  userId: string,
+  currentInstances: ChallengeInstance[],
+  timezone: string,
+): Promise<ChallengeHistoryView[]> {
+  const currentKeys = new Set(
+    currentInstances.map(({ row }) => `${row.challengeId}:${row.periodStart.toISOString()}`),
+  );
+  const rows = await tx.userChallenge.findMany({
+    where: { userId },
+    orderBy: { periodStart: "desc" },
+    take: 50,
+  });
+  const history: ChallengeHistoryView[] = [];
+  for (const row of rows) {
+    if (currentKeys.has(`${row.challengeId}:${row.periodStart.toISOString()}`)) continue;
+    const definitionRow = await tx.challengeDefinition.findUnique({
+      where: { challengeId: row.challengeId },
+    });
+    if (!definitionRow) continue;
+    const definition = challengeRowToDefinition(definitionRow as ChallengeDefinitionRow);
+    const start = challengePeriodService.localDateKey(row.periodStart, timezone);
+    const end = challengePeriodService.localDateKey(new Date(row.periodEnd.getTime() - 1), timezone);
+    history.push({
+      ...challengeView(definition, row as ChallengeUserRow, start, end),
+      status: row.status as "active" | "completed" | "expired",
+      completed_at: row.completedAt?.toISOString() ?? null,
+    });
+  }
+  return history;
 }
 
 /**
@@ -637,6 +842,7 @@ export class PrismaStore implements DataStore {
   async recordSuccessfulProductScan(
     input: SuccessfulProductScanInput,
     rules: GamificationRules,
+    challengeDefinitions: readonly ChallengeDefinition[] = [],
   ): Promise<GamificationActivityResult> {
     return serializableTransaction(async (tx) => {
       if (input.actionType !== "product_scan") {
@@ -677,6 +883,7 @@ export class PrismaStore implements DataStore {
           activity: mapGamificationActivity(existingByEvent),
           profile,
           idempotent: true,
+          completedChallenges: [],
         };
       }
 
@@ -699,6 +906,7 @@ export class PrismaStore implements DataStore {
           activity: mapGamificationActivity(existingRecent),
           profile,
           idempotent: true,
+          completedChallenges: [],
         };
       }
 
@@ -722,6 +930,7 @@ export class PrismaStore implements DataStore {
           userId: input.userId,
           actionType: input.actionType,
           productId: input.productId,
+          ingredientId: null,
           activityDate,
           timestamp: input.timestamp,
           xpAwarded,
@@ -754,10 +963,232 @@ export class PrismaStore implements DataStore {
         },
       });
 
+      if (challengeDefinitions.length > 0) {
+        const current = await ensureChallengeInstancesTx(
+          tx,
+          input.userId,
+          challengeDefinitions,
+          input.timestamp,
+          user.timezone,
+        );
+        const outcome = await evaluateChallengeInstancesTx(
+          tx,
+          input.userId,
+          user.timezone,
+          input.timestamp,
+          current,
+          rules,
+          mapGamificationProfile(profileRow),
+        );
+        const finalProfileRow = outcome.rewardXp > 0
+          ? await tx.userGamification.update({
+              where: { userId: input.userId },
+              data: { totalXp: { increment: outcome.rewardXp } },
+            })
+          : profileRow;
+        const views = outcome.instances.flatMap((instance) => {
+          const window = challengePeriodService.windowFor(
+            input.timestamp,
+            user.timezone,
+            instance.definition.period,
+          );
+          return [challengeView(instance.definition, instance.row, window.startDate, window.endDate)];
+        });
+        return {
+          activity: mapGamificationActivity(activityRow),
+          profile: mapGamificationProfile(finalProfileRow),
+          idempotent: false,
+          challenges: views,
+          completedChallenges: outcome.completed.map(({ definition }) => ({
+            challenge_id: definition.id,
+            name: definition.title,
+            description: definition.description,
+            xp_reward: definition.rewardXp,
+          })),
+        };
+      }
+
       return {
         activity: mapGamificationActivity(activityRow),
         profile: mapGamificationProfile(profileRow),
         idempotent: false,
+      };
+    });
+  }
+
+  async recordValidatedActivity(
+    input: ValidatedGamificationActivityInput,
+    rules: GamificationRules,
+    challengeDefinitions: readonly ChallengeDefinition[] = [],
+  ): Promise<GamificationActivityResult> {
+    return serializableTransaction(async (tx) => {
+      if (input.actionType !== "ingredient_view" && input.actionType !== "meaningful_chat") {
+        throw new AppError(ErrorCodes.VALIDATION_ERROR, "Unsupported gamification action");
+      }
+      const user = await tx.user.findUnique({
+        where: { id: input.userId },
+        select: { id: true, timezone: true },
+      });
+      if (!user) throw new AppError(ErrorCodes.UNAUTHORIZED, "User not found", 401);
+      await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${input.userId} FOR UPDATE`;
+      const product = await tx.product.findUnique({
+        where: { id: input.productId },
+        select: { id: true, isDemo: true },
+      });
+      if (!product || product.isDemo) {
+        throw new AppError(ErrorCodes.PRODUCT_NOT_FOUND, "Product was not found", 404);
+      }
+      if (!input.eventId || input.eventId.length < 8 || input.eventId.length > 128) {
+        throw new AppError(ErrorCodes.VALIDATION_ERROR, "event_id must be 8-128 characters");
+      }
+      const existing = await tx.gamificationActivity.findUnique({
+        where: { userId_eventId: { userId: input.userId, eventId: input.eventId } },
+      });
+      if (existing) {
+        const profile = await readGamificationProfileTx(tx, input.userId, rules, user.timezone);
+        const current = challengeDefinitions.length > 0
+          ? await ensureChallengeInstancesTx(tx, input.userId, challengeDefinitions, input.timestamp, user.timezone)
+          : [];
+        return {
+          activity: mapGamificationActivity(existing),
+          profile,
+          idempotent: true,
+          challenges: current.length > 0
+            ? current.flatMap((instance) => {
+                const window = challengePeriodService.windowFor(input.timestamp, user.timezone, instance.definition.period);
+                return [challengeView(instance.definition, instance.row, window.startDate, window.endDate)];
+              })
+            : undefined,
+          completedChallenges: [],
+        };
+      }
+
+      const activityDate = rules.streakService.activityDate(input.timestamp, user.timezone);
+      const activityRow = await tx.gamificationActivity.create({
+        data: {
+          userId: input.userId,
+          actionType: input.actionType,
+          productId: input.productId,
+          ingredientId: input.ingredientId ?? null,
+          activityDate,
+          timestamp: input.timestamp,
+          xpAwarded: 0,
+          eventId: input.eventId,
+        },
+      });
+      if (challengeDefinitions.length === 0) {
+        return {
+          activity: mapGamificationActivity(activityRow),
+          profile: await readGamificationProfileTx(tx, input.userId, rules, user.timezone),
+          idempotent: false,
+        };
+      }
+
+      const current = await ensureChallengeInstancesTx(
+        tx,
+        input.userId,
+        challengeDefinitions,
+        input.timestamp,
+        user.timezone,
+      );
+      const profileBefore = await readGamificationProfileTx(tx, input.userId, rules, user.timezone);
+      const outcome = await evaluateChallengeInstancesTx(
+        tx,
+        input.userId,
+        user.timezone,
+        input.timestamp,
+        current,
+        rules,
+        profileBefore,
+      );
+      const profileRow = outcome.rewardXp > 0
+        ? await tx.userGamification.upsert({
+            where: { userId: input.userId },
+            create: {
+              userId: input.userId,
+              totalXp: profileBefore.totalXp + outcome.rewardXp,
+              currentStreak: profileBefore.currentStreak,
+              longestStreak: profileBefore.longestStreak,
+              lastActivityDate: profileBefore.lastActivityDate,
+            },
+            update: { totalXp: { increment: outcome.rewardXp } },
+          })
+        : await tx.userGamification.findUnique({ where: { userId: input.userId } });
+      const finalProfile = profileRow
+        ? mapGamificationProfile(profileRow)
+        : profileBefore;
+      const views = outcome.instances.flatMap((instance) => {
+        const window = challengePeriodService.windowFor(input.timestamp, user.timezone, instance.definition.period);
+        return [challengeView(instance.definition, instance.row, window.startDate, window.endDate)];
+      });
+      return {
+        activity: mapGamificationActivity(activityRow),
+        profile: finalProfile,
+        idempotent: false,
+        challenges: views,
+        completedChallenges: outcome.completed.map(({ definition }) => ({
+          challenge_id: definition.id,
+          name: definition.title,
+          description: definition.description,
+          xp_reward: definition.rewardXp,
+        })),
+      };
+    });
+  }
+
+  async getChallenges(
+    userId: string,
+    challengeDefinitions: readonly ChallengeDefinition[],
+    now: Date,
+  ): Promise<ChallengeListResult> {
+    return serializableTransaction(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        select: { id: true, timezone: true },
+      });
+      if (!user) throw new AppError(ErrorCodes.UNAUTHORIZED, "User not found", 401);
+      await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${userId} FOR UPDATE`;
+      const rules: GamificationRules = {
+        now: () => now,
+        duplicateRequestWindowMs: 0,
+        xpService,
+        streakService,
+      };
+      const profile = await readGamificationProfileTx(tx, userId, rules, user.timezone);
+      const current = await ensureChallengeInstancesTx(tx, userId, challengeDefinitions, now, user.timezone);
+      const outcome = await evaluateChallengeInstancesTx(
+        tx,
+        userId,
+        user.timezone,
+        now,
+        current,
+        rules,
+        profile,
+      );
+      if (outcome.rewardXp > 0) {
+        await tx.userGamification.upsert({
+          where: { userId },
+          create: {
+            userId,
+            totalXp: profile.totalXp + outcome.rewardXp,
+            currentStreak: profile.currentStreak,
+            longestStreak: profile.longestStreak,
+            lastActivityDate: profile.lastActivityDate,
+          },
+          update: { totalXp: { increment: outcome.rewardXp } },
+        });
+      }
+      const daily: ChallengeDefinitionView[] = [];
+      const weekly: ChallengeDefinitionView[] = [];
+      for (const instance of outcome.instances) {
+        const window = challengePeriodService.windowFor(now, user.timezone, instance.definition.period);
+        const view = challengeView(instance.definition, instance.row, window.startDate, window.endDate);
+        (instance.definition.period === "weekly" ? weekly : daily).push(view);
+      }
+      return {
+        daily,
+        weekly,
+        history: await challengeHistoryTx(tx, userId, outcome.instances, user.timezone),
       };
     });
   }

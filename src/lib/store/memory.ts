@@ -19,8 +19,20 @@ import type {
   GamificationProfileRecord,
   GamificationRules,
   SuccessfulProductScanInput,
+  ValidatedGamificationActivityInput,
 } from "@/gamification/models/gamification";
+import type { ChallengeDefinition } from "@/gamification/challenges/config";
+import { challengePeriodService } from "@/gamification/challenges/period.service";
+import { evaluateChallenges, type ChallengeActivityRow } from "@/gamification/challenges/progress.service";
+import {
+  challengeDefinitionToRow,
+  challengeRowToDefinition,
+  type ChallengeDefinitionRow,
+} from "@/gamification/challenges/store-utils";
+import type { ChallengeDefinitionView, ChallengeHistoryView } from "@/gamification/challenges/models";
 import { AppError, ErrorCodes } from "@/lib/errors";
+import { xpService } from "@/gamification/services/xp.service";
+import { streakService } from "@/gamification/services/streak.service";
 import { cosineSimilarity, STOPWORDS } from "@/lib/embeddings";
 import type { DataStore, ProductSearchResult, UserPreferencesRecord, UserRecord } from "./types";
 import { preferencesToRecord } from "./types";
@@ -29,6 +41,21 @@ import { INGREDIENT_SEED } from "@/data/seed/ingredients";
 import { EVIDENCE_SEED } from "@/data/seed/evidence";
 import { config } from "@/lib/config";
 import type { ProductLookupResult } from "@/lib/product-provider";
+
+type UserChallengeRow = {
+  id: string;
+  userId: string;
+  challengeId: string;
+  periodStart: Date;
+  periodEnd: Date;
+  progress: number;
+  completed: boolean;
+  completedAt: Date | null;
+  rewardClaimed: boolean;
+  status: "active" | "completed" | "expired";
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 function toProductInfo(seed: (typeof PRODUCT_SEED)[number], index: number): ProductInfo {
   return {
@@ -90,7 +117,9 @@ export class InMemoryStore implements DataStore {
   private preferences = new Map<string, UserPreferencesRecord>();
   private history: HistoryEntryInfo[] = [];
   private gamificationProfiles = new Map<string, GamificationProfileRecord>();
-  private gamificationActivities: GamificationActivityResult["activity"][] = [];
+  private gamificationActivities: (GamificationActivityResult["activity"] & { ingredientId?: string | null })[] = [];
+  private challengeDefinitions = new Map<string, ChallengeDefinitionRow>();
+  private userChallenges: UserChallengeRow[] = [];
   private gamificationLock: Promise<void> = Promise.resolve();
   private conversations = new Map<string, ChatConversationRecord>();
   private chatMessages: ChatMessageRecord[] = [];
@@ -148,6 +177,191 @@ export class InMemoryStore implements DataStore {
     } finally {
       release();
     }
+  }
+
+  private syncChallengeDefinitions(definitions: readonly ChallengeDefinition[]): void {
+    for (const definition of definitions) {
+      const row = challengeDefinitionToRow(definition);
+      this.challengeDefinitions.set(row.challengeId, row);
+    }
+  }
+
+  private currentChallengeRows(
+    userId: string,
+    now: Date,
+    timezone: string,
+  ): Array<{ definition: ChallengeDefinition; row: UserChallengeRow }> {
+    const definitions = [...this.challengeDefinitions.values()]
+      .filter((row) => row.enabled)
+      .map(challengeRowToDefinition);
+    const nowMs = now.getTime();
+    for (const row of this.userChallenges) {
+      if (row.userId === userId && row.status === "active" && row.periodEnd.getTime() <= nowMs) {
+        row.status = "expired";
+        row.updatedAt = new Date(nowMs);
+      }
+    }
+    const result: Array<{ definition: ChallengeDefinition; row: UserChallengeRow }> = [];
+    for (const definition of definitions) {
+      const window = challengePeriodService.windowFor(now, timezone, definition.period);
+      let row = this.userChallenges.find(
+        (candidate) =>
+          candidate.userId === userId &&
+          candidate.challengeId === definition.id &&
+          candidate.periodStart.getTime() === window.startInstant.getTime(),
+      );
+      if (!row) {
+        const timestamp = new Date(nowMs);
+        row = {
+          id: this.nextId("challenge"),
+          userId,
+          challengeId: definition.id,
+          periodStart: window.startInstant,
+          periodEnd: window.endInstant,
+          progress: 0,
+          completed: false,
+          completedAt: null,
+          rewardClaimed: false,
+          status: "active",
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        };
+        this.userChallenges.push(row);
+      }
+      result.push({ definition, row });
+    }
+    return result;
+  }
+
+  private challengeView(
+    definition: ChallengeDefinition,
+    row: UserChallengeRow,
+    window: { startDate: string; endDate: string },
+  ): ChallengeDefinitionView {
+    return {
+      challenge_id: definition.id,
+      name: definition.title,
+      description: definition.description,
+      challenge_type: definition.period === "weekly" ? "WEEKLY" : "DAILY",
+      condition_type: definition.condition.type,
+      progress: row.progress,
+      target: definition.condition.target,
+      xp_reward: definition.rewardXp,
+      completed: row.completed,
+      reward_claimed: row.rewardClaimed,
+      period_start: window.startDate,
+      period_end: window.endDate,
+    };
+  }
+
+  private challengeHistoryView(
+    definition: ChallengeDefinition,
+    row: UserChallengeRow,
+    timezone: string,
+  ): ChallengeHistoryView {
+    const window = {
+      startDate: challengePeriodService.localDateKey(row.periodStart, timezone),
+      endDate: challengePeriodService.localDateKey(new Date(row.periodEnd.getTime() - 1), timezone),
+    };
+    return {
+      ...this.challengeView(definition, row, window),
+      status: row.status,
+      completed_at: row.completedAt?.toISOString() ?? null,
+    };
+  }
+
+  private evaluateCurrentChallenges(
+    user: UserRecord,
+    current: Array<{ definition: ChallengeDefinition; row: UserChallengeRow }>,
+    now: Date,
+    rules: GamificationRules,
+  ): { completed: Array<{ definition: ChallengeDefinition; row: UserChallengeRow }>; rewardXp: number } {
+    const profile = this.gamificationProfileForUser(user, rules);
+    const completed: Array<{ definition: ChallengeDefinition; row: UserChallengeRow }> = [];
+    let rewardXp = 0;
+    for (const entry of current) {
+      const window = challengePeriodService.windowFor(now, user.timezone, entry.definition.period);
+      const activities: ChallengeActivityRow[] = this.gamificationActivities
+        .filter(
+          (activity) =>
+            activity.userId === user.id &&
+            challengePeriodService.containsDateKey(window, activity.activityDate),
+        )
+        .map((activity) => ({
+          activityType: activity.actionType,
+          activityDate: activity.activityDate,
+          productId: activity.productId,
+          ingredientId: activity.ingredientId,
+          eventId: activity.eventId,
+        }));
+      const evaluation = evaluateChallenges([entry.definition], {
+        activities,
+        currentStreakDays: profile.currentStreak,
+      })[0];
+      entry.row.progress = evaluation.progress;
+      entry.row.updatedAt = now;
+      if (!entry.row.completed && evaluation.completed) {
+        entry.row.completed = true;
+        entry.row.completedAt = now;
+        entry.row.rewardClaimed = true;
+        entry.row.status = "completed";
+        rewardXp += rules.xpService.calculateChallengeReward(entry.definition.rewardXp);
+        completed.push(entry);
+      }
+    }
+    return { completed, rewardXp };
+  }
+
+  private applyChallengeReward(
+    user: UserRecord,
+    rewardXp: number,
+    now: Date,
+    rules: GamificationRules,
+  ): GamificationProfileRecord {
+    const previous = this.gamificationProfiles.get(user.id);
+    const profile = this.gamificationProfileForUser(user, rules);
+    const updated: GamificationProfileRecord = {
+      ...profile,
+      totalXp: (previous?.totalXp ?? profile.totalXp) + rules.xpService.calculateChallengeReward(rewardXp),
+      createdAt: previous?.createdAt ?? now.toISOString(),
+      updatedAt: now.toISOString(),
+    };
+    if (rewardXp > 0 || previous) this.gamificationProfiles.set(user.id, updated);
+    return updated;
+  }
+
+  private challengeViewsForUser(
+    user: UserRecord,
+    current: Array<{ definition: ChallengeDefinition; row: UserChallengeRow }>,
+    now: Date,
+  ): { daily: ChallengeDefinitionView[]; weekly: ChallengeDefinitionView[] } {
+    const daily: ChallengeDefinitionView[] = [];
+    const weekly: ChallengeDefinitionView[] = [];
+    for (const entry of current) {
+      const window = challengePeriodService.windowFor(now, user.timezone, entry.definition.period);
+      const view = this.challengeView(entry.definition, entry.row, {
+        startDate: window.startDate,
+        endDate: window.endDate,
+      });
+      (entry.definition.period === "weekly" ? weekly : daily).push(view);
+    }
+    return { daily, weekly };
+  }
+
+  private challengeHistoryForUser(
+    userId: string,
+    currentIds: Set<string>,
+    timezone: string,
+  ): ChallengeHistoryView[] {
+    return this.userChallenges
+      .filter((row) => row.userId === userId && !currentIds.has(`${row.challengeId}:${row.periodStart.toISOString()}`))
+      .sort((a, b) => b.periodStart.getTime() - a.periodStart.getTime())
+      .slice(0, 50)
+      .flatMap((row) => {
+        const definitionRow = this.challengeDefinitions.get(row.challengeId);
+        if (!definitionRow) return [];
+        return [this.challengeHistoryView(challengeRowToDefinition(definitionRow), row, timezone)];
+      });
   }
 
   private gamificationProfileForUser(
@@ -410,6 +624,7 @@ export class InMemoryStore implements DataStore {
   async recordSuccessfulProductScan(
     input: SuccessfulProductScanInput,
     rules: GamificationRules,
+    challengeDefinitions: readonly ChallengeDefinition[] = [],
   ): Promise<GamificationActivityResult> {
     return this.withGamificationLock(async () => {
       if (input.actionType !== "product_scan") {
@@ -435,6 +650,7 @@ export class InMemoryStore implements DataStore {
           activity: { ...existingByEvent },
           profile: this.gamificationProfileForUser(user, rules),
           idempotent: true,
+          completedChallenges: [],
         };
       }
 
@@ -451,6 +667,7 @@ export class InMemoryStore implements DataStore {
           activity: { ...existingRecent },
           profile: this.gamificationProfileForUser(user, rules),
           idempotent: true,
+          completedChallenges: [],
         };
       }
 
@@ -495,7 +712,138 @@ export class InMemoryStore implements DataStore {
       // Mutate only after all validation and calculations have succeeded.
       this.gamificationActivities.push(activity);
       this.gamificationProfiles.set(input.userId, profile);
+
+      if (challengeDefinitions.length > 0) {
+        this.syncChallengeDefinitions(challengeDefinitions);
+        const current = this.currentChallengeRows(input.userId, input.timestamp, user.timezone);
+        const outcome = this.evaluateCurrentChallenges(user, current, input.timestamp, rules);
+        const finalProfile =
+          outcome.rewardXp > 0
+            ? this.applyChallengeReward(user, outcome.rewardXp, input.timestamp, rules)
+            : profile;
+        const views = this.challengeViewsForUser(user, current, input.timestamp);
+        return {
+          activity: { ...activity },
+          profile: { ...finalProfile },
+          idempotent: false,
+          challenges: [...views.daily, ...views.weekly],
+          completedChallenges: outcome.completed.map(({ definition }) => ({
+            challenge_id: definition.id,
+            name: definition.title,
+            description: definition.description,
+            xp_reward: definition.rewardXp,
+          })),
+        };
+      }
+
       return { activity: { ...activity }, profile: { ...profile }, idempotent: false };
+    });
+  }
+
+  async recordValidatedActivity(
+    input: ValidatedGamificationActivityInput,
+    rules: GamificationRules,
+    challengeDefinitions: readonly ChallengeDefinition[] = [],
+  ): Promise<GamificationActivityResult> {
+    return this.withGamificationLock(async () => {
+      if (input.actionType !== "ingredient_view" && input.actionType !== "meaningful_chat") {
+        throw new AppError(ErrorCodes.VALIDATION_ERROR, "Unsupported gamification action");
+      }
+      const user = this.users.get(input.userId);
+      if (!user) throw new AppError(ErrorCodes.UNAUTHORIZED, "User not found", 401);
+      const product = this.products.find((candidate) => candidate.id === input.productId);
+      if (!product || product.isDemo) {
+        throw new AppError(ErrorCodes.PRODUCT_NOT_FOUND, "Product was not found", 404);
+      }
+      if (!input.eventId || input.eventId.length < 8 || input.eventId.length > 128) {
+        throw new AppError(ErrorCodes.VALIDATION_ERROR, "event_id must be 8-128 characters");
+      }
+      const existing = this.gamificationActivities.find(
+        (activity) => activity.userId === input.userId && activity.eventId === input.eventId,
+      );
+      if (existing) {
+        const profile = this.gamificationProfileForUser(user, rules);
+        const current = challengeDefinitions.length > 0
+          ? (this.syncChallengeDefinitions(challengeDefinitions),
+            this.currentChallengeRows(input.userId, input.timestamp, user.timezone))
+          : [];
+        return {
+          activity: { ...existing },
+          profile,
+          idempotent: true,
+          challenges: current.length > 0
+            ? Object.values(this.challengeViewsForUser(user, current, input.timestamp)).flat()
+            : undefined,
+          completedChallenges: [],
+        };
+      }
+
+      const activityDate = challengePeriodService.localDateKey(input.timestamp, user.timezone);
+      const activity = {
+        activityId: this.nextId("activity"),
+        userId: input.userId,
+        actionType: input.actionType,
+        productId: input.productId,
+        ingredientId: input.ingredientId ?? null,
+        activityDate,
+        timestamp: input.timestamp.toISOString(),
+        xpAwarded: 0,
+        eventId: input.eventId,
+      };
+      this.gamificationActivities.push(activity);
+      if (challengeDefinitions.length === 0) {
+        return {
+          activity: { ...activity },
+          profile: this.gamificationProfileForUser(user, rules),
+          idempotent: false,
+        };
+      }
+
+      this.syncChallengeDefinitions(challengeDefinitions);
+      const current = this.currentChallengeRows(input.userId, input.timestamp, user.timezone);
+      const outcome = this.evaluateCurrentChallenges(user, current, input.timestamp, rules);
+      const profile = outcome.rewardXp > 0
+        ? this.applyChallengeReward(user, outcome.rewardXp, input.timestamp, rules)
+        : this.gamificationProfileForUser(user, rules);
+      const views = this.challengeViewsForUser(user, current, input.timestamp);
+      return {
+        activity: { ...activity },
+        profile,
+        idempotent: false,
+        challenges: [...views.daily, ...views.weekly],
+        completedChallenges: outcome.completed.map(({ definition }) => ({
+          challenge_id: definition.id,
+          name: definition.title,
+          description: definition.description,
+          xp_reward: definition.rewardXp,
+        })),
+      };
+    });
+  }
+
+  async getChallenges(
+    userId: string,
+    challengeDefinitions: readonly ChallengeDefinition[],
+    now: Date,
+  ): Promise<{ daily: ChallengeDefinitionView[]; weekly: ChallengeDefinitionView[]; history: ChallengeHistoryView[] }> {
+    return this.withGamificationLock(async () => {
+      const user = this.users.get(userId);
+      if (!user) throw new AppError(ErrorCodes.UNAUTHORIZED, "User not found", 401);
+      this.syncChallengeDefinitions(challengeDefinitions);
+      const current = this.currentChallengeRows(userId, now, user.timezone);
+      const rules: GamificationRules = {
+        now: () => now,
+        duplicateRequestWindowMs: 0,
+        xpService,
+        streakService,
+      };
+      const outcome = this.evaluateCurrentChallenges(user, current, now, rules);
+      if (outcome.rewardXp > 0) {
+        this.applyChallengeReward(user, outcome.rewardXp, now, rules);
+      }
+      const views = this.challengeViewsForUser(user, current, now);
+      const currentIds = new Set(current.map(({ row }) => `${row.challengeId}:${row.periodStart.toISOString()}`));
+      return { ...views, history: this.challengeHistoryForUser(userId, currentIds, user.timezone) };
     });
   }
 

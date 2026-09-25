@@ -53,6 +53,12 @@ export async function POST(request: NextRequest) {
       longest_streak: number;
       activity_date: string;
       idempotent: boolean;
+      completed_challenges: Array<{
+        challenge_id: string;
+        name: string;
+        description: string;
+        xp_reward: number;
+      }>;
     } | null = null;
     if (
       session &&
@@ -74,6 +80,7 @@ export async function POST(request: NextRequest) {
           longest_streak: reward.profile.longestStreak,
           activity_date: reward.activity.activityDate,
           idempotent: reward.idempotent,
+          completed_challenges: reward.completedChallenges ?? [],
         };
       } catch (error) {
         // Analysis remains available if the optional gamification migration has

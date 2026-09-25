@@ -29,28 +29,32 @@ import * as m24 from "@/app/api/external/pubchem/properties/route";
 import * as m25 from "@/app/api/external/usda/search/route";
 import * as m26 from "@/app/api/external/who/indicators/route";
 import * as m27 from "@/app/api/food-safety-assistant/route";
-import * as m28 from "@/app/api/gamification/activity/route";
-import * as m29 from "@/app/api/gamification/profile/route";
-import * as m30 from "@/app/api/history/[id]/route";
-import * as m31 from "@/app/api/history/route";
-import * as m32 from "@/app/api/ingredients/[id]/route";
-import * as m33 from "@/app/api/ingredients/analyze/route";
-import * as m34 from "@/app/api/nutrition/[barcode]/route";
-import * as m35 from "@/app/api/product-images/[barcode]/route";
-import * as m36 from "@/app/api/product-images/route";
-import * as m37 from "@/app/api/products/[id]/alternatives/feedback/route";
-import * as m38 from "@/app/api/products/[id]/alternatives/route";
-import * as m39 from "@/app/api/products/barcode/[barcode]/route";
-import * as m40 from "@/app/api/products/compare/route";
-import * as m41 from "@/app/api/products/route";
-import * as m42 from "@/app/api/products/search/route";
-import * as m43 from "@/app/api/regulatory/analyze/route";
-import * as m44 from "@/app/api/scan/label/route";
-import * as m45 from "@/app/api/temp/[id]/route";
-import * as m46 from "@/app/api/users/me/preferences/route";
-import * as m47 from "@/app/api/users/me/route";
-import * as m48 from "@/app/api/visual-search-url/route";
-import * as m49 from "@/app/api/visual-search/route";
+import * as m28 from "@/app/api/gamification/activity/ingredient-view/route";
+import * as m29 from "@/app/api/gamification/activity/route";
+import * as m30 from "@/app/api/gamification/challenges/daily/route";
+import * as m31 from "@/app/api/gamification/challenges/route";
+import * as m32 from "@/app/api/gamification/challenges/weekly/route";
+import * as m33 from "@/app/api/gamification/profile/route";
+import * as m34 from "@/app/api/history/[id]/route";
+import * as m35 from "@/app/api/history/route";
+import * as m36 from "@/app/api/ingredients/[id]/route";
+import * as m37 from "@/app/api/ingredients/analyze/route";
+import * as m38 from "@/app/api/nutrition/[barcode]/route";
+import * as m39 from "@/app/api/product-images/[barcode]/route";
+import * as m40 from "@/app/api/product-images/route";
+import * as m41 from "@/app/api/products/[id]/alternatives/feedback/route";
+import * as m42 from "@/app/api/products/[id]/alternatives/route";
+import * as m43 from "@/app/api/products/barcode/[barcode]/route";
+import * as m44 from "@/app/api/products/compare/route";
+import * as m45 from "@/app/api/products/route";
+import * as m46 from "@/app/api/products/search/route";
+import * as m47 from "@/app/api/regulatory/analyze/route";
+import * as m48 from "@/app/api/scan/label/route";
+import * as m49 from "@/app/api/temp/[id]/route";
+import * as m50 from "@/app/api/users/me/preferences/route";
+import * as m51 from "@/app/api/users/me/route";
+import * as m52 from "@/app/api/visual-search-url/route";
+import * as m53 from "@/app/api/visual-search/route";
 
 export const ROUTES: Array<{ path: string; mod: Record<string, unknown> }> = [
   { path: "/api/admin/dashboard", mod: m0 as unknown as Record<string, unknown> },
@@ -81,26 +85,30 @@ export const ROUTES: Array<{ path: string; mod: Record<string, unknown> }> = [
   { path: "/api/external/usda/search", mod: m25 as unknown as Record<string, unknown> },
   { path: "/api/external/who/indicators", mod: m26 as unknown as Record<string, unknown> },
   { path: "/api/food-safety-assistant", mod: m27 as unknown as Record<string, unknown> },
-  { path: "/api/gamification/activity", mod: m28 as unknown as Record<string, unknown> },
-  { path: "/api/gamification/profile", mod: m29 as unknown as Record<string, unknown> },
-  { path: "/api/history/:id", mod: m30 as unknown as Record<string, unknown> },
-  { path: "/api/history", mod: m31 as unknown as Record<string, unknown> },
-  { path: "/api/ingredients/:id", mod: m32 as unknown as Record<string, unknown> },
-  { path: "/api/ingredients/analyze", mod: m33 as unknown as Record<string, unknown> },
-  { path: "/api/nutrition/:barcode", mod: m34 as unknown as Record<string, unknown> },
-  { path: "/api/product-images/:barcode", mod: m35 as unknown as Record<string, unknown> },
-  { path: "/api/product-images", mod: m36 as unknown as Record<string, unknown> },
-  { path: "/api/products/:id/alternatives/feedback", mod: m37 as unknown as Record<string, unknown> },
-  { path: "/api/products/:id/alternatives", mod: m38 as unknown as Record<string, unknown> },
-  { path: "/api/products/barcode/:barcode", mod: m39 as unknown as Record<string, unknown> },
-  { path: "/api/products/compare", mod: m40 as unknown as Record<string, unknown> },
-  { path: "/api/products", mod: m41 as unknown as Record<string, unknown> },
-  { path: "/api/products/search", mod: m42 as unknown as Record<string, unknown> },
-  { path: "/api/regulatory/analyze", mod: m43 as unknown as Record<string, unknown> },
-  { path: "/api/scan/label", mod: m44 as unknown as Record<string, unknown> },
-  { path: "/api/temp/:id", mod: m45 as unknown as Record<string, unknown> },
-  { path: "/api/users/me/preferences", mod: m46 as unknown as Record<string, unknown> },
-  { path: "/api/users/me", mod: m47 as unknown as Record<string, unknown> },
-  { path: "/api/visual-search-url", mod: m48 as unknown as Record<string, unknown> },
-  { path: "/api/visual-search", mod: m49 as unknown as Record<string, unknown> },
+  { path: "/api/gamification/activity/ingredient-view", mod: m28 as unknown as Record<string, unknown> },
+  { path: "/api/gamification/activity", mod: m29 as unknown as Record<string, unknown> },
+  { path: "/api/gamification/challenges/daily", mod: m30 as unknown as Record<string, unknown> },
+  { path: "/api/gamification/challenges", mod: m31 as unknown as Record<string, unknown> },
+  { path: "/api/gamification/challenges/weekly", mod: m32 as unknown as Record<string, unknown> },
+  { path: "/api/gamification/profile", mod: m33 as unknown as Record<string, unknown> },
+  { path: "/api/history/:id", mod: m34 as unknown as Record<string, unknown> },
+  { path: "/api/history", mod: m35 as unknown as Record<string, unknown> },
+  { path: "/api/ingredients/:id", mod: m36 as unknown as Record<string, unknown> },
+  { path: "/api/ingredients/analyze", mod: m37 as unknown as Record<string, unknown> },
+  { path: "/api/nutrition/:barcode", mod: m38 as unknown as Record<string, unknown> },
+  { path: "/api/product-images/:barcode", mod: m39 as unknown as Record<string, unknown> },
+  { path: "/api/product-images", mod: m40 as unknown as Record<string, unknown> },
+  { path: "/api/products/:id/alternatives/feedback", mod: m41 as unknown as Record<string, unknown> },
+  { path: "/api/products/:id/alternatives", mod: m42 as unknown as Record<string, unknown> },
+  { path: "/api/products/barcode/:barcode", mod: m43 as unknown as Record<string, unknown> },
+  { path: "/api/products/compare", mod: m44 as unknown as Record<string, unknown> },
+  { path: "/api/products", mod: m45 as unknown as Record<string, unknown> },
+  { path: "/api/products/search", mod: m46 as unknown as Record<string, unknown> },
+  { path: "/api/regulatory/analyze", mod: m47 as unknown as Record<string, unknown> },
+  { path: "/api/scan/label", mod: m48 as unknown as Record<string, unknown> },
+  { path: "/api/temp/:id", mod: m49 as unknown as Record<string, unknown> },
+  { path: "/api/users/me/preferences", mod: m50 as unknown as Record<string, unknown> },
+  { path: "/api/users/me", mod: m51 as unknown as Record<string, unknown> },
+  { path: "/api/visual-search-url", mod: m52 as unknown as Record<string, unknown> },
+  { path: "/api/visual-search", mod: m53 as unknown as Record<string, unknown> },
 ];

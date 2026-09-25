@@ -20,6 +20,14 @@ export class XPService {
       gamificationConfig.duplicateProductPolicy,
   ) {}
 
+  /**
+   * Returns a validated challenge reward. Challenge definitions own the
+   * amount; this keeps every XP award flowing through the Module 1 service.
+   */
+  calculateChallengeReward(rewardXp: number): number {
+    return Number.isSafeInteger(rewardXp) && rewardXp >= 0 ? rewardXp : 0;
+  }
+
   calculateProductScanXp(input: ProductScanXpInput): number {
     if (input.isNewProduct) {
       return this.successfulScanXp + this.uniqueProductXp;

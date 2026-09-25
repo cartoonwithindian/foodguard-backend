@@ -20,7 +20,10 @@ import type {
   GamificationProfileRecord,
   GamificationRules,
   SuccessfulProductScanInput,
+  ValidatedGamificationActivityInput,
 } from "@/gamification/models/gamification";
+import type { ChallengeDefinition } from "@/gamification/challenges/config";
+import type { ChallengeListResult } from "@/gamification/challenges/models";
 
 export type UserRecord = {
   id: string;
@@ -113,7 +116,18 @@ export interface DataStore {
   recordSuccessfulProductScan(
     input: SuccessfulProductScanInput,
     rules: GamificationRules,
+    challengeDefinitions?: readonly ChallengeDefinition[],
   ): Promise<GamificationActivityResult>;
+  recordValidatedActivity(
+    input: ValidatedGamificationActivityInput,
+    rules: GamificationRules,
+    challengeDefinitions?: readonly ChallengeDefinition[],
+  ): Promise<GamificationActivityResult>;
+  getChallenges(
+    userId: string,
+    challengeDefinitions: readonly ChallengeDefinition[],
+    now: Date,
+  ): Promise<ChallengeListResult>;
 
   // chat conversations
   createConversation(userId: string): Promise<ChatConversationRecord>;

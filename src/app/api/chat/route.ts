@@ -19,6 +19,7 @@ import { logger } from "@/lib/logger";
 import { chatRequestSchema } from "@/schemas";
 import { runChatAssistant } from "@/services/chat/orchestrator";
 import { ConversationService } from "@/services/chat/conversation.service";
+import { challengeService } from "@/gamification/challenges/challenge.service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -60,6 +61,31 @@ async function handlePost(request: NextRequest, requestId: string): Promise<Resp
     conversationId: conversation_id,
   });
 
+  let challengeCompletions: Array<{
+    challenge_id: string;
+    name: string;
+    description: string;
+    xp_reward: number;
+  }> = [];
+  if (productId) {
+    try {
+      const challengeResult = await challengeService.recordMeaningfulChat({
+        userId: user.id,
+        productId,
+        message,
+        conversationId: result.conversationId,
+      });
+      challengeCompletions = challengeResult?.completedChallenges ?? [];
+    } catch (error) {
+      // Chat must remain available even if challenge persistence is temporarily
+      // unavailable; no progress is invented when recording fails.
+      logger.warn("chat_challenge_event_failed", {
+        requestId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
   return jsonSuccess(
     {
       answer: result.response.answer,
@@ -67,6 +93,7 @@ async function handlePost(request: NextRequest, requestId: string): Promise<Resp
       actions: result.response.actions,
       conversation_id: result.conversationId,
       metadata: result.response.metadata,
+      challenge_completions: challengeCompletions,
     },
     { requestId },
   );

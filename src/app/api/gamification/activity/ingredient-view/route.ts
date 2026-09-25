@@ -3,45 +3,41 @@ import { z } from "zod";
 import { jsonError, jsonSuccess } from "@/lib/http";
 import { requireAuth } from "@/lib/auth";
 import { enforceRateLimit, clientIp } from "@/lib/rate-limit";
-import { gamificationService } from "@/gamification/services/gamification.service";
+import { challengeService } from "@/gamification/challenges/challenge.service";
 
 export const runtime = "nodejs";
 
-const activityRequestSchema = z
+const ingredientViewSchema = z
   .object({
-    action_type: z.literal("product_scan"),
     product_id: z.string().trim().min(1).max(200),
-    // Optional for backwards compatibility; the client should send a UUID so
-    // retries are idempotent. XP and streak values are intentionally absent.
+    ingredient_id: z.string().trim().min(1).max(120).optional(),
     event_id: z.string().trim().min(8).max(128).optional(),
   })
   .strict();
 
 /**
- * POST /api/gamification/activity
- *
- * Records a validated successful product-scan event. The authenticated user,
- * product existence, action type, duplicate event, XP, and local calendar date
- * are all determined by the backend.
+ * Records a real ingredient-information view. The caller cannot submit
+ * progress, completion, or XP; the store validates the product and evaluates
+ * the configured challenges transactionally.
  */
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID().slice(0, 8);
   try {
     const session = await requireAuth(request);
-    await enforceRateLimit(`gamification:${clientIp(request)}:${session.id}`);
-
+    await enforceRateLimit(`challenge-ingredient:${clientIp(request)}:${session.id}`);
     const body = await request.json().catch(() => null);
-    const parsed = activityRequestSchema.safeParse(body);
+    const parsed = ingredientViewSchema.safeParse(body);
     if (!parsed.success) return jsonError(parsed.error, requestId);
-
-    const result = await gamificationService.recordProductScan({
+    const eventId = parsed.data.event_id ?? request.headers.get("idempotency-key")?.trim();
+    if (!eventId) {
+      return jsonError({ code: "VALIDATION_ERROR", message: "event_id is required" }, requestId);
+    }
+    const result = await challengeService.recordIngredientView({
       userId: session.id,
-      actionType: parsed.data.action_type,
       productId: parsed.data.product_id,
-      eventId:
-        parsed.data.event_id ?? request.headers.get("idempotency-key")?.trim() ?? undefined,
+      ingredientId: parsed.data.ingredient_id ?? null,
+      eventId,
     });
-
     return jsonSuccess(
       {
         xp_awarded: result.activity.xpAwarded,

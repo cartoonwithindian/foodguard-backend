@@ -29,6 +29,21 @@ export type GamificationActivityRecord = {
   eventId: string;
 };
 
+export type ValidatedGamificationActionType =
+  | "product_scan"
+  | "ingredient_view"
+  | "meaningful_chat";
+
+export type ValidatedGamificationActivityInput = {
+  userId: string;
+  actionType: ValidatedGamificationActionType;
+  productId: string;
+  ingredientId?: string | null;
+  timestamp: Date;
+  eventId: string;
+  eventIdProvided: boolean;
+};
+
 export type SuccessfulProductScanInput = {
   userId: string;
   actionType: ProductScanAction;
@@ -45,6 +60,9 @@ export type GamificationActivityResult = {
   profile: GamificationProfileRecord;
   /** True when an existing event was returned without a second mutation. */
   idempotent: boolean;
+  /** Present when challenge evaluation ran in the same transaction. */
+  challenges?: import("@/gamification/challenges/models").ChallengeDefinitionView[];
+  completedChallenges?: import("@/gamification/challenges/models").ChallengeCompletion[];
 };
 
 export type StreakState = {
@@ -61,6 +79,7 @@ export type GamificationRules = {
       isNewProduct: boolean;
       hasPriorProductOnDate: boolean;
     }): number;
+    calculateChallengeReward(rewardXp: number): number;
   };
   streakService: {
     activityDate(timestamp: Date, timezone: string): string;

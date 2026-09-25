@@ -38,6 +38,7 @@ model User {
   preference             UserPreference?
   gamification           UserGamification?
   gamificationActivities GamificationActivity[]
+  userChallenges         UserChallenge[]
   scans                  HistoryEntry[]
   adminActions           AdminAction[]
   chatConversations      ChatConversation[]
@@ -211,6 +212,7 @@ model GamificationActivity {
   actionType   String
   productId    String
   product      Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  ingredientId String?
   // Local calendar date derived server-side from the user's timezone.
   activityDate String
   timestamp    DateTime
@@ -221,6 +223,52 @@ model GamificationActivity {
   @@index([userId, activityDate])
   @@index([userId, productId])
   @@index([userId, actionType])
+  @@index([userId, ingredientId])
+}
+
+// ── Gamification: daily + weekly challenges ──────────────────
+// Definitions are configuration. UserChallenge rows are created only for a
+// real user + configured challenge + local period, and rewards are recorded
+// through the same XP profile as Module 1.
+
+model ChallengeDefinition {
+  challengeId   String          @id
+  name          String
+  description   String
+  challengeType String // DAILY | WEEKLY
+  conditionType String
+  targetValue   Int
+  xpReward      Int
+  startRule     String
+  endRule       String
+  enabled       Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  instances     UserChallenge[]
+
+  @@index([challengeType, enabled])
+}
+
+model UserChallenge {
+  id            String              @id @default(cuid())
+  userId        String
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challengeId   String
+  challenge     ChallengeDefinition @relation(fields: [challengeId], references: [challengeId], onDelete: Cascade)
+  periodStart   DateTime
+  periodEnd     DateTime
+  progress      Int                 @default(0)
+  completed     Boolean             @default(false)
+  completedAt   DateTime?
+  rewardClaimed Boolean             @default(false)
+  status        String              @default("active") // active | completed | expired
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@unique([userId, challengeId, periodStart])
+  @@index([userId, completed])
+  @@index([userId, periodStart])
+  @@index([periodStart, periodEnd])
 }
 
 model UnknownIngredient {

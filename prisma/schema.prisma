@@ -25,20 +25,23 @@ enum Language {
 
 // ── Users ────────────────────────────────────────────────────
 model User {
-  id                String             @id @default(cuid())
-  email             String             @unique
-  name              String
-  passwordHash      String?
-  authProviderId    String?
-  role              Role               @default(USER)
-  language          Language           @default(EN)
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  preference        UserPreference?
-  scans             HistoryEntry[]
-  adminActions      AdminAction[]
-  chatConversations ChatConversation[]
-  chatMessages      ChatMessage[]
+  id                     String                 @id @default(cuid())
+  email                  String                 @unique
+  name                   String
+  passwordHash           String?
+  authProviderId         String?
+  role                   Role                   @default(USER)
+  language               Language               @default(EN)
+  timezone               String                 @default("UTC")
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  preference             UserPreference?
+  gamification           UserGamification?
+  gamificationActivities GamificationActivity[]
+  scans                  HistoryEntry[]
+  adminActions           AdminAction[]
+  chatConversations      ChatConversation[]
+  chatMessages           ChatMessage[]
 }
 
 model UserPreference {
@@ -58,26 +61,27 @@ model UserPreference {
 
 // ── Products ─────────────────────────────────────────────────
 model Product {
-  id                    String         @id @default(cuid())
-  barcode               String         @unique
-  name                  String
-  brand                 String?
-  category              String         @default("food")
-  country               String?
-  servingSize           String?
-  imageUrl              String?
-  ingredientsRaw        String         @db.Text
-  ingredientsNormalized String[] // normalized canonical ingredient names, in label order
-  source                String
-  sourceUrl             String?
-  verified              Boolean        @default(false)
-  productDataConfidence Float          @default(0.5)
-  isDemo                Boolean        @default(false)
-  lastVerifiedAt        DateTime?
-  createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @updatedAt
-  nutrition             Nutrition?
-  histories             HistoryEntry[]
+  id                     String                 @id @default(cuid())
+  barcode                String                 @unique
+  name                   String
+  brand                  String?
+  category               String                 @default("food")
+  country                String?
+  servingSize            String?
+  imageUrl               String?
+  ingredientsRaw         String                 @db.Text
+  ingredientsNormalized  String[] // normalized canonical ingredient names, in label order
+  source                 String
+  sourceUrl              String?
+  verified               Boolean                @default(false)
+  productDataConfidence  Float                  @default(0.5)
+  isDemo                 Boolean                @default(false)
+  lastVerifiedAt         DateTime?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  nutrition              Nutrition?
+  histories              HistoryEntry[]
+  gamificationActivities GamificationActivity[]
 }
 
 // Nutrition facts for one product.
@@ -182,7 +186,43 @@ model HistoryEntry {
   @@index([userId, scannedAt])
 }
 
-// ── Unknown ingredients (admin review queue) ─────────────────
+// ── Gamification: XP + daily streak ─────────────────────────
+// Only validated, real product-scan activity is stored here. There are no
+// achievement, level, badge, challenge, or leaderboard records in this module.
+
+model UserGamification {
+  userId           String   @id
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  totalXp          Int      @default(0)
+  currentStreak    Int      @default(0)
+  longestStreak    Int      @default(0)
+  // YYYY-MM-DD in the user's configured IANA timezone.
+  lastActivityDate String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([lastActivityDate])
+}
+
+model GamificationActivity {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  actionType   String
+  productId    String
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  // Local calendar date derived server-side from the user's timezone.
+  activityDate String
+  timestamp    DateTime
+  xpAwarded    Int      @default(0)
+  eventId      String
+
+  @@unique([userId, eventId])
+  @@index([userId, activityDate])
+  @@index([userId, productId])
+  @@index([userId, actionType])
+}
+
 model UnknownIngredient {
   id                   String   @id @default(cuid())
   rawName              String

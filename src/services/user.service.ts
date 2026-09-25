@@ -5,7 +5,7 @@ import type { UserPreferencesInput } from "@/types/domain";
 
 export const GUEST_EMAIL = "guest@foodgaurd.app";
 
-export async function signup(input: { email: string; name: string; password: string; language?: "EN" | "HI" }) {
+export async function signup(input: { email: string; name: string; password: string; language?: "EN" | "HI"; timezone?: string }) {
   const store = getStore();
   const existing = await store.getUserByEmail(input.email);
   if (existing) {
@@ -16,6 +16,7 @@ export async function signup(input: { email: string; name: string; password: str
     name: input.name,
     passwordHash: await hashPassword(input.password),
     language: input.language ?? "EN",
+    timezone: input.timezone,
   });
   const session: SessionUser = {
     id: user.id,
@@ -27,7 +28,7 @@ export async function signup(input: { email: string; name: string; password: str
   return { token: await signToken(session), user: session };
 }
 
-export async function login(input: { email: string; password: string }) {
+export async function login(input: { email: string; password: string; timezone?: string }) {
   const store = getStore();
   let user = await store.getUserByEmail(input.email.toLowerCase());
 
@@ -39,6 +40,7 @@ export async function login(input: { email: string; password: string }) {
       name,
       passwordHash: input.password ? await hashPassword(input.password) : null,
       language: "EN",
+      timezone: input.timezone,
     });
   } else if (user.passwordHash) {
     // Verify password for existing users with a stored hash.
@@ -46,6 +48,10 @@ export async function login(input: { email: string; password: string }) {
     if (!valid) {
       throw new AppError(ErrorCodes.AUTH_INVALID_CREDENTIALS, "Invalid email or password", 401);
     }
+  }
+  if (input.timezone && user.timezone !== input.timezone) {
+    const updated = await store.updateUser(user.id, { timezone: input.timezone });
+    if (updated) user = updated;
   }
   // If user exists but has no passwordHash (e.g. guest account), allow login.
 
@@ -72,6 +78,7 @@ export async function getMe(session: SessionUser) {
         name: session.name,
         role: session.role,
         language: session.language,
+        timezone: "UTC",
         memberSince: new Date().toISOString(),
         preferences: null,
       };
@@ -85,6 +92,7 @@ export async function getMe(session: SessionUser) {
     name: user.name,
     role: user.role,
     language: user.language,
+    timezone: user.timezone,
     memberSince: user.createdAt,
     preferences: preferences
       ? {
@@ -101,7 +109,7 @@ export async function getMe(session: SessionUser) {
   };
 }
 
-export async function updateProfile(session: SessionUser, fields: { name?: string; language?: "EN" | "HI" }) {
+export async function updateProfile(session: SessionUser, fields: { name?: string; language?: "EN" | "HI"; timezone?: string }) {
   const store = getStore();
   const user = await store.updateUser(session.id, fields);
   if (!user) {
@@ -112,6 +120,7 @@ export async function updateProfile(session: SessionUser, fields: { name?: strin
         name: fields.name ?? session.name,
         role: session.role,
         language: fields.language ?? session.language,
+        timezone: fields.timezone ?? "UTC",
         createdAt: new Date().toISOString(),
       };
     }
@@ -123,6 +132,7 @@ export async function updateProfile(session: SessionUser, fields: { name?: strin
     name: user.name,
     role: user.role,
     language: user.language,
+    timezone: user.timezone,
     createdAt: user.createdAt,
   };
 }

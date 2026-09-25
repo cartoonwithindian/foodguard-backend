@@ -15,7 +15,11 @@ export async function POST(request: NextRequest) {
     const parsed = loginSchema.safeParse(body);
     if (!parsed.success) return jsonError(parsed.error, requestId);
 
-    const result = await login(parsed.data);
+    const result = await login({
+      email: parsed.data.email,
+      password: parsed.data.password,
+      timezone: parsed.data.timezone,
+    });
     return jsonSuccess(result, { requestId });
   } catch (error) {
     return jsonError(error, requestId);

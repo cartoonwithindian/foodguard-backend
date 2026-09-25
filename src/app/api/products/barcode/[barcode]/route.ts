@@ -4,6 +4,7 @@ import { lookupProductByBarcode } from "@/lib/product-lookup";
 import type { ProductLookupResult } from "@/lib/product-lookup/types";
 import { AppError, ErrorCodes } from "@/lib/errors";
 import type { ProductInfo, ProductCategory, NutritionFacts } from "@/types/domain";
+import { getStore } from "@/lib/store";
 
 export const runtime = "nodejs";
 
@@ -69,9 +70,14 @@ export async function GET(
         404,
       );
     }
+    // The lookup result is a view model; use the persisted product ID when
+    // available so downstream activity validation never trusts a client ID.
+    const storedProduct = await getStore().getProductByBarcode(barcode);
+    const product = toProductInfo(outcome.product);
+    if (storedProduct) product.id = storedProduct.id;
     return jsonSuccess(
       {
-        product: toProductInfo(outcome.product),
+        product,
         nutrition: (outcome.product.nutrition ?? null) as NutritionFacts | null,
         source: outcome.source,
         confidence: outcome.confidence,

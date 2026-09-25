@@ -11,6 +11,7 @@ import { decodeBarcodeInNode } from "@/lib/barcode/node-decoder";
 import { lookupProductByBarcode } from "@/lib/product-lookup";
 import { searchByVector, searchByImageUrl } from "@/lib/visual-search";
 import { storeTempImage, deleteTempImage } from "@/lib/temp-images";
+import { getStore } from "@/lib/store";
 
 export const runtime = "nodejs";
 
@@ -148,8 +149,9 @@ export async function POST(request: NextRequest) {
       });
       if (outcome.success && outcome.product) {
         const p = outcome.product;
+        const storedProduct = await getStore().getProductByBarcode(p.barcode);
         productObj = {
-          id: "",
+          id: storedProduct?.id ?? "",
           name: p.name ?? "",
           brand: p.brand ?? null,
           category: (p.category as "food" | "cosmetics" | "personal_care" | "household" | "other") ?? "food",

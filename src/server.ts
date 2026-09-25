@@ -21,7 +21,7 @@ import type { Context } from "hono";
 // runtime filesystem glob).
 import { ROUTES } from "./routes.generated";
 
-const HTTP_METHODS = ["GET", "POST"] as const;
+const HTTP_METHODS = ["GET", "POST", "PATCH", "PUT", "DELETE"] as const;
 type Method = (typeof HTTP_METHODS)[number];
 
 const app = new Hono();
@@ -30,8 +30,8 @@ app.use(
   "*",
   cors({
     origin: (origin) => origin || "*",
-    allowMethods: ["GET", "POST", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization", "x-forwarded-for"],
+    allowMethods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization", "Idempotency-Key", "x-forwarded-for"],
     exposeHeaders: ["Content-Length"],
     maxAge: 86400,
   }),
@@ -53,8 +53,13 @@ for (const { path: route, mod } of ROUTES) {
       const res = await (handler as RouteHandler)(c.req.raw, { params });
       return res;
     };
-    app.on(method, route, wrapped);
-    mounted++;
+    const mountPaths = route.startsWith("/api/gamification/")
+      ? [route, route.slice("/api".length)]
+      : [route];
+    for (const mountPath of mountPaths) {
+      app.on(method, mountPath, wrapped);
+      mounted++;
+    }
   }
 }
 

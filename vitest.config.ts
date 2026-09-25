@@ -6,6 +6,7 @@ export default defineConfig({
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
       "server-only": fileURLToPath(new URL("./src/stubs/server-only.ts", import.meta.url)),
+      "next/server": fileURLToPath(new URL("./src/stubs/next-server.ts", import.meta.url)),
     },
   },
   test: {

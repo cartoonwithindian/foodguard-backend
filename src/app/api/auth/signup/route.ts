@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
       name: parsed.data.name,
       password: parsed.data.password,
       language: (parsed.data.language?.toUpperCase() as "EN" | "HI") ?? "EN",
+      timezone: parsed.data.timezone,
     });
     return jsonSuccess(result, { requestId });
   } catch (error) {

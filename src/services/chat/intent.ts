@@ -17,6 +17,8 @@ const RULES: Array<{ intent: ChatIntent; patterns: RegExp[] }> = [
       /explain (this )?(product|it)/i,
       /about this product/i,
       /what.{0,40}(product|it).{0,40}(mean|tell|analysis)/i,
+      /(does|do|is|are).{0,40}(contain|include|have)/i,
+      /what (is|are) (the )?ingredients?/i,
       /is (this|it) (good|safe|healthy|fine)/i,
     ],
   },

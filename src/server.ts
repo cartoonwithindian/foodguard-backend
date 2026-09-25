@@ -94,7 +94,8 @@ app.use(
       return allowedOrigins.has(origin) ? origin : undefined;
     },
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization", "x-forwarded-for"],
+    // `Idempotency-Key` is read by the gamification activity routes.
+    allowHeaders: ["Content-Type", "Authorization", "Idempotency-Key", "x-forwarded-for"],
     exposeHeaders: ["Content-Length"],
     maxAge: 86400,
   }),
@@ -139,8 +140,13 @@ for (const { path: route, mod } of ROUTES) {
       const res = await (handler as RouteHandler)(c.req.raw, { params });
       return res;
     };
-    app.on(method, route, wrapped);
-    mounted++;
+    const mountPaths = route.startsWith("/api/gamification/")
+      ? [route, route.slice("/api".length)]
+      : [route];
+    for (const mountPath of mountPaths) {
+      app.on(method, mountPath, wrapped);
+      mounted++;
+    }
   }
 }
 

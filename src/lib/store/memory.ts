@@ -30,6 +30,21 @@ import {
   type ChallengeDefinitionRow,
 } from "@/gamification/challenges/store-utils";
 import type { ChallengeDefinitionView, ChallengeHistoryView } from "@/gamification/challenges/models";
+import { streakProtectionConfig, PROTECTION_REASONS } from "@/gamification/protection/config";
+import { applyProtectionCap, decideProtection } from "@/gamification/protection/protection.engine";
+import { listRewardDefinitions, rewardsConfig } from "@/gamification/rewards/config";
+import { milestoneKeyFor, observeCondition, toRewardView } from "@/gamification/rewards/reward.engine";
+import type {
+  ClaimRewardResult,
+  GamificationOverview,
+  RewardEvaluationContext,
+  RewardListResult,
+  RewardRecord,
+  RewardView,
+  StreakProtectionHistoryResult,
+  StreakProtectionStatus,
+  StreakProtectionUsageRecord,
+} from "@/gamification/models/rewards";
 import { AppError, ErrorCodes } from "@/lib/errors";
 import { xpService } from "@/gamification/services/xp.service";
 import { streakService } from "@/gamification/services/streak.service";
@@ -125,6 +140,11 @@ export class InMemoryStore implements DataStore {
   private gamificationActivities: (GamificationActivityResult["activity"] & { ingredientId?: string | null })[] = [];
   private challengeDefinitions = new Map<string, ChallengeDefinitionRow>();
   private userChallenges: UserChallengeRow[] = [];
+  // Module 4. Created lazily: a new user holds no protection and no reward
+  // until a real milestone earns one, so a read never seeds a fake inventory.
+  private streakProtections = new Map<string, { availableCount: number; usedCount: number }>();
+  private streakProtectionUsages: StreakProtectionUsageRecord[] = [];
+  private userRewards: RewardRecord[] = [];
   private gamificationLock: Promise<void> = Promise.resolve();
   private conversations = new Map<string, ChatConversationRecord>();
   private chatMessages: ChatMessageRecord[] = [];
@@ -377,19 +397,364 @@ export class InMemoryStore implements DataStore {
       (activity) => activity.userId === user.id && activity.actionType === "product_scan",
     );
     const existing = this.gamificationProfiles.get(user.id);
+    const activityDates = activities.map((activity) => activity.activityDate);
+    const now = rules.now();
+    const today = rules.streakService.today(user.timezone, now);
+    const base = rules.streakService.calculateForProfile(activityDates, today);
+    const totalXp =
+      existing?.totalXp ?? activities.reduce((sum, activity) => sum + activity.xpAwarded, 0);
+    const longestStreak = Math.max(existing?.longestStreak ?? 0, base.longestStreak);
+
+    // Module 4 runs first: a consumed protection changes the streak answer.
+    // `longestStreak` is protection-independent, so reward eligibility is
+    // evaluated from it without a circular read.
+    this.reconcileModule4(user.id, {
+      now,
+      today,
+      activityDates,
+      totalXp,
+      longestStreak,
+    });
     const calculated = rules.streakService.calculateForProfile(
-      activities.map((activity) => activity.activityDate),
-      rules.streakService.today(user.timezone, rules.now()),
+      activityDates,
+      today,
+      this.protectedDatesFor(user.id),
     );
     return {
       userId: user.id,
-      totalXp: existing?.totalXp ?? activities.reduce((sum, activity) => sum + activity.xpAwarded, 0),
+      totalXp,
       currentStreak: calculated.currentStreak,
       longestStreak: Math.max(existing?.longestStreak ?? 0, calculated.longestStreak),
       lastActivityDate: calculated.lastActivityDate,
       createdAt: existing?.createdAt ?? new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
+  }
+
+  // ── Module 4: streak protection + rewards ──────────────────
+  private protectionFor(userId: string): { availableCount: number; usedCount: number } {
+    return this.streakProtections.get(userId) ?? { availableCount: 0, usedCount: 0 };
+  }
+
+  private protectedDatesFor(userId: string): string[] {
+    return this.streakProtectionUsages
+      .filter((usage) => usage.userId === userId)
+      .map((usage) => usage.protectedDate);
+  }
+
+  private usageFor(userId: string): StreakProtectionUsageRecord[] {
+    return this.streakProtectionUsages
+      .filter((usage) => usage.userId === userId)
+      .sort((a, b) => (a.usedAt < b.usedAt ? 1 : -1));
+  }
+
+  /**
+   * Grant earned rewards, then spend protections on genuinely missed days.
+   *
+   * Mirrors the Prisma path and relies on the same unique keys: a milestone is
+   * recorded at most once per user, and a missed date is bridged at most once.
+   * The caller holds `gamificationLock`, so this is serialized.
+   */
+  private reconcileModule4(
+    userId: string,
+    input: {
+      now: Date;
+      today: string;
+      activityDates: readonly string[];
+      totalXp: number;
+      longestStreak: number;
+    },
+  ): void {
+    const profile = this.gamificationProfiles.get(userId);
+    const context: RewardEvaluationContext = {
+      userId,
+      now: input.now,
+      profile: {
+        userId,
+        totalXp: input.totalXp,
+        currentStreak: input.longestStreak,
+        longestStreak: input.longestStreak,
+        lastActivityDate: input.activityDates.at(-1) ?? null,
+        createdAt: profile?.createdAt ?? input.now.toISOString(),
+        updatedAt: profile?.updatedAt ?? input.now.toISOString(),
+      },
+      completedChallengeIds: this.userChallenges
+        .filter((challenge) => challenge.userId === userId && challenge.completed)
+        .map((challenge) => challenge.challengeId),
+      definitions: listRewardDefinitions(),
+    };
+
+    const recordedKeys = new Set(
+      this.userRewards.filter((reward) => reward.userId === userId).map((r) => r.milestoneKey),
+    );
+    for (const definition of listRewardDefinitions()) {
+      const observed = observeCondition(definition, context);
+      if (observed === null || observed < definition.condition.target) continue;
+      const milestoneKey = milestoneKeyFor(definition, observed);
+      if (recordedKeys.has(milestoneKey)) continue;
+
+      if (definition.autoClaim && definition.rewardType === "STREAK_PROTECTION") {
+        const current = this.protectionFor(userId);
+        const capped = applyProtectionCap(current.availableCount, definition.rewardValue);
+        this.streakProtections.set(userId, {
+          availableCount: capped.availableCount,
+          usedCount: current.usedCount,
+        });
+      }
+      if (definition.autoClaim && definition.rewardType === "XP_BONUS") {
+        if (profile) {
+          this.gamificationProfiles.set(userId, {
+            ...profile,
+            totalXp: profile.totalXp + definition.rewardValue,
+          });
+        }
+      }
+      this.userRewards.push({
+        userRewardId: this.nextId("reward"),
+        userId,
+        rewardId: definition.id,
+        milestoneKey,
+        earnedAt: input.now.toISOString(),
+        claimed: definition.autoClaim,
+        claimedAt: definition.autoClaim ? input.now.toISOString() : null,
+      });
+      recordedKeys.add(milestoneKey);
+    }
+
+    const protection = this.protectionFor(userId);
+    const decision = decideProtection({
+      activityDates: input.activityDates,
+      protectedDates: this.protectedDatesFor(userId),
+      today: input.today,
+      availableCount: protection.availableCount,
+    });
+    if (decision.declined || decision.protectedDates.length === 0) return;
+
+    let availableCount = protection.availableCount;
+    let usedCount = protection.usedCount;
+    for (const protectedDate of decision.protectedDates) {
+      if (availableCount <= 0) break;
+      // The unique (user, date) rule: a date is bridged at most once.
+      if (this.streakProtectionUsages.some(
+        (usage) => usage.userId === userId && usage.protectedDate === protectedDate,
+      )) {
+        continue;
+      }
+      this.streakProtectionUsages.push({
+        usageId: this.nextId("protection"),
+        userId,
+        protectedDate,
+        streakBefore: decision.streakBefore,
+        streakAfter: decision.streakAfter,
+        usedAt: input.now.toISOString(),
+        reason: PROTECTION_REASONS.missedActivityDay,
+      });
+      availableCount -= 1;
+      usedCount += 1;
+    }
+    // Only write when this pass moved a counter, so a read never seeds a
+    // zero-protection record. Mirrors the Prisma path.
+    if (availableCount !== protection.availableCount || usedCount !== protection.usedCount) {
+      this.streakProtections.set(userId, { availableCount, usedCount });
+    }
+  }
+
+  private rewardViewsFor(
+    userId: string,
+    context: RewardEvaluationContext,
+  ): RewardView[] {
+    const earned = new Map<string, RewardRecord>();
+    for (const record of this.userRewards) {
+      if (record.userId !== userId) continue;
+      // Most recent record wins, so a repeatable reward shows its latest state.
+      const previous = earned.get(record.rewardId);
+      if (!previous || previous.earnedAt < record.earnedAt) {
+        earned.set(record.rewardId, record);
+      }
+    }
+    return listRewardDefinitions().map((definition) =>
+      toRewardView(definition, context, earned.get(definition.id) ?? null),
+    );
+  }
+
+  private summarizeRewards(rewards: RewardView[]): RewardListResult {
+    const earned = rewards.filter((reward) => reward.earned);
+    return {
+      rewards,
+      available: earned.filter((reward) => !reward.claimed).length,
+      earned: earned.length,
+      claimed: rewards.filter((reward) => reward.claimed).length,
+    };
+  }
+
+  private module4Context(
+    userId: string,
+    rules: GamificationRules,
+  ): RewardEvaluationContext {
+    const user = this.users.get(userId);
+    if (!user) throw new AppError(ErrorCodes.UNAUTHORIZED, "User not found", 401);
+    const profile = this.gamificationProfileForUser(user, rules);
+    return {
+      userId,
+      now: rules.now(),
+      profile,
+      completedChallengeIds: this.userChallenges
+        .filter((challenge) => challenge.userId === userId && challenge.completed)
+        .map((challenge) => challenge.challengeId),
+      definitions: listRewardDefinitions(),
+    };
+  }
+
+  async getStreakProtection(
+    userId: string,
+    rules: GamificationRules,
+  ): Promise<StreakProtectionStatus> {
+    return this.withGamificationLock(async () => {
+      const user = this.users.get(userId);
+      if (!user) throw new AppError(ErrorCodes.UNAUTHORIZED, "User not found", 401);
+      const profile = this.gamificationProfileForUser(user, rules);
+      const usage = this.usageFor(userId);
+      const protection = this.protectionFor(userId);
+      const latest = usage[0];
+      return {
+        available_count: protection.availableCount,
+        used_count: protection.usedCount,
+        max_available: streakProtectionConfig.maxAvailable,
+        current_streak: profile.currentStreak,
+        last_protected: latest
+          ? {
+              protected_date: latest.protectedDate,
+              used_at: latest.usedAt,
+              reason: latest.reason,
+            }
+          : null,
+      };
+    });
+  }
+
+  async getStreakProtectionHistory(
+    userId: string,
+    limit = rewardsConfig.historyLimit,
+  ): Promise<StreakProtectionHistoryResult> {
+    return this.withGamificationLock(async () => {
+      if (!this.users.has(userId)) {
+        throw new AppError(ErrorCodes.UNAUTHORIZED, "User not found", 401);
+      }
+      return {
+        history: this.usageFor(userId).slice(0, limit).map((usage) => ({
+          protected_date: usage.protectedDate,
+          streak_before: usage.streakBefore,
+          streak_after: usage.streakAfter,
+          used_at: usage.usedAt,
+          reason: usage.reason,
+        })),
+      };
+    });
+  }
+
+  async getRewards(userId: string, rules: GamificationRules): Promise<RewardListResult> {
+    return this.withGamificationLock(async () => {
+      const context = this.module4Context(userId, rules);
+      return this.summarizeRewards(this.rewardViewsFor(userId, context));
+    });
+  }
+
+  async getRewardHistory(
+    userId: string,
+    rules: GamificationRules,
+  ): Promise<RewardListResult> {
+    return this.getRewards(userId, rules);
+  }
+
+  async claimReward(
+    userId: string,
+    input: { userRewardId?: string | null; rewardId?: string | null },
+    rules: GamificationRules,
+  ): Promise<ClaimRewardResult> {
+    return this.withGamificationLock(async () => {
+      const context = this.module4Context(userId, rules);
+      const rewardId = input.userRewardId
+        ? this.userRewards.find(
+            (reward) => reward.userId === userId && reward.userRewardId === input.userRewardId,
+          )?.rewardId
+        : input.rewardId;
+      if (!rewardId) throw new AppError(ErrorCodes.VALIDATION_ERROR, "reward_id is required");
+      const definition = listRewardDefinitions().find((entry) => entry.id === rewardId);
+      if (!definition) throw new AppError(ErrorCodes.VALIDATION_ERROR, "Unknown reward", 400);
+
+      const view = this.rewardViewsFor(userId, context).find(
+        (entry) => entry.reward_id === rewardId,
+      );
+      // Eligibility is re-derived server-side; the client cannot assert it.
+      if (!view?.earned) {
+        throw new AppError(ErrorCodes.VALIDATION_ERROR, "Reward has not been earned", 400);
+      }
+      if (view.claimed) {
+        return { reward: view, claimed: false, alreadyClaimed: true };
+      }
+      const target = this.userRewards
+        .filter((reward) => reward.userId === userId && reward.rewardId === rewardId && !reward.claimed)
+        .sort((a, b) => (a.earnedAt < b.earnedAt ? -1 : 1))[0];
+      if (!target) return { reward: view, claimed: false, alreadyClaimed: true };
+
+      if (definition.rewardType === "STREAK_PROTECTION") {
+        const protection = this.protectionFor(userId);
+        const next = Math.min(
+          streakProtectionConfig.maxAvailable,
+          protection.availableCount + definition.rewardValue,
+        );
+        this.streakProtections.set(userId, { ...protection, availableCount: next });
+      } else if (definition.rewardType === "XP_BONUS") {
+        const profile = this.gamificationProfiles.get(userId);
+        if (profile) {
+          this.gamificationProfiles.set(userId, {
+            ...profile,
+            totalXp: profile.totalXp + definition.rewardValue,
+          });
+        }
+      }
+      target.claimed = true;
+      target.claimedAt = context.now.toISOString();
+
+      const refreshed = this.module4Context(userId, rules);
+      const updated =
+        this.rewardViewsFor(userId, refreshed).find((entry) => entry.reward_id === rewardId) ??
+        view;
+      return { reward: updated, claimed: true, alreadyClaimed: false };
+    });
+  }
+
+  async getGamificationOverview(
+    userId: string,
+    rules: GamificationRules,
+  ): Promise<GamificationOverview> {
+    return this.withGamificationLock(async () => {
+      const user = this.users.get(userId);
+      if (!user) throw new AppError(ErrorCodes.UNAUTHORIZED, "User not found", 401);
+      const context = this.module4Context(userId, rules);
+      const rewards = this.rewardViewsFor(userId, context);
+      const earned = rewards.filter((reward) => reward.earned);
+      const protection = this.protectionFor(userId);
+      return {
+        total_xp: context.profile.totalXp,
+        // No level service exists yet, so level 1 is reported rather than an
+        // invented scale. A real level module replaces this single line.
+        level: 1,
+        current_streak: context.profile.currentStreak,
+        longest_streak: context.profile.longestStreak,
+        achievements: {},
+        challenges: {},
+        streak_protection: {
+          available_count: protection.availableCount,
+          max_available: streakProtectionConfig.maxAvailable,
+          used_count: protection.usedCount,
+        },
+        rewards: {
+          available: earned.filter((reward) => !reward.claimed).length,
+          earned: earned.length,
+        },
+      };
+    });
   }
 
   // ── products ──────────────────────────────────────────────

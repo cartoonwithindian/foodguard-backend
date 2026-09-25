@@ -70,6 +70,20 @@ export const personalizedSchema = z.object({
   // No `userId`: the session identifies the user (see analyzeSchema).
 });
 
+/**
+ * Claiming a Module 4 reward identifies *which* reward only. It deliberately
+ * carries no XP amount, progress, or completion flag: eligibility and the
+ * payout are re-derived from persisted activity inside the store transaction.
+ */
+export const claimRewardSchema = z
+  .object({
+    reward_id: z.string().trim().min(1).max(64).optional().nullable(),
+    user_reward_id: z.string().trim().min(1).max(64).optional().nullable(),
+  })
+  .refine((value) => Boolean(value.reward_id || value.user_reward_id), {
+    message: "Either reward_id or user_reward_id is required",
+  });
+
 export const compareSchema = z.object({
   productIds: z.array(z.string().min(1).max(120)).min(2).max(5),
 });

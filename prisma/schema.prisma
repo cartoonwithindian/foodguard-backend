@@ -25,20 +25,23 @@ enum Language {
 
 // ── Users ────────────────────────────────────────────────────
 model User {
-  id                     String                 @id @default(cuid())
-  email                  String                 @unique
+  id                     String                  @id @default(cuid())
+  email                  String                  @unique
   name                   String
   passwordHash           String?
   authProviderId         String?
-  role                   Role                   @default(USER)
-  language               Language               @default(EN)
-  timezone               String                 @default("UTC")
-  createdAt              DateTime               @default(now())
-  updatedAt              DateTime               @updatedAt
+  role                   Role                    @default(USER)
+  language               Language                @default(EN)
+  timezone               String                  @default("UTC")
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
   preference             UserPreference?
   gamification           UserGamification?
   gamificationActivities GamificationActivity[]
   userChallenges         UserChallenge[]
+  streakProtection       UserStreakProtection?
+  streakProtectionUsages StreakProtectionUsage[]
+  userRewards            UserReward[]
   scans                  HistoryEntry[]
   adminActions           AdminAction[]
   chatConversations      ChatConversation[]
@@ -269,6 +272,79 @@ model UserChallenge {
   @@index([userId, completed])
   @@index([userId, periodStart])
   @@index([periodStart, periodEnd])
+}
+
+/// FoodGuard Module 4: a user's streak-protection inventory. One row per user,
+/// created lazily so a new user holds no protection until a real milestone
+/// earns one.
+model UserStreakProtection {
+  userId         String   @id
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  availableCount Int      @default(0)
+  usedCount      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("UserStreakProtection")
+}
+
+/// An audit row for one consumed protection. Deliberately NOT a
+/// GamificationActivity: a protection preserves a streak without the user
+/// having scanned anything, so it must never appear as qualifying activity.
+/// The unique constraint makes consuming the same missed date twice a no-op.
+model StreakProtectionUsage {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Local calendar date (YYYY-MM-DD) of the missed day that was bridged.
+  protectedDate String
+  streakBefore  Int
+  streakAfter   Int
+  usedAt        DateTime @default(now())
+  reason        String
+
+  @@unique([userId, protectedDate])
+  @@index([userId])
+  @@index([userId, usedAt])
+}
+
+/// A configured reward. Definitions are configuration only: this table never
+/// implies a user earned anything.
+model RewardDefinition {
+  rewardId      String   @id
+  name          String
+  description   String
+  rewardType    String
+  conditionType String
+  targetValue   Int
+  rewardValue   Int
+  autoClaim     Boolean  @default(true)
+  enabled       Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now())
+
+  @@map("RewardDefinition")
+}
+
+/// One earned reward. `milestoneKey` is the idempotency anchor: it is the
+/// reward id for a one-time reward and the reward id plus the value reached for
+/// a repeatable one, so the same milestone can never be granted twice even
+/// across restarts or concurrent requests.
+model UserReward {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rewardId     String
+  milestoneKey String
+  earnedAt     DateTime  @default(now())
+  claimed      Boolean   @default(false)
+  claimedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @default(now())
+
+  @@unique([userId, milestoneKey])
+  @@index([userId, earnedAt])
+  @@index([userId, rewardId])
 }
 
 model UnknownIngredient {

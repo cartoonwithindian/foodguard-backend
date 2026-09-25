@@ -24,8 +24,7 @@ import type {
   ValidatedGamificationActivityInput,
 } from "@/gamification/models/gamification";
 import type { ChallengeDefinition } from "@/gamification/challenges/config";
-import { challengePeriodService } from "@/gamification/challenges/period.service";
-import { evaluateChallenges, type ChallengeActivityRow } from "@/gamification/challenges/progress.service";
+import { challengePeriodService } from "@/gamification/challenges/period.service";import { evaluateChallenges, type ChallengeActivityRow } from "@/gamification/challenges/progress.service";
 import {
   challengeDefinitionToRow,
   challengeRowToDefinition,
@@ -38,7 +37,25 @@ import { preferencesToRecord, MAX_HISTORY_ENTRIES, MAX_HISTORY_LIST, MAX_SEARCH_
 import { EVIDENCE_SEED } from "@/data/seed/evidence";
 import type { ProductLookupResult } from "@/lib/product-provider";
 import { normalizeNutritionFacts } from "@/lib/nutrition/units";
+import { listRewardDefinitions, rewardsConfig } from "@/gamification/rewards/config";
+import { toRewardView, type EarnedMilestone } from "@/gamification/rewards/reward.engine";
+import {
+  consumeProtectionsTx,
+  grantEarnedRewardsTx,
+  protectionStatus,
+  readProtectionStateTx,
+} from "@/lib/store/module4.prisma";
+import { streakProtectionConfig } from "@/gamification/protection/config";
 import { AppError, ErrorCodes } from "@/lib/errors";
+import type {
+  ClaimRewardResult,
+  GamificationOverview,
+  RewardEvaluationContext,
+  RewardListResult,
+  RewardView,
+  StreakProtectionHistoryResult,
+  StreakProtectionStatus,
+} from "@/gamification/models/rewards";
 import { xpService } from "@/gamification/services/xp.service";
 import { streakService } from "@/gamification/services/streak.service";
 
@@ -201,10 +218,24 @@ async function readGamificationProfileTx(
     select: { activityDate: true, xpAwarded: true },
   });
   const activityDates = activityRows.map((row) => row.activityDate);
-  const calculated = rules.streakService.calculateForProfile(
+  const now = rules.now();
+  const today = rules.streakService.today(timezone, now);
+
+  // Module 4 runs before the streak is resolved, because a protection can
+  // change the answer. `longestStreak` does not depend on protections, so
+  // reward eligibility is evaluated from it directly -- no circular read.
+  const baseState = rules.streakService.calculateForProfile(activityDates, today);
+  const protectedDates = await reconcileModule4Tx(tx, {
+    userId,
+    timezone,
+    now,
+    today,
     activityDates,
-    rules.streakService.today(timezone, rules.now()),
-  );
+    totalXp: profileRow?.totalXp ?? activityRows.reduce((sum, row) => sum + row.xpAwarded, 0),
+    longestStreak: Math.max(profileRow?.longestStreak ?? 0, baseState.longestStreak),
+  });
+
+  const calculated = rules.streakService.calculateForProfile(activityDates, today, protectedDates);
   const totalXp = profileRow?.totalXp ?? activityRows.reduce((sum, row) => sum + row.xpAwarded, 0);
   const profile = {
     userId,
@@ -212,8 +243,8 @@ async function readGamificationProfileTx(
     currentStreak: calculated.currentStreak,
     longestStreak: Math.max(profileRow?.longestStreak ?? 0, calculated.longestStreak),
     lastActivityDate: calculated.lastActivityDate,
-    createdAt: profileRow?.createdAt ?? new Date(),
-    updatedAt: profileRow?.updatedAt ?? new Date(),
+    createdAt: profileRow?.createdAt ?? now,
+    updatedAt: profileRow?.updatedAt ?? now,
   };
 
   if (
@@ -238,6 +269,65 @@ async function readGamificationProfileTx(
     createdAt: profile.createdAt.toISOString(),
     updatedAt: profile.updatedAt.toISOString(),
   };
+}
+
+type Module4ReconcileInput = {
+  userId: string;
+  timezone: string;
+  now: Date;
+  today: string;
+  activityDates: readonly string[];
+  totalXp: number;
+  longestStreak: number;
+};
+
+/**
+ * Module 4 reconciliation: grant rewards the user has genuinely earned, then
+ * spend protections on genuinely missed days.
+ *
+ * Rewards are evaluated first so a protection earned at this very milestone is
+ * available to bridge the current gap. Both steps are idempotent at the
+ * database level, so this is safe to run on every profile read.
+ */
+async function reconcileModule4Tx(
+  tx: Prisma.TransactionClient,
+  input: Module4ReconcileInput,
+): Promise<string[]> {
+  let state = await readProtectionStateTx(tx, input.userId);
+  const completedChallengeIds = (
+    await tx.userChallenge.findMany({
+      where: { userId: input.userId, completed: true },
+      select: { challengeId: true },
+    })
+  ).map((row) => row.challengeId);
+
+  const context: RewardEvaluationContext = {
+    userId: input.userId,
+    now: input.now,
+    profile: {
+      userId: input.userId,
+      totalXp: input.totalXp,
+      // `longestStreak` is protection-independent, so this cannot be skewed by
+      // a protection consumed in the same pass.
+      currentStreak: input.longestStreak,
+      longestStreak: input.longestStreak,
+      lastActivityDate: input.activityDates.at(-1) ?? null,
+      createdAt: input.now.toISOString(),
+      updatedAt: input.now.toISOString(),
+    },
+    completedChallengeIds,
+    definitions: listRewardDefinitions(),
+  };
+
+  const granted = await grantEarnedRewardsTx(tx, input.userId, context, state);
+  state = granted.state;
+  const consumed = await consumeProtectionsTx(
+    tx,
+    input.userId,
+    { activityDates: input.activityDates, today: input.today, now: input.now },
+    state,
+  );
+  return consumed.protectedDates;
 }
 
 type ChallengeUserRow = {
@@ -1203,6 +1293,273 @@ export class PrismaStore implements DataStore {
         daily,
         weekly,
         history: await challengeHistoryTx(tx, userId, outcome.instances, user.timezone),
+      };
+    });
+  }
+
+  // ── Module 4: streak protection + rewards ──────────────────
+  /**
+   * Lock the user row and reconcile Module 4, returning the protected dates
+   * that the streak calculation must honour. Every Module 4 entry point funnels
+   * through here so the business rules exist exactly once.
+   */
+  private async module4ContextTx(
+    tx: Prisma.TransactionClient,
+    userId: string,
+    rules: GamificationRules,
+  ): Promise<{
+    user: { id: string; timezone: string };
+    profile: GamificationProfileRecord;
+    context: RewardEvaluationContext;
+    state: Awaited<ReturnType<typeof readProtectionStateTx>>;
+  }> {
+    const user = await tx.user.findUnique({
+      where: { id: userId },
+      select: { id: true, timezone: true },
+    });
+    if (!user) throw new AppError(ErrorCodes.UNAUTHORIZED, "User not found", 401);
+    await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${userId} FOR UPDATE`;
+
+    const activityRows = await tx.gamificationActivity.findMany({
+      where: { userId, actionType: "product_scan" },
+      select: { activityDate: true, xpAwarded: true },
+    });
+    const activityDates = activityRows.map((row) => row.activityDate);
+    const now = rules.now();
+    const today = rules.streakService.today(user.timezone, now);
+    const profileRow = await tx.userGamification.findUnique({ where: { userId } });
+    const totalXp =
+      profileRow?.totalXp ?? activityRows.reduce((sum, row) => sum + row.xpAwarded, 0);
+    const baseState = rules.streakService.calculateForProfile(activityDates, today);
+    const longestStreak = Math.max(profileRow?.longestStreak ?? 0, baseState.longestStreak);
+
+    const protectedDates = await reconcileModule4Tx(tx, {
+      userId,
+      timezone: user.timezone,
+      now,
+      today,
+      activityDates,
+      totalXp,
+      longestStreak,
+    });
+    const resolved = rules.streakService.calculateForProfile(activityDates, today, protectedDates);
+    const profile: GamificationProfileRecord = {
+      userId,
+      totalXp,
+      currentStreak: resolved.currentStreak,
+      longestStreak: Math.max(profileRow?.longestStreak ?? 0, resolved.longestStreak),
+      lastActivityDate: resolved.lastActivityDate,
+      createdAt: (profileRow?.createdAt ?? now).toISOString(),
+      updatedAt: (profileRow?.updatedAt ?? now).toISOString(),
+    };
+    const completedChallengeIds = (
+      await tx.userChallenge.findMany({
+        where: { userId, completed: true },
+        select: { challengeId: true },
+      })
+    ).map((row) => row.challengeId);
+    const context: RewardEvaluationContext = {
+      userId,
+      now,
+      profile,
+      completedChallengeIds,
+      definitions: listRewardDefinitions(),
+    };
+    const state = await readProtectionStateTx(tx, userId);
+    return { user, profile, context, state };
+  }
+
+  private async rewardViewsTx(
+    tx: Prisma.TransactionClient,
+    context: RewardEvaluationContext,
+  ): Promise<RewardView[]> {
+    const rows = await tx.userReward.findMany({
+      where: { userId: context.userId },
+      orderBy: { earnedAt: "desc" },
+    });
+    const byMilestone = new Map<string, EarnedMilestone>();
+    for (const row of rows) {
+      const definition = listRewardDefinitions().find((entry) => entry.id === row.rewardId);
+      if (!definition) continue;
+      // Keep the most recent record for a repeatable reward's milestone.
+      byMilestone.set(`${row.rewardId}`, {
+        userRewardId: row.id,
+        rewardId: row.rewardId,
+        milestoneKey: row.milestoneKey,
+        earnedAt: row.earnedAt.toISOString(),
+        claimed: row.claimed,
+        claimedAt: row.claimedAt?.toISOString() ?? null,
+      });
+      void definition;
+    }
+    return listRewardDefinitions().map((definition) => {
+      const earned =
+        [...byMilestone.values()].reverse().find((entry) => entry.rewardId === definition.id) ?? null;
+      return toRewardView(definition, context, earned);
+    });
+  }
+
+  private summarizeRewards(rewards: RewardView[]): RewardListResult {
+    const earned = rewards.filter((reward) => reward.earned);
+    return {
+      rewards,
+      available: rewards.filter((reward) => reward.earned && !reward.claimed).length,
+      earned: earned.length,
+      claimed: rewards.filter((reward) => reward.claimed).length,
+    };
+  }
+
+  async getStreakProtection(
+    userId: string,
+    rules: GamificationRules,
+  ): Promise<StreakProtectionStatus> {
+    return serializableTransaction(async (tx) => {
+      const { profile, state } = await this.module4ContextTx(tx, userId, rules);
+      return protectionStatus(state, profile.currentStreak);
+    });
+  }
+
+  async getStreakProtectionHistory(
+    userId: string,
+    limit = rewardsConfig.historyLimit,
+  ): Promise<StreakProtectionHistoryResult> {
+    return serializableTransaction(async (tx) => {
+      const user = await tx.user.findUnique({ where: { id: userId }, select: { id: true } });
+      if (!user) throw new AppError(ErrorCodes.UNAUTHORIZED, "User not found", 401);
+      const state = await readProtectionStateTx(tx, userId);
+      return {
+        history: state.usage.slice(0, limit).map((usage) => ({
+          protected_date: usage.protectedDate,
+          streak_before: usage.streakBefore,
+          streak_after: usage.streakAfter,
+          used_at: usage.usedAt,
+          reason: usage.reason,
+        })),
+      };
+    });
+  }
+
+  async getRewards(userId: string, rules: GamificationRules): Promise<RewardListResult> {
+    return serializableTransaction(async (tx) => {
+      const { context } = await this.module4ContextTx(tx, userId, rules);
+      return this.summarizeRewards(await this.rewardViewsTx(tx, context));
+    });
+  }
+
+  async getRewardHistory(
+    userId: string,
+    rules: GamificationRules,
+  ): Promise<RewardListResult> {
+    return serializableTransaction(async (tx) => {
+      const { context } = await this.module4ContextTx(tx, userId, rules);
+      return this.summarizeRewards(await this.rewardViewsTx(tx, context));
+    });
+  }
+
+  async claimReward(
+    userId: string,
+    input: { userRewardId?: string | null; rewardId?: string | null },
+    rules: GamificationRules,
+  ): Promise<ClaimRewardResult> {
+    return serializableTransaction(async (tx) => {
+      const { context } = await this.module4ContextTx(tx, userId, rules);
+      const rewardId = input.userRewardId
+        ? (await tx.userReward.findFirst({
+            where: { id: input.userRewardId, userId },
+            select: { rewardId: true },
+          }))?.rewardId
+        : input.rewardId;
+      if (!rewardId) {
+        throw new AppError(ErrorCodes.VALIDATION_ERROR, "reward_id is required");
+      }
+      const definition = listRewardDefinitions().find((entry) => entry.id === rewardId);
+      if (!definition) {
+        throw new AppError(ErrorCodes.VALIDATION_ERROR, "Unknown reward", 400);
+      }
+      // Eligibility is re-derived server-side; the client cannot assert it.
+      const views = await this.rewardViewsTx(tx, context);
+      const view = views.find((entry) => entry.reward_id === rewardId) ?? null;
+      if (!view?.earned) {
+        throw new AppError(ErrorCodes.VALIDATION_ERROR, "Reward has not been earned", 400);
+      }
+      if (view.claimed) {
+        return { reward: view, claimed: false, alreadyClaimed: true };
+      }
+
+      const target = await tx.userReward.findFirst({
+        where: { userId, rewardId, claimed: false },
+        orderBy: { earnedAt: "asc" },
+      });
+      if (!target) {
+        return { reward: view, claimed: false, alreadyClaimed: true };
+      }
+
+      if (definition.rewardType === "STREAK_PROTECTION") {
+        const state = await readProtectionStateTx(tx, userId);
+        const capped = Math.min(
+          streakProtectionConfig.maxAvailable,
+          state.availableCount + definition.rewardValue,
+        );
+        await tx.userStreakProtection.upsert({
+          where: { userId },
+          create: { userId, availableCount: capped },
+          update: { availableCount: capped },
+        });
+      } else if (definition.rewardType === "XP_BONUS") {
+        // Route through the same counter Module 1 and Module 3 use, so the XP
+        // balance stays single-sourced.
+        await tx.userGamification.upsert({
+          where: { userId },
+          create: { userId, totalXp: definition.rewardValue },
+          update: { totalXp: { increment: definition.rewardValue } },
+        });
+      }
+
+      const claimed = await tx.userReward.updateMany({
+        where: { id: target.id, claimed: false },
+        data: { claimed: true, claimedAt: context.now },
+      });
+      if (claimed.count === 0) {
+        return { reward: view, claimed: false, alreadyClaimed: true };
+      }
+      const fresh = await this.module4ContextTx(tx, userId, rules);
+      const updated = (await this.rewardViewsTx(tx, fresh.context)).find(
+        (entry) => entry.reward_id === rewardId,
+      );
+      return {
+        reward: updated ?? view,
+        claimed: true,
+        alreadyClaimed: false,
+      };
+    });
+  }
+
+  async getGamificationOverview(
+    userId: string,
+    rules: GamificationRules,
+  ): Promise<GamificationOverview> {
+    return serializableTransaction(async (tx) => {
+      const { profile, context, state } = await this.module4ContextTx(tx, userId, rules);
+      const rewards = await this.rewardViewsTx(tx, context);
+      const earnedRewards = rewards.filter((reward) => reward.earned);
+      return {
+        total_xp: profile.totalXp,
+        // No level service exists yet, so level 1 is reported rather than an
+        // invented scale. A real level module replaces this single line.
+        level: 1,
+        current_streak: profile.currentStreak,
+        longest_streak: profile.longestStreak,
+        achievements: {},
+        challenges: {},
+        streak_protection: {
+          available_count: state.availableCount,
+          max_available: streakProtectionConfig.maxAvailable,
+          used_count: state.usedCount,
+        },
+        rewards: {
+          available: earnedRewards.filter((reward) => !reward.claimed).length,
+          earned: earnedRewards.length,
+        },
       };
     });
   }

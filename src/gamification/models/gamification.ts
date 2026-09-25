@@ -84,7 +84,15 @@ export type GamificationRules = {
   streakService: {
     activityDate(timestamp: Date, timezone: string): string;
     today(timezone: string, now: Date): string;
-    calculateAfterActivity(activityDates: string[], activityDate: string): StreakState;
-    calculateForProfile(activityDates: string[], today: string): StreakState;
+    calculateAfterActivity(
+      activityDates: string[],
+      activityDate: string,
+      protectedDates?: readonly string[],
+    ): StreakState;
+    calculateForProfile(
+      activityDates: string[],
+      today: string,
+      protectedDates?: readonly string[],
+    ): StreakState;
   };
 };

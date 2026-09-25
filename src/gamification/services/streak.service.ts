@@ -52,13 +52,58 @@ function longestRun(sortedDates: string[]): number {
   return longest;
 }
 
-function countBackFrom(sortedDates: string[], lastDate: string): number {
-  let count = 1;
-  for (let index = sortedDates.length - 1; index > 0; index -= 1) {
-    if (addDays(sortedDates[index - 1], 1) !== sortedDates[index]) break;
-    count += 1;
+/**
+ * Streak length of the covered run that ends on `referenceDate`.
+ *
+ * `coveredDates` are days that keep a streak alive -- real qualifying activity
+ * plus any day a protection bridged. `countedDates` are the days that actually
+ * lengthen it. Separating the two is what stops a protection from inflating a
+ * streak: a bridged day holds the run together but is not a day the user
+ * actually used FoodGuard, so it is never counted.
+ */
+function streakRunLength(
+  coveredDates: string[],
+  countedDates: string[],
+  referenceDate: string,
+): number {
+  if (!coveredDates.includes(referenceDate)) return 0;
+  const counted = new Set(countedDates);
+  let length = 0;
+  let cursor = referenceDate;
+  // Bounded by the number of covered days, so a sparse history cannot spin.
+  for (let step = 0; step <= coveredDates.length; step += 1) {
+    if (counted.has(cursor)) length += 1;
+    const previous = addDays(cursor, -1);
+    if (!coveredDates.includes(previous)) break;
+    cursor = previous;
   }
-  return lastDate ? count : 0;
+  return length;
+}
+
+/** Longest counted run across the whole history, ignoring protections. */
+function longestCountedRun(coveredDates: string[], countedDates: string[]): number {
+  let longest = 0;
+  for (const date of countedDates) {
+    if (!coveredDates.includes(date)) continue;
+    longest = Math.max(longest, streakRunLength(coveredDates, countedDates, date));
+  }
+  return longest;
+}
+
+/**
+ * Local calendar dates strictly between `from` and `to`. These are the days a
+ * user could have qualified on and did not.
+ */
+export function missedDatesBetween(from: string, to: string): string[] {
+  if (!isDateKey(from) || !isDateKey(to)) return [];
+  const start = dateKeyToUtcMillis(from) + 86_400_000;
+  const end = dateKeyToUtcMillis(to);
+  if (end <= start) return [];
+  const missed: string[] = [];
+  for (let millis = start; millis < end; millis += 86_400_000) {
+    missed.push(millisToDateKey(millis));
+  }
+  return missed;
 }
 
 export function isValidTimezone(timezone: string): boolean {
@@ -102,30 +147,49 @@ export class StreakService {
     return this.activityDate(now, timezone);
   }
 
-  calculateAfterActivity(activityDates: string[], activityDate: string): StreakState {
-    const sorted = uniqueSortedDates([...activityDates, activityDate]);
-    const longestStreak = longestRun(sorted);
-    const lastActivityDate = sorted.at(-1) ?? null;
-    const currentStreak =
-      lastActivityDate === activityDate ? countBackFrom(sorted, activityDate) : 0;
-    return { currentStreak, longestStreak, lastActivityDate };
+  /**
+   * @param protectedDates Local dates bridged by a consumed protection. They
+   *   keep a run contiguous but never add to its length, so one protection can
+   *   preserve a streak without inflating it.
+   */
+  calculateAfterActivity(
+    activityDates: string[],
+    activityDate: string,
+    protectedDates: readonly string[] = [],
+  ): StreakState {
+    const counted = uniqueSortedDates([...activityDates, activityDate]);
+    const covered = uniqueSortedDates([...counted, ...protectedDates]);
+    const lastActivityDate = counted.at(-1) ?? null;
+    return {
+      currentStreak: streakRunLength(covered, counted, activityDate),
+      longestStreak: Math.max(longestCountedRun(covered, counted), longestRun(counted)),
+      lastActivityDate,
+    };
   }
 
-  calculateForProfile(activityDates: string[], today: string): StreakState {
-    const sorted = uniqueSortedDates(activityDates);
-    const lastActivityDate = sorted.at(-1) ?? null;
-    const longestStreak = longestRun(sorted);
+  calculateForProfile(
+    activityDates: string[],
+    today: string,
+    protectedDates: readonly string[] = [],
+  ): StreakState {
+    const counted = uniqueSortedDates(activityDates);
+    const lastActivityDate = counted.at(-1) ?? null;
+    const covered = uniqueSortedDates([...counted, ...protectedDates]);
+    const longestStreak = Math.max(longestCountedRun(covered, counted), longestRun(counted));
     if (!lastActivityDate) {
-      return { currentStreak: 0, longestStreak: 0, lastActivityDate: null };
+      return { currentStreak: 0, longestStreak, lastActivityDate: null };
     }
 
-    // A streak remains current through the day immediately after its last
-    // qualifying activity. Once a full local day is missed, it resets to zero.
+    // A streak survives only if every local day between its last qualifying
+    // activity and today was either used or bridged by a protection. With no
+    // protections this reduces to the original one-day grace: a single missed
+    // day resets the streak.
     const resetOnMissedDay = gamificationConfig.streakResetPolicy === "reset_on_missed_day";
-    const isCurrent =
-      !resetOnMissedDay || lastActivityDate === today || lastActivityDate === addDays(today, -1);
+    const protectedSet = new Set(protectedDates.filter(isDateKey));
+    const missed = resetOnMissedDay ? missedDatesBetween(lastActivityDate, today) : [];
+    const isCurrent = missed.every((date) => protectedSet.has(date));
     return {
-      currentStreak: isCurrent ? countBackFrom(sorted, lastActivityDate) : 0,
+      currentStreak: isCurrent ? streakRunLength(covered, counted, lastActivityDate) : 0,
       longestStreak,
       lastActivityDate,
     };

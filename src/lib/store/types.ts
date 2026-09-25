@@ -24,6 +24,13 @@ import type {
 } from "@/gamification/models/gamification";
 import type { ChallengeDefinition } from "@/gamification/challenges/config";
 import type { ChallengeListResult } from "@/gamification/challenges/models";
+import type {
+  ClaimRewardResult,
+  GamificationOverview,
+  RewardListResult,
+  StreakProtectionHistoryResult,
+  StreakProtectionStatus,
+} from "@/gamification/models/rewards";
 
 /**
  * Shared result bounds. The two stores previously disagreed: Prisma capped
@@ -139,6 +146,36 @@ export interface DataStore {
     challengeDefinitions: readonly ChallengeDefinition[],
     now: Date,
   ): Promise<ChallengeListResult>;
+
+  // Module 4: streak protection + rewards.
+  //
+  // Every one of these reconciles real persisted state first, so a response can
+  // never describe a protection or reward that was not genuinely earned. The
+  // reconciliation is shared rather than repeated per endpoint.
+  getStreakProtection(
+    userId: string,
+    rules: GamificationRules,
+  ): Promise<StreakProtectionStatus>;
+  getStreakProtectionHistory(
+    userId: string,
+    limit?: number,
+  ): Promise<StreakProtectionHistoryResult>;
+  getRewards(userId: string, rules: GamificationRules): Promise<RewardListResult>;
+  getRewardHistory(
+    userId: string,
+    rules: GamificationRules,
+  ): Promise<RewardListResult>;
+  /**
+   * Applies an earned, claim-required reward. The store re-validates
+   * eligibility server-side; a second claim of the same reward is reported as
+   * `alreadyClaimed` rather than granted twice.
+   */
+  claimReward(
+    userId: string,
+    input: { userRewardId?: string | null; rewardId?: string | null },
+    rules: GamificationRules,
+  ): Promise<ClaimRewardResult>;
+  getGamificationOverview(userId: string, rules: GamificationRules): Promise<GamificationOverview>;
 
   // chat conversations
   createConversation(userId: string): Promise<ChatConversationRecord>;

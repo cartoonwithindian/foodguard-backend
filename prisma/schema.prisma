@@ -39,6 +39,7 @@ model User {
   gamification           UserGamification?
   gamificationActivities GamificationActivity[]
   userChallenges         UserChallenge[]
+  userAchievements       UserAchievement[]
   streakProtection       UserStreakProtection?
   streakProtectionUsages StreakProtectionUsage[]
   userRewards            UserReward[]
@@ -272,6 +273,44 @@ model UserChallenge {
   @@index([userId, completed])
   @@index([userId, periodStart])
   @@index([periodStart, periodEnd])
+}
+
+/// ── Gamification: levels + achievements (Module 2) ────────────
+/// A level is never stored: it is a pure function of lifetime XP (see
+/// level.service.ts), so the stored XP total is the only source of truth and
+/// the two can never drift apart.
+model AchievementDefinition {
+  achievementId String   @id
+  name          String
+  description   String
+  icon          String   @default("🏅")
+  conditionType String
+  targetValue   Int
+  rewardXp      Int      @default(0)
+  enabled       Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  users UserAchievement[]
+
+  @@index([conditionType, enabled])
+}
+
+/// A recorded unlock. The unique (user, achievement) key makes unlocking
+/// idempotent, so a concurrent request cannot award the XP twice.
+model UserAchievement {
+  id            String                @id @default(cuid())
+  userId        String
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  definition    AchievementDefinition @relation(fields: [achievementId], references: [achievementId], onDelete: Cascade)
+  /// XP actually paid at unlock time, so a later config change cannot rewrite
+  /// what a user already received.
+  xpAwarded     Int                   @default(0)
+  unlockedAt    DateTime              @default(now())
+
+  @@unique([userId, achievementId])
+  @@index([userId, unlockedAt])
 }
 
 /// FoodGuard Module 4: a user's streak-protection inventory. One row per user,

@@ -2,8 +2,15 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { InMemoryStore } from "@/lib/store/memory";
 import { GamificationService } from "@/gamification/services/gamification.service";
 import { gamificationConfig } from "@/gamification/config";
+import { getAchievementDefinition } from "@/gamification/achievements/config";
 import { XPService } from "@/gamification/services/xp.service";
 import type { ProductInfo } from "@/types/domain";
+
+/**
+ * A first successful scan also unlocks the Module 2 `first_scan` achievement,
+ * so a lifetime total after one scan is scan XP + unique-product XP + this.
+ */
+const FIRST_SCAN_REWARD_XP = getAchievementDefinition("first_scan")!.rewardXp;
 
 /**
  * These fixtures are isolated test records. Production never seeds users,
@@ -183,8 +190,19 @@ describe("FoodGuard XP + daily streak engine", () => {
 
     expect(duplicate.idempotent).toBe(true);
     expect(duplicate.activity.xpAwarded).toBe(first.activity.xpAwarded);
-    expect(duplicate.profile.totalXp).toBe(first.profile.totalXp);
+    // The scan response is written before the Module 2 reconciliation that paid
+    // `first_scan` inside the same transaction, so the repeat is the first read
+    // that sees the payout. It is paid once, and only once.
+    expect(duplicate.profile.totalXp).toBe(first.profile.totalXp + FIRST_SCAN_REWARD_XP);
     expect(duplicate.profile.currentStreak).toBe(1);
+
+    const third = await service.recordProductScan({
+      userId,
+      productId,
+      eventId: "duplicate-event-id",
+    });
+    expect(third.idempotent).toBe(true);
+    expect(third.profile.totalXp).toBe(duplicate.profile.totalXp);
   });
 
   it("deduplicates simultaneous retries of the same event", async () => {
@@ -195,8 +213,13 @@ describe("FoodGuard XP + daily streak engine", () => {
     expect(first.profile.totalXp).toBe(
       gamificationConfig.successfulScanXp + gamificationConfig.uniqueProductXp,
     );
-    expect(second.profile.totalXp).toBe(first.profile.totalXp);
+    // Only the winner of the race paid scan XP; the loser is a pure replay plus
+    // the one-time `first_scan` payout.
+    expect(second.profile.totalXp).toBe(first.profile.totalXp + FIRST_SCAN_REWARD_XP);
     expect(second.idempotent).toBe(true);
+
+    const profile = await service.getProfile(userId);
+    expect(profile.totalXp).toBe(second.profile.totalXp);
   });
 
   it("serializes concurrent requests without losing XP or corrupting the streak", async () => {
@@ -205,14 +228,16 @@ describe("FoodGuard XP + daily streak engine", () => {
       service.recordProductScan({ userId, productId, eventId: "concurrent-two" }),
     ]);
 
+    // Two scans of the same product: both pay the base scan XP, one pays the
+    // unique-product bonus, and `first_scan` pays once on top.
+    const expectedTotal =
+      gamificationConfig.successfulScanXp * 2 +
+      gamificationConfig.uniqueProductXp +
+      FIRST_SCAN_REWARD_XP;
     expect(first.profile.totalXp).toBeGreaterThan(0);
-    expect(second.profile.totalXp).toBe(
-      gamificationConfig.successfulScanXp * 2 + gamificationConfig.uniqueProductXp,
-    );
+    expect(second.profile.totalXp).toBe(expectedTotal);
     const profile = await service.getProfile(userId);
-    expect(profile.totalXp).toBe(
-      gamificationConfig.successfulScanXp * 2 + gamificationConfig.uniqueProductXp,
-    );
+    expect(profile.totalXp).toBe(expectedTotal);
     expect(profile.currentStreak).toBe(1);
   });
 
@@ -220,8 +245,9 @@ describe("FoodGuard XP + daily streak engine", () => {
     await service.recordProductScan({ userId, productId, eventId: "restart-event" });
     const recreated = new GamificationService(store, () => now);
     const profile = await recreated.getProfile(userId);
+    // The persisted total includes the `first_scan` achievement the scan unlocked.
     expect(profile.totalXp).toBe(
-      gamificationConfig.successfulScanXp + gamificationConfig.uniqueProductXp,
+      gamificationConfig.successfulScanXp + gamificationConfig.uniqueProductXp + FIRST_SCAN_REWARD_XP,
     );
     expect(profile.currentStreak).toBe(1);
   });
@@ -269,6 +295,12 @@ describe("FoodGuard XP + daily streak engine", () => {
     const duplicate = await service.recordProductScan({ userId, productId });
 
     expect(duplicate.idempotent).toBe(true);
-    expect(duplicate.profile.totalXp).toBe(first.profile.totalXp);
+    // Same as an explicit duplicate event id: no second scan XP, and the
+    // one-time `first_scan` payout applied exactly once.
+    expect(duplicate.profile.totalXp).toBe(first.profile.totalXp + FIRST_SCAN_REWARD_XP);
+
+    const third = await service.recordProductScan({ userId, productId });
+    expect(third.idempotent).toBe(true);
+    expect(third.profile.totalXp).toBe(duplicate.profile.totalXp);
   });
 });

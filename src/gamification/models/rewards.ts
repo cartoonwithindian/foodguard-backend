@@ -1,3 +1,5 @@
+import type { LevelView } from "@/gamification/models/achievements";
+
 /**
  * Shared contracts for the FoodGuard streak protection + rewards module.
  *
@@ -105,11 +107,21 @@ export type RewardEvaluationOutcome = {
 
 export type GamificationOverview = {
   total_xp: number;
-  level: number;
+  /** Full level state, derived from XP by the Module 2 curve. */
+  level: LevelView;
   current_streak: number;
   longest_streak: number;
-  achievements: Record<string, unknown>;
-  challenges: Record<string, unknown>;
+  achievements: {
+    unlocked: number;
+    total: number;
+  };
+  challenges: {
+    /** Daily instances completed in the current period. */
+    daily_completed: number;
+    daily_total: number;
+    weekly_completed: number;
+    weekly_total: number;
+  };
   streak_protection: {
     available_count: number;
     max_available: number;

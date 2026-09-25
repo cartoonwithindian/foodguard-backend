@@ -63,6 +63,13 @@ export type GamificationActivityResult = {
   /** Present when challenge evaluation ran in the same transaction. */
   challenges?: import("@/gamification/challenges/models").ChallengeDefinitionView[];
   completedChallenges?: import("@/gamification/challenges/models").ChallengeCompletion[];
+  /**
+   * Present when the Module 2 reconciliation ran in the same transaction. The
+   * client renders a celebration from these; it never derives them itself.
+   */
+  level?: import("@/gamification/models/achievements").LevelView;
+  level_up?: import("@/gamification/models/achievements").LevelUpEvent | null;
+  newly_unlocked?: import("@/gamification/models/achievements").AchievementView[];
 };
 
 export type StreakState = {

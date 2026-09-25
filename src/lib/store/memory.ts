@@ -31,6 +31,25 @@ import {
 } from "@/gamification/challenges/store-utils";
 import type { ChallengeDefinitionView, ChallengeHistoryView } from "@/gamification/challenges/models";
 import { streakProtectionConfig, PROTECTION_REASONS } from "@/gamification/protection/config";
+import {
+  achievementViews,
+  levelUpBetween,
+  pendingUnlocks,
+  summarizeAchievements,
+  toLevelView,
+  type AchievementContext,
+} from "@/gamification/achievements/achievement.engine";
+import type { AchievementCounters } from "@/lib/store/module2.prisma";
+import type {
+  AchievementRecord,
+  AchievementStateResult,
+} from "@/gamification/models/achievements";
+import {
+  countIngredientViews,
+  countMeaningfulChats,
+  countUniqueProducts,
+} from "@/gamification/challenges/progress.service";
+import { listChallengeDefinitions } from "@/gamification/challenges/config";
 import { applyProtectionCap, decideProtection } from "@/gamification/protection/protection.engine";
 import { listRewardDefinitions, rewardsConfig } from "@/gamification/rewards/config";
 import { milestoneKeyFor, observeCondition, toRewardView } from "@/gamification/rewards/reward.engine";
@@ -145,6 +164,7 @@ export class InMemoryStore implements DataStore {
   private streakProtections = new Map<string, { availableCount: number; usedCount: number }>();
   private streakProtectionUsages: StreakProtectionUsageRecord[] = [];
   private userRewards: RewardRecord[] = [];
+  private userAchievements: AchievementRecord[] = [];
   private gamificationLock: Promise<void> = Promise.resolve();
   private conversations = new Map<string, ChatConversationRecord>();
   private chatMessages: ChatMessageRecord[] = [];
@@ -429,6 +449,152 @@ export class InMemoryStore implements DataStore {
       createdAt: existing?.createdAt ?? new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
+  }
+
+  // ── Module 2: levels + achievements ────────────────────────
+  private unlockedAchievementsFor(userId: string): AchievementRecord[] {
+    return this.userAchievements.filter((entry) => entry.userId === userId);
+  }
+
+  /**
+   * Counters derived from real activity rows, using the same counting helpers
+   * Module 3 uses so "unique product" means one thing across the system.
+   */
+  private achievementCountersFor(userId: string): AchievementCounters {
+    const activities: ChallengeActivityRow[] = this.gamificationActivities
+      .filter((activity) => activity.userId === userId)
+      .map((activity) => ({
+        activityType: activity.actionType,
+        activityDate: activity.activityDate,
+        productId: activity.productId,
+        ingredientId: activity.ingredientId ?? null,
+        eventId: activity.eventId,
+      }));
+    return {
+      uniqueProductsScanned: countUniqueProducts(activities),
+      ingredientViews: countIngredientViews(activities),
+      meaningfulChats: countMeaningfulChats(activities),
+      challengesCompleted: this.userChallenges.filter(
+        (challenge) => challenge.userId === userId && challenge.completed,
+      ).length,
+    };
+  }
+
+  /**
+   * Record every achievement the user has genuinely reached and pay its XP.
+   *
+   * Mirrors the Prisma path. The caller holds `gamificationLock`, so the
+   * equivalent of the unique (user, achievement) constraint is the check for an
+   * existing record, and XP is only added for a record actually created.
+   */
+  private achievementStateFor(
+    userId: string,
+    rules: GamificationRules,
+    previousTotalXp?: number,
+  ): AchievementStateResult {
+    const profile = this.gamificationProfiles.get(userId);
+    const baseXp = profile?.totalXp ?? 0;
+    const before = this.unlockedAchievementsFor(userId);
+    const context: AchievementContext = {
+      userId,
+      now: rules.now(),
+      totalXp: baseXp,
+      longestStreak: profile?.longestStreak ?? 0,
+      ...this.achievementCountersFor(userId),
+      unlocked: before,
+    };
+
+    const newlyUnlocked: string[] = [];
+    let awardedXp = 0;
+    for (const definition of pendingUnlocks(context)) {
+      if (this.userAchievements.some(
+        (entry) => entry.userId === userId && entry.achievementId === definition.id,
+      )) {
+        continue;
+      }
+      this.userAchievements.push({
+        achievementId: definition.id,
+        userId,
+        unlockedAt: context.now.toISOString(),
+        xpAwarded: definition.rewardXp,
+      });
+      newlyUnlocked.push(definition.id);
+      awardedXp += definition.rewardXp;
+    }
+
+    if (awardedXp > 0 && profile) {
+      this.gamificationProfiles.set(userId, { ...profile, totalXp: baseXp + awardedXp });
+    }
+    const totalXp = baseXp + awardedXp;
+    const unlockedAfter =
+      newlyUnlocked.length > 0 ? this.unlockedAchievementsFor(userId) : before;
+    const { from, to, leveledUp } = levelUpBetween(previousTotalXp ?? baseXp, totalXp);
+    return {
+      level: toLevelView(to),
+      achievements: summarizeAchievements(
+        achievementViews({ ...context, totalXp, unlocked: unlockedAfter }),
+      ),
+      leveled_up: leveledUp,
+      level_up: leveledUp
+        ? { from_level: from.level, to_level: to.level, total_xp: totalXp }
+        : null,
+      newly_unlocked: newlyUnlocked,
+    };
+  }
+
+  /**
+   * Completion counts for the user's current daily and weekly instances,
+   * using the same period service as Module 3 so the two never disagree.
+   */
+  private challengeCountsFor(
+    userId: string,
+    rules: GamificationRules,
+    timezone: string,
+  ): {
+    daily_completed: number;
+    daily_total: number;
+    weekly_completed: number;
+    weekly_total: number;
+  } {
+    const now = rules.now();
+    const periods = new Map(
+      listChallengeDefinitions().map((definition) => [definition.id, definition.period]),
+    );
+    const dailyWindow = challengePeriodService.windowFor(now, timezone, "daily");
+    const weeklyWindow = challengePeriodService.windowFor(now, timezone, "weekly");
+    const live = this.userChallenges.filter((challenge) => {
+      if (challenge.userId !== userId) return false;
+      const period = periods.get(challenge.challengeId);
+      if (!period) return false;
+      const window = period === "weekly" ? weeklyWindow : dailyWindow;
+      return (
+        challenge.periodStart >= window.startInstant && challenge.periodStart < window.endInstant
+      );
+    });
+    const weekly = live.filter(
+      (challenge) => periods.get(challenge.challengeId) === "weekly",
+    );
+    const daily = live.filter(
+      (challenge) => periods.get(challenge.challengeId) === "daily",
+    );
+    return {
+      daily_completed: daily.filter((challenge) => challenge.completed).length,
+      daily_total: daily.length,
+      weekly_completed: weekly.filter((challenge) => challenge.completed).length,
+      weekly_total: weekly.length,
+    };
+  }
+
+  async getAchievementState(
+    userId: string,
+    rules: GamificationRules,
+  ): Promise<AchievementStateResult> {
+    return this.withGamificationLock(async () => {
+      if (!this.users.has(userId)) {
+        throw new AppError(ErrorCodes.UNAUTHORIZED, "User not found", 401);
+      }
+      return this.achievementStateFor(userId, rules);
+    });
   }
 
   // ── Module 4: streak protection + rewards ──────────────────
@@ -731,19 +897,24 @@ export class InMemoryStore implements DataStore {
     return this.withGamificationLock(async () => {
       const user = this.users.get(userId);
       if (!user) throw new AppError(ErrorCodes.UNAUTHORIZED, "User not found", 401);
+      const state = this.achievementStateFor(userId, rules);
       const context = this.module4Context(userId, rules);
       const rewards = this.rewardViewsFor(userId, context);
       const earned = rewards.filter((reward) => reward.earned);
       const protection = this.protectionFor(userId);
+      const challenges = this.challengeCountsFor(userId, rules, user.timezone ?? "UTC");
       return {
-        total_xp: context.profile.totalXp,
-        // No level service exists yet, so level 1 is reported rather than an
-        // invented scale. A real level module replaces this single line.
-        level: 1,
+        // Read from the Module 2 result so an achievement payout taken during
+        // this same locked pass is already included.
+        total_xp: state.level.total_xp,
+        level: state.level,
         current_streak: context.profile.currentStreak,
         longest_streak: context.profile.longestStreak,
-        achievements: {},
-        challenges: {},
+        achievements: {
+          unlocked: state.achievements.unlocked,
+          total: state.achievements.total,
+        },
+        challenges,
         streak_protection: {
           available_count: protection.availableCount,
           max_available: streakProtectionConfig.maxAvailable,
@@ -1090,6 +1261,18 @@ export class InMemoryStore implements DataStore {
       this.gamificationActivities.push(activity);
       this.gamificationProfiles.set(input.userId, profile);
 
+      // Module 2 reconciles after the scan XP and any challenge reward are
+      // applied, so `previous` correctly brackets the whole transaction and a
+      // level crossing from either source is reported once.
+      const module2 = this.achievementStateFor(input.userId, rules, previous?.totalXp ?? 0);
+      const events = {
+        level: module2.level,
+        level_up: module2.level_up,
+        newly_unlocked: module2.achievements.achievements.filter((view) =>
+          module2.newly_unlocked.includes(view.achievement_id),
+        ),
+      };
+
       if (challengeDefinitions.length > 0) {
         this.syncChallengeDefinitions(challengeDefinitions);
         const current = this.currentChallengeRows(input.userId, input.timestamp, user.timezone);
@@ -1103,6 +1286,7 @@ export class InMemoryStore implements DataStore {
           activity: { ...activity },
           profile: { ...finalProfile },
           idempotent: false,
+          ...events,
           challenges: [...views.daily, ...views.weekly],
           completedChallenges: outcome.completed.map(({ definition }) => ({
             challenge_id: definition.id,
@@ -1113,7 +1297,7 @@ export class InMemoryStore implements DataStore {
         };
       }
 
-      return { activity: { ...activity }, profile: { ...profile }, idempotent: false };
+      return { activity: { ...activity }, profile: { ...profile }, idempotent: false, ...events };
     });
   }
 

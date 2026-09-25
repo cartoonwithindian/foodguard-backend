@@ -46,6 +46,33 @@ import {
   readProtectionStateTx,
 } from "@/lib/store/module4.prisma";
 import { streakProtectionConfig } from "@/gamification/protection/config";
+import {
+  achievementViews,
+  levelUpBetween,
+  summarizeAchievements,
+  toLevelView,
+  type AchievementContext,
+} from "@/gamification/achievements/achievement.engine";
+import {
+  achievementCountersTx,
+  challengeCountsTx,
+  grantAchievementsTx,
+  readUnlockedTx,
+  syncAchievementDefinitionsTx,
+} from "@/lib/store/module2.prisma";
+import type {
+  AchievementStateResult,
+  AchievementView,
+  LevelUpEvent,
+  LevelView,
+} from "@/gamification/models/achievements";
+
+/** The celebration subset of Module 2 attached to an activity write. */
+type Module2EventFields = {
+  level: LevelView;
+  level_up: LevelUpEvent | null;
+  newly_unlocked: AchievementView[];
+};
 import { AppError, ErrorCodes } from "@/lib/errors";
 import type {
   ClaimRewardResult,
@@ -1047,7 +1074,7 @@ export class PrismaStore implements DataStore {
       );
       const existingProfile = await tx.userGamification.findUnique({
         where: { userId: input.userId },
-        select: { longestStreak: true },
+        select: { longestStreak: true, totalXp: true },
       });
       const longestStreak = Math.max(existingProfile?.longestStreak ?? 0, streak.longestStreak);
       const profileRow = await tx.userGamification.upsert({
@@ -1067,6 +1094,11 @@ export class PrismaStore implements DataStore {
         },
       });
 
+      // Module 2 reconciles after the scan XP and any challenge reward are
+      // applied, so `previousTotalXp` brackets the whole transaction and a level
+      // crossing from either source is reported exactly once.
+      const previousTotalXp = existingProfile?.totalXp ?? 0;
+      let events: Partial<Module2EventFields> = {};
       if (challengeDefinitions.length > 0) {
         const current = await ensureChallengeInstancesTx(
           tx,
@@ -1090,6 +1122,8 @@ export class PrismaStore implements DataStore {
               data: { totalXp: { increment: outcome.rewardXp } },
             })
           : profileRow;
+        const state = await this.achievementStateTx(tx, input.userId, rules, previousTotalXp);
+        events = this.module2Events(state);
         const views = outcome.instances.flatMap((instance) => {
           const window = challengePeriodService.windowFor(
             input.timestamp,
@@ -1100,8 +1134,11 @@ export class PrismaStore implements DataStore {
         });
         return {
           activity: mapGamificationActivity(activityRow),
-          profile: mapGamificationProfile(finalProfileRow),
+          profile: mapGamificationProfile(
+            (await this.readProfileRowTx(tx, input.userId)) ?? finalProfileRow,
+          ),
           idempotent: false,
+          ...events,
           challenges: views,
           completedChallenges: outcome.completed.map(({ definition }) => ({
             challenge_id: definition.id,
@@ -1112,10 +1149,16 @@ export class PrismaStore implements DataStore {
         };
       }
 
+      events = this.module2Events(
+        await this.achievementStateTx(tx, input.userId, rules, previousTotalXp),
+      );
       return {
         activity: mapGamificationActivity(activityRow),
-        profile: mapGamificationProfile(profileRow),
+        profile: mapGamificationProfile(
+          (await this.readProfileRowTx(tx, input.userId)) ?? profileRow,
+        ),
         idempotent: false,
+        ...events,
       };
     });
   }
@@ -1294,6 +1337,110 @@ export class PrismaStore implements DataStore {
         weekly,
         history: await challengeHistoryTx(tx, userId, outcome.instances, user.timezone),
       };
+    });
+  }
+
+  // ── Module 2: levels + achievements ────────────────────────
+  /**
+   * Narrow a full Module 2 result to just the celebration fields a scan or
+   * activity write needs, so callers cannot leak the whole state by accident.
+   */
+  private module2Events(state: AchievementStateResult): Module2EventFields {
+    const newly = new Set(state.newly_unlocked);
+    return {
+      level: state.level,
+      level_up: state.level_up,
+      newly_unlocked: state.achievements.achievements.filter((view) =>
+        newly.has(view.achievement_id),
+      ),
+    };
+  }
+
+  /** Fresh profile row after a Module 2 payout, which may have changed total XP. */
+  private async readProfileRowTx(
+    tx: Prisma.TransactionClient,
+    userId: string,
+  ) {
+    return tx.userGamification.findUnique({ where: { userId } });
+  }
+
+  /** The user's configured timezone, which owns their local calendar day. */
+  private async timezoneForTx(
+    tx: Prisma.TransactionClient,
+    userId: string,
+  ): Promise<string> {
+    const row = await tx.user.findUnique({
+      where: { id: userId },
+      select: { timezone: true },
+    });
+    return row?.timezone ?? "UTC";
+  }
+  /**
+   * Reconcile Module 2 inside an open transaction and return the resolved
+   * level/achievement state.
+   *
+   * `previousTotalXp` is the XP total before the caller's own changes, so a
+   * level crossing is reported whenever *any* source moved the total -- a scan,
+   * a challenge reward, or an achievement payout.
+   */
+  private async achievementStateTx(
+    tx: Prisma.TransactionClient,
+    userId: string,
+    rules: GamificationRules,
+    previousTotalXp?: number,
+  ): Promise<AchievementStateResult> {
+    const now = rules.now();
+    const profileRow = await tx.userGamification.findUnique({ where: { userId } });
+    const baseXp = profileRow?.totalXp ?? 0;
+    const activityRows = await tx.gamificationActivity.findMany({
+      where: { userId, actionType: "product_scan" },
+      select: { activityDate: true },
+    });
+    const today = rules.streakService.today("UTC", now);
+    const streak = rules.streakService.calculateForProfile(
+      activityRows.map((row) => row.activityDate),
+      today,
+    );
+    const counters = await achievementCountersTx(tx, userId);
+    const unlockedBefore = await readUnlockedTx(tx, userId);
+
+    const context: AchievementContext = {
+      userId,
+      now,
+      totalXp: baseXp,
+      longestStreak: Math.max(profileRow?.longestStreak ?? 0, streak.longestStreak),
+      ...counters,
+      unlocked: unlockedBefore,
+    };
+    const granted = await grantAchievementsTx(tx, context);
+    const unlockedAfter =
+      granted.newlyUnlocked.length > 0 ? await readUnlockedTx(tx, userId) : unlockedBefore;
+
+    const { from, to, leveledUp } = levelUpBetween(previousTotalXp ?? baseXp, granted.totalXp);
+    return {
+      level: toLevelView(to),
+      achievements: summarizeAchievements(achievementViews({ ...context, unlocked: unlockedAfter })),
+      leveled_up: leveledUp,
+      level_up: leveledUp
+        ? { from_level: from.level, to_level: to.level, total_xp: granted.totalXp }
+        : null,
+      newly_unlocked: granted.newlyUnlocked,
+    };
+  }
+
+  async getAchievementState(
+    userId: string,
+    rules: GamificationRules,
+  ): Promise<AchievementStateResult> {
+    return serializableTransaction(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        select: { id: true, timezone: true },
+      });
+      if (!user) throw new AppError(ErrorCodes.UNAUTHORIZED, "User not found", 401);
+      await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${userId} FOR UPDATE`;
+      await syncAchievementDefinitionsTx(tx);
+      return this.achievementStateTx(tx, userId, rules);
     });
   }
 
@@ -1540,17 +1687,29 @@ export class PrismaStore implements DataStore {
   ): Promise<GamificationOverview> {
     return serializableTransaction(async (tx) => {
       const { profile, context, state } = await this.module4ContextTx(tx, userId, rules);
+      // Module 2 is reconciled here too, so the overview can never show a level
+      // or achievement count that disagrees with a dedicated Module 2 read.
+      const achievementState = await this.achievementStateTx(tx, userId, rules);
       const rewards = await this.rewardViewsTx(tx, context);
       const earnedRewards = rewards.filter((reward) => reward.earned);
       return {
-        total_xp: profile.totalXp,
-        // No level service exists yet, so level 1 is reported rather than an
-        // invented scale. A real level module replaces this single line.
-        level: 1,
+        // The level view carries the XP total as it stands *after* the Module 2
+        // reconciliation, so an achievement payout in this same transaction is
+        // already reflected here.
+        total_xp: achievementState.level.total_xp,
+        level: achievementState.level,
         current_streak: profile.currentStreak,
         longest_streak: profile.longestStreak,
-        achievements: {},
-        challenges: {},
+        achievements: {
+          unlocked: achievementState.achievements.unlocked,
+          total: achievementState.achievements.total,
+        },
+        challenges: await challengeCountsTx(
+          tx,
+          userId,
+          rules.now(),
+          await this.timezoneForTx(tx, userId),
+        ),
         streak_protection: {
           available_count: state.availableCount,
           max_available: streakProtectionConfig.maxAvailable,

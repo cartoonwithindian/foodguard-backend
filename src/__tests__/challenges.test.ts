@@ -3,6 +3,7 @@ import { InMemoryStore } from "@/lib/store/memory";
 import { GamificationService } from "@/gamification/services/gamification.service";
 import { ChallengeService, isMeaningfulProductQuestion } from "@/gamification/challenges/challenge.service";
 import { gamificationConfig } from "@/gamification/config";
+import { getAchievementDefinition } from "@/gamification/achievements/config";
 import type { ProductInfo } from "@/types/domain";
 
 function fixtureProduct(barcode: string, name: string): ProductInfo {
@@ -91,8 +92,13 @@ describe("FoodGuard daily and weekly challenges", () => {
     const challenge = (await challenges.getChallenges(userId)).daily.find((entry) => entry.challenge_id === "daily_product_explorer")!;
     expect(challenge).toMatchObject({ progress: 3, completed: true, reward_claimed: true });
     expect(result.completedChallenges?.[0]?.challenge_id).toBe("daily_product_explorer");
+    // Scan XP for three distinct products, the challenge reward, and the
+    // one-time `first_scan` achievement the first scan unlocked.
     expect(result.profile.totalXp).toBe(
-      gamificationConfig.successfulScanXp * 3 + gamificationConfig.uniqueProductXp * 3 + 25,
+      gamificationConfig.successfulScanXp * 3 +
+        gamificationConfig.uniqueProductXp * 3 +
+        25 +
+        getAchievementDefinition("first_scan")!.rewardXp,
     );
   });
 

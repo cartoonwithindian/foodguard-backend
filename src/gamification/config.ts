@@ -15,6 +15,11 @@ function nonNegativeInteger(value: string | undefined, fallback: number): number
   return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : fallback;
 }
 
+function positiveInteger(value: string | undefined, fallback: number): number {
+  const parsed = nonNegativeInteger(value, fallback);
+  return parsed > 0 ? parsed : fallback;
+}
+
 function duplicatePolicy(value: string | undefined): DuplicateProductPolicy {
   if (value === "no_xp" || value === "once_per_day" || value === "base_only") {
     return value;
@@ -40,6 +45,14 @@ export const gamificationConfig = Object.freeze({
     process.env.GAMIFICATION_DUPLICATE_REQUEST_WINDOW_MS,
     30_000,
   ),
+  /**
+   * Module 2 level curve. Level 1 starts at 0 XP, and each level costs
+   * `levelBaseXp + levelXpStep * (level - 2)` more than the one before it, so
+   * early levels arrive quickly while later ones stay meaningful.
+   */
+  levelBaseXp: positiveInteger(process.env.GAMIFICATION_LEVEL_BASE_XP, 100),
+  levelXpStep: nonNegativeInteger(process.env.GAMIFICATION_LEVEL_XP_STEP, 50),
+  levelMax: positiveInteger(process.env.GAMIFICATION_LEVEL_MAX, 20),
 });
 
 export type GamificationConfig = typeof gamificationConfig;

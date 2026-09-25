@@ -24,6 +24,7 @@ import type {
 } from "@/gamification/models/gamification";
 import type { ChallengeDefinition } from "@/gamification/challenges/config";
 import type { ChallengeListResult } from "@/gamification/challenges/models";
+import type { AchievementStateResult } from "@/gamification/models/achievements";
 import type {
   ClaimRewardResult,
   GamificationOverview,
@@ -146,6 +147,12 @@ export interface DataStore {
     challengeDefinitions: readonly ChallengeDefinition[],
     now: Date,
   ): Promise<ChallengeListResult>;
+
+  // Module 2: levels + achievements.
+  getAchievementState(
+    userId: string,
+    rules: GamificationRules,
+  ): Promise<AchievementStateResult>;
 
   // Module 4: streak protection + rewards.
   //

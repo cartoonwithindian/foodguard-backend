@@ -14,10 +14,11 @@ export async function addHistoryEntry(
   });
 }
 
-export async function listHistory(userId: string) {
+export async function listHistory(userId: string, limit?: number) {
   const store = getStore();
   const entries = await store.listHistory(userId);
-  return entries.map((entry) => {
+  const trimmed = limit && limit > 0 ? entries.slice(0, limit) : entries;
+  return trimmed.map((entry) => {
     const snapshot = entry.assessmentSnapshot as FrontendAnalysisResult;
     return {
       id: entry.id,

@@ -16,6 +16,17 @@ import type {
 } from "@/types/knowledge";
 import type { ProductLookupResult } from "@/lib/product-provider";
 
+/**
+ * Shared result bounds. The two stores previously disagreed: Prisma capped
+ * history at 100 rows and search at 50, while the in-memory store returned
+ * everything — so mock-mode tests passed on unbounded lists that the real
+ * database would have truncated (and vice versa for the write-side cap).
+ */
+export const MAX_SEARCH_RESULTS = 50;
+export const MAX_HISTORY_LIST = 100;
+/** Newest entries kept per user; older ones are trimmed on write. */
+export const MAX_HISTORY_ENTRIES = 500;
+
 export type UserRecord = {
   id: string;
   email: string;

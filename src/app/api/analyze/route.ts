@@ -36,7 +36,9 @@ export async function POST(request: NextRequest) {
       ocrText: input.ocrText,
       ocrConfidence: input.ocrConfidence,
       imageAvailable: false,
-      userId: input.userId ?? session?.id ?? null,
+      // Identity comes ONLY from the verified session (anonymous scans are
+      // unpersonalised) — never from the request body.
+      userId: session?.id ?? null,
       language: input.language,
     });
 

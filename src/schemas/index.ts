@@ -19,7 +19,7 @@ export const signupSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  email: z.string().trim().min(1, "Email is required").max(254),
+  email: z.string().trim().email("A valid email is required").max(254),
   password: z.string().min(1, "Password is required").max(128),
 });
 
@@ -47,7 +47,9 @@ export const analyzeSchema = z.object({
   nutrition: nutritionInputSchema,
   ocrText: z.string().max(20_000).optional(),
   ocrConfidence: z.number().min(0).max(1).optional(),
-  userId: z.string().max(100).optional(),
+  // NOTE: no `userId`. Identity always comes from the verified session — a
+  // body-supplied id let any caller write history into, and read the
+  // preferences of, an arbitrary account.
   language: languageSchema,
 });
 
@@ -59,12 +61,22 @@ export const ingredientAnalyzeSchema = z.object({
 
 export const personalizedSchema = z.object({
   productId: z.string().min(1).max(120),
-  userId: z.string().min(1).max(120).optional(),
+  // No `userId`: the session identifies the user (see analyzeSchema).
 });
 
 export const compareSchema = z.object({
   productIds: z.array(z.string().min(1).max(120)).min(2).max(5),
 });
+
+export const enrichProductSchema = z
+  .object({
+    productName: z.string().trim().min(1).max(200).optional(),
+    barcode: barcodeSchema.optional(),
+    brand: z.string().trim().min(1).max(120).optional(),
+  })
+  .refine((value) => Boolean(value.productName || value.barcode), {
+    message: "Either productName or barcode is required",
+  });
 
 export const chatRequestSchema = z.object({
   message: z.string().trim().min(1, "Message is required").max(2000),

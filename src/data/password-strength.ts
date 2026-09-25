@@ -1,4 +1,6 @@
-import type { PasswordStrength } from "@/lib/validation";
+// Previously imported from `@/lib/validation`, an 81-line module whose only
+// live export was this type — the rest was dead code, now removed.
+export type PasswordStrength = "none" | "weak" | "medium" | "strong";
 
 export const STRENGTH_CONFIG: Record<
   PasswordStrength,

@@ -18,7 +18,7 @@ import type {
 } from "@/types/knowledge";
 import { cosineSimilarity, STOPWORDS } from "@/lib/embeddings";
 import type { ChatConversationRecord, ChatMessageRecord, ChatRole } from "@/types/chat";
-import { preferencesToRecord } from "./types";
+import { preferencesToRecord, MAX_HISTORY_ENTRIES, MAX_HISTORY_LIST, MAX_SEARCH_RESULTS } from "./types";
 import { EVIDENCE_SEED } from "@/data/seed/evidence";
 import type { ProductLookupResult } from "@/lib/product-provider";
 import { normalizeNutritionFacts } from "@/lib/nutrition/units";
@@ -221,7 +221,7 @@ export class PrismaStore implements DataStore {
             : {},
         ],
       },
-      take: 50,
+      take: MAX_SEARCH_RESULTS,
     });
     return rows.map((row) => ({ product: mapProduct(row), rank: 100, matchedOn: ["name"] }));
   }
@@ -452,6 +452,20 @@ export class PrismaStore implements DataStore {
         source: entry.source,
       },
     });
+    // Keep only the newest N entries per user (matching the in-memory store),
+    // otherwise an open POST /api/history loop grows this table without bound.
+    const total = await prisma.historyEntry.count({ where: { userId } });
+    if (total > MAX_HISTORY_ENTRIES) {
+      const stale = await prisma.historyEntry.findMany({
+        where: { userId },
+        orderBy: { scannedAt: "asc" },
+        take: total - MAX_HISTORY_ENTRIES,
+        select: { id: true },
+      });
+      if (stale.length > 0) {
+        await prisma.historyEntry.deleteMany({ where: { id: { in: stale.map((s) => s.id) } } });
+      }
+    }
     return {
       id: row.id,
       userId: row.userId,
@@ -466,7 +480,7 @@ export class PrismaStore implements DataStore {
     const rows = await prisma.historyEntry.findMany({
       where: { userId },
       orderBy: { scannedAt: "desc" },
-      take: 100,
+      take: MAX_HISTORY_LIST,
     });
     return rows.map((r) => ({
       id: r.id,

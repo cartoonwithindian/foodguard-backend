@@ -91,19 +91,36 @@ export async function enforceRateLimit(key: string): Promise<void> {
 }
 
 /**
+ * Header the HTTP server middleware uses to record the raw TCP peer address.
+ * It is always overwritten server-side, so a client cannot forge it.
+ */
+export const REMOTE_ADDR_HEADER = "x-fg-remote-addr";
+
+/**
  * @returns the client IP used as the rate-limit key, falling back to "unknown".
  *
- * Proxies *append* to `X-Forwarded-For`, so the right-most entry is the one the
- * trusted upstream hop recorded and the left-most is client-controlled. Taking
- * `[0]` (the old behaviour) let any caller mint a fresh identity per request
- * with `X-Forwarded-For: <random>`, bypassing the limiter completely.
+ * With `TRUST_PROXY=false` the key is purely the socket peer address — the
+ * only value a directly-connected client cannot forge. Every request header is
+ * attacker-controlled on a non-proxied deployment, so trusting them there
+ * allowed unlimited buckets ("spoof one header, get a fresh budget") while an
+ * absent header collapsed everybody onto one shared `"unknown"` bucket (one
+ * 429 for the whole server).
+ *
+ * With `TRUST_PROXY=true` (behind a reverse proxy) the key is the right-most
+ * `X-Forwarded-For` hop — the entry the trusted upstream appended. Taking
+ * `[0]` (the original behaviour) let any caller mint a fresh identity per
+ * request. The socket peer remains the final fallback so the bucket never
+ * degenerates to a single shared key.
  */
 export function clientIp(request: Request): string {
+  const remote = request.headers.get(REMOTE_ADDR_HEADER) || undefined;
+  if (!config.limits.trustProxy) return remote ?? "unknown";
+
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) {
     const hops = forwarded.split(",").map((hop) => hop.trim()).filter(Boolean);
     const trusted = hops[hops.length - 1];
     if (trusted) return trusted;
   }
-  return request.headers.get("x-real-ip") ?? "unknown";
+  return request.headers.get("x-real-ip") ?? remote ?? "unknown";
 }

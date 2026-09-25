@@ -1,4 +1,8 @@
 import { searchSimilarByImage } from "@/lib/visual-search";
+import { AppError, ErrorCodes } from "@/lib/errors";
+import { jsonError } from "@/lib/http";
+import { enforceRateLimit, clientIp } from "@/lib/rate-limit";
+import { config } from "@/lib/config";
 
 export const runtime = "nodejs";
 
@@ -9,7 +13,10 @@ export const runtime = "nodejs";
  * search service, and returns top-K visually similar products.
  */
 export async function POST(request: Request): Promise<Response> {
+  const requestId = "visual-search";
   try {
+    await enforceRateLimit(`visualsearch:${clientIp(request)}`);
+
     const formData = await request.formData();
     const file = formData.get("image");
 
@@ -19,9 +26,17 @@ export async function POST(request: Request): Promise<Response> {
           success: false,
           data: null,
           error: { code: "MISSING_IMAGE", message: "No image file provided" },
-          meta: { requestId: "visual-search" },
+          meta: { requestId },
         },
         { status: 400 },
+      );
+    }
+
+    if (file.size > config.limits.maxBodyMb * 1024 * 1024) {
+      throw new AppError(
+        ErrorCodes.PAYLOAD_TOO_LARGE,
+        `Image exceeds the ${config.limits.maxBodyMb} MB limit`,
+        413,
       );
     }
 
@@ -44,7 +59,7 @@ export async function POST(request: Request): Promise<Response> {
             code: result.code || "VISUAL_SEARCH_ERROR",
             message: result.message,
           },
-          meta: { requestId: "visual-search" },
+          meta: { requestId },
         },
         { status: result.serviceUnavailable ? 503 : 500 },
       );
@@ -57,20 +72,11 @@ export async function POST(request: Request): Promise<Response> {
         query: result.query,
       },
       error: null,
-      meta: { requestId: "visual-search" },
+      meta: { requestId },
     });
   } catch (error) {
-    return Response.json(
-      {
-        success: false,
-        data: null,
-        error: {
-          code: "INTERNAL_ERROR",
-          message: error instanceof Error ? error.message : "Unknown error",
-        },
-        meta: { requestId: "visual-search" },
-      },
-      { status: 500 },
-    );
+    // jsonError maps AppError status/codes and never echoes raw exception
+    // text (upstream URLs, tokens, SQL) back to the caller.
+    return jsonError(error, requestId);
   }
 }

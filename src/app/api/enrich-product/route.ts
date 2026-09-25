@@ -5,24 +5,31 @@
  * Searches the web, fetches pages, extracts ingredients/nutrition,
  * and saves to the database.
  *
- * Body: { productName: string, barcode?: string, brand?: string }
+ * Body: { productName?: string, barcode?: string, brand?: string }
+ *
+ * Admin-only: this crawls the live web on demand and writes to the shared
+ * product catalogue, so it is deliberately not reachable anonymously —
+ * previously any visitor could trigger unbounded outbound crawling and
+ * poison the catalog with arbitrary data.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { enrichProductFromWeb, saveEnrichedProduct } from "@/services/web-product-enrichment";
 import { logger } from "@/lib/logger";
+import { requireAdmin } from "@/lib/auth";
+import { enforceRateLimit, clientIp } from "@/lib/rate-limit";
+import { enrichProductSchema } from "@/schemas";
+import { jsonError } from "@/lib/http";
 
 export async function POST(request: NextRequest) {
+  const requestId = request.headers.get("x-request-id") ?? "enrich-product";
   try {
-    const body = await request.json();
-    const { productName, barcode, brand } = body;
+    await requireAdmin(request);
+    await enforceRateLimit(`enrich:${clientIp(request)}`);
 
-    if (!productName && !barcode) {
-      return NextResponse.json(
-        { error: "Either productName or barcode is required" },
-        { status: 400 },
-      );
-    }
+    const parsed = enrichProductSchema.safeParse(await request.json().catch(() => null));
+    if (!parsed.success) return jsonError(parsed.error, requestId);
+    const { productName, barcode, brand } = parsed.data;
 
     logger.info("enrich_product_request", { productName, barcode, brand });
 
@@ -56,10 +63,9 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+    // Goes through jsonError so AppError status/codes are preserved and raw
+    // exception text (provider URLs, tokens, SQL) is never echoed back.
     logger.error("enrich_product_error", { error: String(error) });
-    return NextResponse.json(
-      { error: "Failed to enrich product", details: String(error) },
-      { status: 500 },
-    );
+    return jsonError(error, requestId);
   }
 }

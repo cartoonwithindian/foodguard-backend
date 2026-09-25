@@ -106,13 +106,26 @@ export const config = {
     maxBodyMb: Number(process.env.MAX_REQUEST_BODY_MB || 8),
     rateLimitMax: Number(process.env.RATE_LIMIT_MAX_REQUESTS || 120),
     rateLimitWindowMs: Number(process.env.RATE_LIMIT_WINDOW_MS || 60_000),
+    /**
+     * Is this deployment behind a reverse proxy (Render, nginx, Cloudflare…)?
+     *
+     * When true the rate-limit key comes from the right-most `X-Forwarded-For`
+     * hop (the one the proxy appended, so the client cannot forge it).
+     * When false every request key comes from the raw socket peer address
+     * instead, which is the only safe setting on a directly-reachable server —
+     * otherwise `X-Forwarded-For` is fully client-controlled and each request
+     * can mint a brand-new identity.
+     */
+    trustProxy: (process.env.TRUST_PROXY ?? "true") !== "false",
   },
   seed: {
-    enabled: (process.env.SEED_DEMO_DATA || "true") !== "false",
-    adminEmail: process.env.DEMO_ADMIN_EMAIL || "admin@foodgaurd.app",
-    adminPassword: process.env.DEMO_ADMIN_PASSWORD || "FoodGaurd@Admin1",
-    userEmail: process.env.DEMO_USER_EMAIL || "user@foodgaurd.app",
-    userPassword: process.env.DEMO_USER_PASSWORD || "FoodGaurd@User1",
+    // Opt-in only. Seeding demo accounts used to default to ON with a
+    // hardcoded admin password committed to a public repository.
+    enabled: process.env.SEED_DEMO_DATA === "true",
+    adminEmail: process.env.DEMO_ADMIN_EMAIL || "",
+    adminPassword: process.env.DEMO_ADMIN_PASSWORD || "",
+    userEmail: process.env.DEMO_USER_EMAIL || "",
+    userPassword: process.env.DEMO_USER_PASSWORD || "",
   },
   // Configurable FSSAI reporting channel. The reporting CTA in the
   // assistant UI is only shown when this URL is configured. Leave

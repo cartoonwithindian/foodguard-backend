@@ -27,25 +27,32 @@ export function getStore(): DataStore {
 export async function ensureDemoUsers(): Promise<void> {
   if (!isMockMode() && config.seed.enabled) {
     try {
+      const { adminEmail, adminPassword, userEmail, userPassword } = config.seed;
+      if (!adminEmail || !adminPassword || !userEmail || !userPassword) {
+        logger.warn("seed_skipped_missing_credentials", {
+          reason:
+            "SEED_DEMO_DATA=true but DEMO_* credentials are not all set; refusing to seed demo accounts",
+        });
+        return;
+      }
       // Lazy-load Prisma client
-      
       const { prisma } = require("./prisma");
       const existing = await prisma.user.count();
       if (existing === 0) {
         const { hashPassword } = await import("@/lib/auth");
         const admin = await prisma.user.create({
           data: {
-            email: config.seed.adminEmail,
-            name: "FoodGaurd Admin",
-            passwordHash: await hashPassword(config.seed.adminPassword),
+            email: adminEmail,
+            name: "FoodGuard Admin",
+            passwordHash: await hashPassword(adminPassword),
             role: "ADMIN",
           },
         });
         await prisma.user.create({
           data: {
-            email: config.seed.userEmail,
+            email: userEmail,
             name: "Demo User",
-            passwordHash: await hashPassword(config.seed.userPassword),
+            passwordHash: await hashPassword(userPassword),
             role: "USER",
           },
         });

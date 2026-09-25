@@ -127,13 +127,17 @@ describe("authentication", () => {
     expect(logged.token).toBeDefined();
   });
 
-  // NOTE: This test documents a known design limitation.
-  // The login() function has TEST MODE that auto-creates unknown users,
-  // so wrong-password rejection is not enforced in mock mode.
-  // This is NOT a bug — it's intentional for hackathon demo convenience.
-  // Do not change production behavior to make this test pass.
-  it.skip("rejects a wrong password (blocked by TEST MODE auto-create)", async () => {
-    // When TEST MODE is eventually removed, this test should be .skip -> .only
+  it("rejects a wrong password", async () => {
     await expect(login({ email: "auth-wrong@test.local", password: "WrongPass1" })).rejects.toThrow();
+  });
+
+  it("does not auto-create an account for an unknown email on login", async () => {
+    // Logging in must never register the address: an attacker could otherwise
+    // pre-claim victim@example.com and lock the real owner out of signup.
+    const email = `squat-${Date.now()}@test.local`;
+    await expect(login({ email, password: "Whatever1" })).rejects.toThrow();
+    await expect(
+      signup({ email, name: "Real Owner", password: "StrongPass1" }),
+    ).resolves.toMatchObject({ token: expect.any(String) });
   });
 });

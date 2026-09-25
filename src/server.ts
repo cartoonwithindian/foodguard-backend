@@ -21,7 +21,9 @@ import type { Context } from "hono";
 // runtime filesystem glob).
 import { ROUTES } from "./routes.generated";
 
-const HTTP_METHODS = ["GET", "POST"] as const;
+// Every method the route handlers export. GET/POST alone silently dropped the
+// PATCH / PUT / DELETE handlers (preferences, profile, history, assistant).
+const HTTP_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const;
 type Method = (typeof HTTP_METHODS)[number];
 
 const app = new Hono();
@@ -30,7 +32,7 @@ app.use(
   "*",
   cors({
     origin: (origin) => origin || "*",
-    allowMethods: ["GET", "POST", "OPTIONS"],
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization", "x-forwarded-for"],
     exposeHeaders: ["Content-Length"],
     maxAge: 86400,

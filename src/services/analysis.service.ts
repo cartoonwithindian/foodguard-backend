@@ -57,6 +57,13 @@ export type AnalyzeInput = {
   language?: string;
   skipAlternatives?: boolean;
   skipPersonalization?: boolean;
+  /**
+   * Skip the outbound web-research phase (Google/DuckDuckGo/…). Evidence is
+   * gathered, not verdicts, so skipping only affects `meta.webResearch` — it
+   * never changes the score or assessment. Used by request paths that must not
+   * block on live internet calls (the chat orchestrator).
+   */
+  skipWebResearch?: boolean;
 };
 
 function fmt(value: number): string {
@@ -515,7 +522,7 @@ export async function runAnalysis(input: AnalyzeInput): Promise<{ frontend: Fron
     !!productNutrition,
   );
 
-  if (isWebResearchAvailable() && (shouldResearch.needed || missingIngredients)) {
+  if (!input.skipWebResearch && isWebResearchAvailable() && (shouldResearch.needed || missingIngredients)) {
     logger.info("web_research_triggered", {
       reasons: missingIngredients ? ["Missing ingredients - fetching from web"] : shouldResearch.reasons,
       product: product?.name,

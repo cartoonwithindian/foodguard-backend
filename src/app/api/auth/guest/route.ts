@@ -3,17 +3,19 @@ import { jsonSuccess, jsonError } from "@/lib/http";
 import { signToken, type SessionUser } from "@/lib/auth";
 import { enforceRateLimit, clientIp } from "@/lib/rate-limit";
 import { getStore } from "@/lib/store";
+import { guestEmail } from "@/services/user.service";
 
 export const runtime = "nodejs";
 
 /**
  * POST /api/auth/guest - start a guest session without email/password.
  *
- * One tap, no typing. The guest user is created once (and reused) in the
- * store so every store-backed API (history, preferences, /api/auth/me)
- * works for the session. The token is signed for the real record id.
+ * One tap, no typing. Each guest gets its OWN record so every store-backed
+ * API (history, preferences, /api/auth/me) is scoped to that session only —
+ * a single shared guest row would hand every visitor the same user id and
+ * let strangers read each other's history. The token is signed for the real
+ * record id; `isGuestEmail` recognises these accounts elsewhere.
  */
-const GUEST_EMAIL = "guest@foodgaurd.app";
 const GUEST_NAME = "Guest";
 
 export async function POST(request: NextRequest) {
@@ -22,15 +24,12 @@ export async function POST(request: NextRequest) {
     await enforceRateLimit(`guest:${clientIp(request)}`);
 
     const store = getStore();
-    let guest = await store.getUserByEmail(GUEST_EMAIL);
-    if (!guest) {
-      guest = await store.createUser({
-        email: GUEST_EMAIL,
-        name: GUEST_NAME,
-        passwordHash: null,
-        language: "EN",
-      });
-    }
+    const guest = await store.createUser({
+      email: guestEmail(),
+      name: GUEST_NAME,
+      passwordHash: null,
+      language: "EN",
+    });
 
     const session: SessionUser = {
       id: guest.id,

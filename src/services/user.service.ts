@@ -1,9 +1,35 @@
 import { AppError, ErrorCodes } from "@/lib/errors";
 import { hashPassword, verifyPassword, signToken, type SessionUser } from "@/lib/auth";
 import { getStore } from "@/lib/store";
+import { randomUUID } from "node:crypto";
 import type { UserPreferencesInput } from "@/types/domain";
 
-export const GUEST_EMAIL = "guest@foodgaurd.app";
+const GUEST_EMAIL_PREFIX = "guest";
+const GUEST_EMAIL_DOMAIN = "foodguard.app";
+/** The single shared address used before guest identities were split. */
+const LEGACY_GUEST_EMAIL = "guest@foodgaurd.app";
+
+/** Mints a unique address for a brand-new guest session. */
+export function guestEmail(): string {
+  // 16 hex chars (64 bits) — collision-free in practice under the guest rate
+  // limit, and short enough to render sensibly in the profile screen.
+  const suffix = randomUUID().replace(/-/g, "").slice(0, 16);
+  return `${GUEST_EMAIL_PREFIX}-${suffix}@${GUEST_EMAIL_DOMAIN}`;
+}
+
+/**
+ * True for any account minted by {@link guestEmail}. Guests are one row per
+ * session, so identity checks must match the pattern rather than one literal
+ * address (the old shared `guest@foodgaurd.app` row leaked history between
+ * visitors).
+ */
+export function isGuestEmail(email: string): boolean {
+  const value = email.trim().toLowerCase();
+  if (value === LEGACY_GUEST_EMAIL) return true;
+  return (
+    value.startsWith(`${GUEST_EMAIL_PREFIX}-`) && value.endsWith(`@${GUEST_EMAIL_DOMAIN}`)
+  );
+}
 
 export async function signup(input: { email: string; name: string; password: string; language?: "EN" | "HI" }) {
   const store = getStore();
@@ -65,7 +91,7 @@ export async function getMe(session: SessionUser) {
   // Guest sessions may not have a persisted record yet (e.g. the store is
   // per-worker in dev). Fall back to a synthetic profile instead of 401.
   if (!user) {
-    if (session.email === GUEST_EMAIL) {
+    if (isGuestEmail(session.email)) {
       return {
         id: session.id,
         email: session.email,
@@ -105,7 +131,7 @@ export async function updateProfile(session: SessionUser, fields: { name?: strin
   const store = getStore();
   const user = await store.updateUser(session.id, fields);
   if (!user) {
-    if (session.email === GUEST_EMAIL) {
+    if (isGuestEmail(session.email)) {
       return {
         id: session.id,
         email: session.email,

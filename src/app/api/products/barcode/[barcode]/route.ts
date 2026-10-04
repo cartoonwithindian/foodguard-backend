@@ -3,6 +3,7 @@ import { jsonSuccess, jsonError } from "@/lib/http";
 import { lookupProductByBarcode } from "@/lib/product-lookup";
 import type { ProductLookupResult } from "@/lib/product-lookup/types";
 import { AppError, ErrorCodes } from "@/lib/errors";
+import { enforceRateLimit, clientIp } from "@/lib/rate-limit";
 import type { ProductInfo, ProductCategory, NutritionFacts } from "@/types/domain";
 
 export const runtime = "nodejs";
@@ -52,11 +53,16 @@ function toProductInfo(lookup: ProductLookupResult): ProductInfo {
 }
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ barcode: string }> },
 ) {
   const requestId = crypto.randomUUID().slice(0, 8);
   try {
+    // Unauthenticated endpoint that fans out to several paid/external barcode
+    // providers on a cache miss, so it carries the same per-IP budget as the
+    // rest of the API instead of being an open proxy for metered lookups.
+    await enforceRateLimit(`barcode:${clientIp(request)}`);
+
     const { barcode } = await params;
     if (!/^\d{4,32}$/.test(barcode)) {
       throw new AppError(ErrorCodes.VALIDATION_ERROR, "Invalid barcode format");

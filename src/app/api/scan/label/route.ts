@@ -5,7 +5,6 @@ import { getOCRProvider, validateImageMime, maxImageBytes } from "@/lib/ocr";
 import { AppError, ErrorCodes } from "@/lib/errors";
 import { parseIngredientText } from "@/lib/ingredients/parse";
 import { parseNutritionTable } from "@/lib/nutrition/parse";
-import { getSession } from "@/lib/auth";
 import { decodeBarcodeFromImage, validateBarcode } from "@/lib/barcode";
 import { decodeBarcodeInNode } from "@/lib/barcode/node-decoder";
 import { lookupProductByBarcode } from "@/lib/product-lookup";
@@ -38,7 +37,6 @@ export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID().slice(0, 8);
   try {
     await enforceRateLimit(`scan:${clientIp(request)}`);
-    await getSession(request);
 
     let form: FormData;
     try {

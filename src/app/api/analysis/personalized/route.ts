@@ -8,7 +8,7 @@ import { parseIngredientText } from "@/lib/ingredients/parse";
 import { analyzeIngredients } from "@/services/ingredient.service";
 import { detectAllergens } from "@/lib/allergens";
 import { personalize } from "@/services/personalization.service";
-import { GUEST_EMAIL } from "@/services/user.service";
+import { isGuestEmail } from "@/services/user.service";
 
 export const runtime = "nodejs";
 
@@ -26,8 +26,10 @@ export async function POST(request: NextRequest) {
 
     const session = await requireAuth(request);
     const store = getStore();
-    const { productId, userId } = parsed.data;
-    const resolvedUserId = userId ?? session.id;
+    const { productId } = parsed.data;
+    // Session-only identity: a body-supplied userId would expose another
+    // account's preferences through the personalised flags.
+    const resolvedUserId = session.id;
 
     const [product, user] = await Promise.all([
       store.getProductById(productId),
@@ -38,7 +40,7 @@ export async function POST(request: NextRequest) {
     // Fall back to a synthetic profile (same pattern as user.service.getMe).
     const resolvedUser =
       user ??
-      (session.email === GUEST_EMAIL
+      (isGuestEmail(session.email)
         ? { id: session.id, language: session.language as "EN" | "HI" }
         : null);
     if (!resolvedUser) throw new AppError(ErrorCodes.UNAUTHORIZED, "User not found", 401);

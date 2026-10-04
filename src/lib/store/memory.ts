@@ -16,7 +16,12 @@ import type {
 } from "@/types/knowledge";
 import { cosineSimilarity, STOPWORDS } from "@/lib/embeddings";
 import type { DataStore, ProductSearchResult, UserPreferencesRecord, UserRecord } from "./types";
-import { preferencesToRecord } from "./types";
+import {
+  preferencesToRecord,
+  MAX_HISTORY_ENTRIES,
+  MAX_HISTORY_LIST,
+  MAX_SEARCH_RESULTS,
+} from "./types";
 import { PRODUCT_SEED, buildNutrition } from "@/data/seed/products";
 import { INGREDIENT_SEED } from "@/data/seed/ingredients";
 import { EVIDENCE_SEED } from "@/data/seed/evidence";
@@ -181,7 +186,7 @@ export class InMemoryStore implements DataStore {
       }
       results.push({ product, rank, matchedOn });
     }
-    return results.sort((a, b) => b.rank - a.rank);
+    return results.sort((a, b) => b.rank - a.rank).slice(0, MAX_SEARCH_RESULTS);
   }
 
   async updateProductImage(productId: string, imageUrl: string): Promise<void> {
@@ -321,11 +326,18 @@ export class InMemoryStore implements DataStore {
       source: entry.source,
     };
     this.history.unshift(record);
+    // Mirror the Prisma store's write-side cap: without it an open POST
+    // /api/history loop grows this array (and the real table) without bound.
+    const mine = this.history.filter((h) => h.userId === userId);
+    if (mine.length > MAX_HISTORY_ENTRIES) {
+      const stale = new Set(mine.slice(MAX_HISTORY_ENTRIES).map((h) => h.id));
+      this.history = this.history.filter((h) => !stale.has(h.id));
+    }
     return record;
   }
 
   async listHistory(userId: string): Promise<HistoryEntryInfo[]> {
-    return this.history.filter((h) => h.userId === userId);
+    return this.history.filter((h) => h.userId === userId).slice(0, MAX_HISTORY_LIST);
   }
 
   async deleteHistoryEntry(userId: string, entryId: string): Promise<boolean> {

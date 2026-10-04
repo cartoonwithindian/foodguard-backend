@@ -55,39 +55,17 @@ function validateInput(image: Blob | Uint8Array, mimeType: string): void {
   }
 }
 
-/* ------------------------------------------------------------------ */
-/*  MockOCRProvider                                                    */
-/* ------------------------------------------------------------------ */
-
 class MockOCRProvider implements OCRProvider {
-  private cannedTexts: Record<string, string>;
-
-  constructor() {
-    this.cannedTexts = {
-      "8901000000001":
-        "Ingredients: Corn Flour, Palm Oil, Refined Wheat Flour (Maida), Salt, Sugar, Spices, Monosodium Glutamate (INS 621), Tartrazine (E102), Sunset Yellow (E110), TBHQ (E319). May contain traces of peanuts.",
-      "8901234567891":
-        "Ingredients: Oats, Soy Lecithin, Sugar, Sodium Chloride, Caffeine, Vitamin B12, Iron, Potassium.",
-      "8901234567897":
-        "Ingredients: Water, Sugar, High Fructose Corn Syrup, Caffeine, Taurine, Vitamin B12, Artificial Colours, Sodium Benzoate, Parfum.",
-    };
-  }
-
   async extractText(
     image: Blob | Uint8Array,
     mimeType: string,
-    onProgress?: OCRProgressCallback
+    _onProgress?: OCRProgressCallback
   ): Promise<OCRResult> {
     validateInput(image, mimeType);
-    onProgress?.("Preparing image");
-    onProgress?.("Loading OCR engine");
-    onProgress?.("Recognizing text", 0.5);
-    onProgress?.("Extracting ingredients", 0.9);
-    onProgress?.("Complete", 1.0);
 
     return {
       rawText: "",
-      confidence: 0.3,
+      confidence: 0.1,
       needsReview: true,
       provider: "mock",
       fallbackUsed: false,
@@ -346,10 +324,20 @@ class FallbackOCRProvider implements OCRProvider {
 let instance: OCRProvider | null = null;
 
 function createOCRProvider(): OCRProvider {
-  const provider = process.env.OCR_PROVIDER || config.ocr.provider || "mock";
+  const provider =
+    process.env.OCR_PROVIDER || config.ocr.provider || (process.env.NODE_ENV === "test" ? "mock" : "");
   const fallback = process.env.OCR_FALLBACK || config.ocr.fallback || "tesseract";
 
   switch (provider) {
+    case "mock":
+      if (process.env.NODE_ENV !== "test") {
+        throw new AppError(
+          ErrorCodes.OCR_FAILED,
+          "Mock OCR is available only in tests. Set OCR_PROVIDER=tesseract or another real provider.",
+          500,
+        );
+      }
+      return new MockOCRProvider();
     case "tesseract": {
       const tesseractProvider = new TesseractOCRProvider();
       const fallbackProvider =
@@ -376,23 +364,35 @@ function createOCRProvider(): OCRProvider {
       }
       return puterProvider;
     }
-    case "mock":
+    case "":
+      throw new AppError(
+        ErrorCodes.OCR_FAILED,
+        "OCR provider is not configured. Set OCR_PROVIDER=tesseract or another real provider.",
+        500,
+      );
     default:
-      return new MockOCRProvider();
+      throw new AppError(ErrorCodes.OCR_FAILED, `Unsupported OCR provider: ${provider}`, 500);
   }
 }
 
 function createFallbackProvider(name: string): OCRProvider | null {
   switch (name) {
+    case "mock":
+      if (process.env.NODE_ENV !== "test") {
+        throw new AppError(
+          ErrorCodes.OCR_FAILED,
+          "Mock OCR is available only in tests. Set OCR_FALLBACK=tesseract or another real provider.",
+          500,
+        );
+      }
+      return new MockOCRProvider();
     case "tesseract":
       return new TesseractOCRProvider();
     case "ocrspace":
     case "ocr.space":
       return new OCRSpaceProvider();
-    case "mock":
-      return new MockOCRProvider();
     default:
-      return null;
+      throw new AppError(ErrorCodes.OCR_FAILED, `Unsupported OCR fallback provider: ${name}`, 500);
   }
 }
 
@@ -405,9 +405,4 @@ export function getOCRProvider(): OCRProvider {
 
 export function resetOCRProviderForTesting(): void {
   instance = null;
-}
-
-export function knownBarcodeText(barcode: string): string | null {
-  if (config.ocr.provider !== "mock") return null;
-  return new MockOCRProvider()["cannedTexts"][barcode] ?? null;
 }

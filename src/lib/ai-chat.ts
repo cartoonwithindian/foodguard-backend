@@ -95,9 +95,16 @@ let instance: ChatProvider | null = null;
 
 export function getChatProvider(): ChatProvider {
   if (!instance) {
-    // Use real provider when API key is configured (supports openai, gemini, etc.)
-    const useRealProvider = config.ai.apiKey && config.ai.provider !== "mock";
-    instance = useRealProvider ? new OpenAICompatibleChatProvider() : new MockChatProvider();
+    const testDefaultMock = process.env.NODE_ENV === "test" && !config.ai.provider;
+    const explicitMock = config.ai.provider === "mock";
+
+    if (testDefaultMock || explicitMock) {
+      instance = new MockChatProvider();
+    } else if (!config.ai.provider || !config.ai.apiKey) {
+      throw new AppError(ErrorCodes.AI_PROVIDER_ERROR, "AI provider is not configured. Set AI_PROVIDER and AI_API_KEY.", 500);
+    } else {
+      instance = new OpenAICompatibleChatProvider();
+    }
   }
   return instance;
 }

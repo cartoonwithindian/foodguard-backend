@@ -53,9 +53,11 @@ const { savedAIEnv } = vi.hoisted(() => {
   const savedAIEnv = {
     AI_PROVIDER: process.env.AI_PROVIDER,
     AI_API_KEY: process.env.AI_API_KEY,
+    PRODUCT_DATA_PROVIDER: process.env.PRODUCT_DATA_PROVIDER,
   };
   process.env.AI_PROVIDER = "mock";
   process.env.AI_API_KEY = "";
+  process.env.PRODUCT_DATA_PROVIDER = "mock";
   return { savedAIEnv };
 });
 
@@ -123,6 +125,7 @@ beforeAll(() => {
 afterAll(() => {
   process.env.AI_PROVIDER = savedAIEnv.AI_PROVIDER ?? "mock";
   process.env.AI_API_KEY = savedAIEnv.AI_API_KEY ?? "";
+  process.env.PRODUCT_DATA_PROVIDER = savedAIEnv.PRODUCT_DATA_PROVIDER ?? "";
 });
 
 // ── Tests ───────────────────────────────────────────────────

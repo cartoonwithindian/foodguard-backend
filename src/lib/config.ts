@@ -2,7 +2,7 @@ export const config = {
   databaseUrl: process.env.DATABASE_URL || "",
   redisUrl: process.env.REDIS_URL || "",
   ai: {
-    provider: process.env.AI_PROVIDER || "mock",
+    provider: process.env.AI_PROVIDER || "",
     apiKey: process.env.AI_API_KEY || "",
     baseUrl:
       // Groq uses an OpenAI-compatible endpoint
@@ -14,14 +14,14 @@ export const config = {
     supportsJsonMode: process.env.AI_SUPPORTS_JSON_MODE !== "false",
   },
   ocr: {
-    provider: process.env.OCR_PROVIDER || "mock",
+    provider: process.env.OCR_PROVIDER || "",
     fallback: process.env.OCR_FALLBACK || "tesseract",
     apiKey: process.env.OCR_API_KEY || "",
     lang: process.env.OCR_ENGINE_LANG || "eng",
     puterAuthToken: process.env.PUTER_AUTH_TOKEN || "",
   },
   productData: {
-    provider: process.env.PRODUCT_DATA_PROVIDER || "mock",
+    provider: process.env.PRODUCT_DATA_PROVIDER || "",
     apiKey: process.env.PRODUCT_DATA_API_KEY || "",
   },
   productLookup: {
@@ -94,7 +94,7 @@ export const config = {
     enableAgentReach: process.env.ENABLE_AGENT_REACH === "true",
   },
   evidence: {
-    provider: process.env.EVIDENCE_PROVIDER || "curated",
+    provider: process.env.EVIDENCE_PROVIDER || "",
   },
   auth: {
     // JWT expiry. The signing secret is resolved server-side (see
@@ -108,7 +108,7 @@ export const config = {
     rateLimitWindowMs: Number(process.env.RATE_LIMIT_WINDOW_MS || 60_000),
   },
   seed: {
-    enabled: (process.env.SEED_DEMO_DATA || "true") !== "false",
+    enabled: process.env.SEED_DEMO_DATA === "true",
     adminEmail: process.env.DEMO_ADMIN_EMAIL || "admin@foodgaurd.app",
     adminPassword: process.env.DEMO_ADMIN_PASSWORD || "FoodGaurd@Admin1",
     userEmail: process.env.DEMO_USER_EMAIL || "user@foodgaurd.app",
@@ -154,10 +154,10 @@ export const config = {
 
 /** True when running without a configured database (in-memory store). */
 export function isMockMode(): boolean {
-  return !config.databaseUrl;
+  return !config.databaseUrl && process.env.NODE_ENV === "test";
 }
 
 /** True when the AI provider is configured and ready to use. */
 export function isAIReady(): boolean {
-  return config.ai.provider !== "mock" && !!config.ai.apiKey;
+  return !!config.ai.provider && config.ai.provider !== "mock" && !!config.ai.apiKey;
 }

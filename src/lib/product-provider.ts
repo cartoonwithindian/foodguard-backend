@@ -4,20 +4,19 @@ import { logger } from "@/lib/logger";
 import { AppError, ErrorCodes } from "@/lib/errors";
 import { getCache } from "@/lib/cache";
 import { getStore } from "@/lib/store";
-import { buildNutrition } from "@/data/seed/products-frontend";
-import {
-  CURATED_PRODUCT_SEED,
-  buildCuratedNutrition,
-} from "@/data/seed/products-curated";
 import { resolveNutritionCascade } from "@/lib/nutrition/cascade";
 import { lookupIndianProductByBarcode, searchIndianProducts } from "@/lib/india-dataset";
 import { lookupBarcodeSpider } from "@/lib/external/barcode-spider";
 import { normalizeNutritionFacts } from "@/lib/nutrition/units";
+import { buildNutrition } from "@/data/seed/products";
 
 /**
  * Product / barcode data provider abstraction.
- *  - mock: bundled demo dataset (works offline)
  *  - openfoodfacts: Open Food Facts API (free)
+ *
+ * Test fixtures are supplied by the test-only in-memory store. The explicit
+ * test provider below only represents an exhausted provider and never returns
+ * product facts.
  */
 
 export interface ProductLookupResult {
@@ -62,15 +61,6 @@ function toProductInfo(input: {
     productDataConfidence: input.confidence,
     isDemo: input.isDemo,
   };
-}
-
-class MockProductProvider implements ProductDataProvider {
-  async lookupByBarcode(barcode: string): Promise<ProductLookupResult> {
-    const store = getStore();
-    const found = await store.getProductByBarcode(barcode);
-    if (found) return { product: found, nutrition: await store.getNutritionForProduct(found.id), source: "bundled_demo_dataset" };
-    return { product: null, nutrition: null, source: "bundled_demo_dataset" };
-  }
 }
 
 class OpenFoodFactsProvider implements ProductDataProvider {
@@ -150,6 +140,12 @@ class OpenFoodFactsProvider implements ProductDataProvider {
   }
 }
 
+class TestProductProvider implements ProductDataProvider {
+  async lookupByBarcode(): Promise<ProductLookupResult> {
+    return { product: null, nutrition: null, source: "mock" };
+  }
+}
+
 let instance: ProductDataProvider | null = null;
 
 /** Reset the cached provider singleton — for tests only. */
@@ -157,30 +153,23 @@ export function resetProductProviderForTesting(): void {
   instance = null;
 }
 
-function curatedLookup(barcode: string): ProductLookupResult | null {
-  const seed = CURATED_PRODUCT_SEED.find((c) => c.barcode === barcode);
-  if (!seed) return null;
-  const product = toProductInfo({
-    barcode,
-    name: seed.name,
-    brand: seed.brand,
-    category: seed.category,
-    country: seed.country ?? null,
-    servingSize: seed.servingSize ?? null,
-    imageUrl: seed.imageUrl ?? null,
-    ingredientsRaw: seed.ingredientsRaw,
-    source: seed.source,
-    sourceUrl: seed.sourceUrl ?? null,
-    verified: seed.verified,
-    isDemo: false,
-    confidence: seed.confidence,
-  });
-  return { product, nutrition: buildCuratedNutrition(seed.nutrition), source: "curated" };
-}
-
 export function getProductProvider(): ProductDataProvider {
   if (!instance) {
-    instance = config.productData.provider === "openfoodfacts" ? new OpenFoodFactsProvider() : new MockProductProvider();
+    const explicitProvider = config.productData.provider === "openfoodfacts";
+    const explicitTestProvider =
+      process.env.NODE_ENV === "test" && config.productData.provider === "mock";
+
+    if (explicitTestProvider) {
+      instance = new TestProductProvider();
+    } else if (explicitProvider) {
+      instance = new OpenFoodFactsProvider();
+    } else {
+      throw new AppError(
+        ErrorCodes.EXTERNAL_PROVIDER_ERROR,
+        "Product provider is not configured. Set PRODUCT_DATA_PROVIDER=openfoodfacts.",
+        500,
+      );
+    }
   }
   return instance;
 }
@@ -224,19 +213,19 @@ export async function lookupProductByBarcode(barcode: string): Promise<ProductLo
     return enriched;
   }
 
+  // The explicit test provider is intentionally terminal. Test fixtures are
+  // resolved by the in-memory store above; network fallbacks would make
+  // tests depend on external latency and are not part of the mock provider.
+  if (config.productData.provider === "mock" && process.env.NODE_ENV === "test") {
+    return { product: null, nutrition: null, source: "none" };
+  }
+
   const spiderResult = await lookupBarcodeSpider(barcode);
   if (spiderResult?.product) {
     const saved = await store.saveProductFromProvider(spiderResult);
     const enriched = await enrichWithCascade(saved);
     await cache.set(`product:${barcode}`, enriched, 3600);
     return enriched;
-  }
-
-  const curated = curatedLookup(barcode);
-  if (curated) {
-    const saved = await store.saveProductFromProvider(curated);
-    await cache.set(`product:${barcode}`, saved, 3600);
-    return saved;
   }
 
   return { product: null, nutrition: null, source: "none" };

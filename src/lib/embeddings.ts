@@ -107,11 +107,16 @@ class OpenAICompatibleEmbeddingProvider implements EmbeddingProvider {
 }
 
 export function getEmbeddingProvider(): EmbeddingProvider {
-  // Use real provider when API key is configured (supports openai, gemini, etc.)
-  if (config.ai.apiKey && config.ai.provider !== "mock") {
+  const explicitMock = config.ai.provider === "mock";
+  const testDefaultMock = process.env.NODE_ENV === "test" && !config.ai.provider;
+
+  if (config.ai.apiKey && !explicitMock) {
     return new OpenAICompatibleEmbeddingProvider();
   }
-  return new MockEmbeddingProvider();
+  if (explicitMock || testDefaultMock) {
+    return new MockEmbeddingProvider();
+  }
+  throw new AppError(ErrorCodes.AI_PROVIDER_ERROR, "Embedding provider is not configured. Set AI_PROVIDER and AI_API_KEY.", 500);
 }
 
 export function cosineSimilarity(a: number[], b: number[]): number {

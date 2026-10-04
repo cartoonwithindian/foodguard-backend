@@ -6,7 +6,7 @@ export default defineConfig({
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
       "server-only": fileURLToPath(new URL("./src/stubs/server-only.ts", import.meta.url)),
-      // Mirrors the tsconfig.json path mapping: `next` is deliberately not a
+// Mirrors the tsconfig.json path mapping: `next` is deliberately not a
       // dependency of this standalone backend (see src/stubs/next-server.ts).
       "next/server": fileURLToPath(new URL("./src/stubs/next-server.ts", import.meta.url)),
     },

@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     const session = await requireAuth(request);
     const store = getStore();
     const { productId } = parsed.data;
-    // Session-only identity: a body-supplied userId would expose another
+// Session-only identity: a body-supplied userId would expose another
     // account's preferences through the personalised flags.
     const resolvedUserId = session.id;
 

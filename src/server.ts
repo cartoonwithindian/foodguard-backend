@@ -88,13 +88,15 @@ if (configuredOrigins.length === 0) {
 app.use(
   "*",
   cors({
-    origin: (origin) => {
+origin: (origin) => {
       if (!origin) return undefined; // same-origin / non-browser client
       if (allowAnyOrigin) return origin;
       return allowedOrigins.has(origin) ? origin : undefined;
     },
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization", "x-forwarded-for"],
+    // Idempotency-Key is read by the gamification activity routes so an HTTP
+    // retry of the same scan collapses onto one XP award.
+    allowHeaders: ["Content-Type", "Authorization", "Idempotency-Key", "x-forwarded-for"],
     exposeHeaders: ["Content-Length"],
     maxAge: 86400,
   }),
@@ -139,8 +141,13 @@ for (const { path: route, mod } of ROUTES) {
       const res = await (handler as RouteHandler)(c.req.raw, { params });
       return res;
     };
-    app.on(method, route, wrapped);
-    mounted++;
+    const mountPaths = route.startsWith("/api/gamification/")
+      ? [route, route.slice("/api".length)]
+      : [route];
+    for (const mountPath of mountPaths) {
+      app.on(method, mountPath, wrapped);
+      mounted++;
+    }
   }
 }
 

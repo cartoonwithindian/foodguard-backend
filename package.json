@@ -11,8 +11,12 @@
     "build": "prisma generate && tsup",
     "db:deploy": "prisma migrate deploy",
     "db:generate": "prisma generate",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.scripts.json",
+    "test": "vitest run",
+    "appwrite:provision": "bash scripts/appwrite/provision.sh",
+    "appwrite:export": "tsx scripts/appwrite/export-catalog.ts",
+    "appwrite:import": "tsx scripts/appwrite/import-catalog.ts",
+    "typecheck:scripts": "tsc -p tsconfig.scripts.json"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.17",
@@ -25,6 +29,7 @@
     "hono": "^4.6.14",
     "ioredis": "^5.4.2",
     "jose": "^6.0.8",
+    "node-appwrite": "^29.0.0",
     "sharp": "^0.35.4",
     "tesseract.js": "^7.0.0",
     "tsup": "^8.3.5",

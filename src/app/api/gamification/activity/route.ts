@@ -1,58 +1,41 @@
 import { NextRequest } from "next/server";
-import { z } from "zod";
-import { jsonError, jsonSuccess } from "@/lib/http";
+import { jsonError } from "@/lib/http";
 import { requireAuth } from "@/lib/auth";
-import { enforceRateLimit, clientIp } from "@/lib/rate-limit";
-import { gamificationService } from "@/gamification/services/gamification.service";
+import { AppError, ErrorCodes } from "@/lib/errors";
 
 export const runtime = "nodejs";
 
-const activityRequestSchema = z
-  .object({
-    action_type: z.literal("product_scan"),
-    product_id: z.string().trim().min(1).max(200),
-    // Optional for backwards compatibility; the client should send a UUID so
-    // retries are idempotent. XP and streak values are intentionally absent.
-    event_id: z.string().trim().min(8).max(128).optional(),
-  })
-  .strict();
-
 /**
- * POST /api/gamification/activity
+ * POST /api/gamification/activity — RETIRED (self-service product_scan).
  *
- * Records a validated successful product-scan event. The authenticated user,
- * product existence, action type, duplicate event, XP, and local calendar date
- * are all determined by the backend.
+ * This endpoint used to accept `{action_type:"product_scan", product_id, event_id}`
+ * and award XP. That let any authenticated caller mint unlimited XP by
+ * replaying product ids with a fresh `event_id` per call, with no analysis ever
+ * happening: `recordSuccessfulProductScan` only checks that the product exists
+ * and is not a demo, so a scripted client could farm the rate-limit budget
+ * (120 req/min -> ~1,200 XP/min) and never scan anything.
+ *
+ * XP for a scan is now awarded in exactly one place — POST /api/analyze, which
+ * can prove the product was actually resolved and analysed — and is returned in
+ * that response's `gamification` block. The `Idempotency-Key` header is still
+ * honoured there, so HTTP retries of one scan still collapse to one award.
+ *
+ * Non-scoring activities (ingredient views, meaningful chats) use their own
+ * routes: /api/gamification/activity/ingredient-view and /api/chat.
+ *
+ * The route is kept as an explicit, authenticated 403 rather than a 404 so an
+ * older deployed client fails loudly instead of silently losing its reward.
  */
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID().slice(0, 8);
   try {
-    const session = await requireAuth(request);
-    await enforceRateLimit(`gamification:${clientIp(request)}:${session.id}`);
-
-    const body = await request.json().catch(() => null);
-    const parsed = activityRequestSchema.safeParse(body);
-    if (!parsed.success) return jsonError(parsed.error, requestId);
-
-    const result = await gamificationService.recordProductScan({
-      userId: session.id,
-      actionType: parsed.data.action_type,
-      productId: parsed.data.product_id,
-      eventId:
-        parsed.data.event_id ?? request.headers.get("idempotency-key")?.trim() ?? undefined,
-    });
-
-    return jsonSuccess(
-      {
-        xp_awarded: result.activity.xpAwarded,
-        total_xp: result.profile.totalXp,
-        current_streak: result.profile.currentStreak,
-        longest_streak: result.profile.longestStreak,
-        activity_date: result.activity.activityDate,
-        idempotent: result.idempotent,
-        completed_challenges: result.completedChallenges ?? [],
-      },
-      { requestId },
+    await requireAuth(request);
+    throw new AppError(
+      ErrorCodes.FORBIDDEN,
+      "Self-service product_scan rewards are no longer accepted here. " +
+        "Send scan_event_id to POST /api/analyze; the gamification block of that " +
+        "response carries the awarded XP.",
+      403,
     );
   } catch (error) {
     return jsonError(error, requestId);

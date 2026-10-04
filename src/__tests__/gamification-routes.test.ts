@@ -6,6 +6,7 @@ import { POST as recordActivity } from "@/app/api/gamification/activity/route";
 import { GET as getProfile } from "@/app/api/gamification/profile/route";
 import type { ProductInfo } from "@/types/domain";
 import { gamificationConfig } from "@/gamification/config";
+import { gamificationService } from "@/gamification/services/gamification.service";
 
 function productFixture(barcode: string): ProductInfo {
   return {
@@ -47,7 +48,12 @@ async function setupUserAndProduct() {
     role: user.role,
     language: user.language,
   };
-  return { user, productId: saved.product!.id, token: await signToken(session) };
+  return {
+    user,
+    userId: user.id,
+    productId: saved.product!.id,
+    token: await signToken(session),
+  };
 }
 
 function jsonRequest(url: string, body: unknown, token?: string): NextRequest {
@@ -61,12 +67,25 @@ function jsonRequest(url: string, body: unknown, token?: string): NextRequest {
   });
 }
 
+async function readProfile(token: string) {
+  const res = await getProfile(
+    new NextRequest("http://localhost/api/gamification/profile", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+  );
+  const body = (await res.json()) as {
+    data: { total_xp: number; current_streak: number; longest_streak: number };
+  };
+  return body.data;
+}
+
 describe("gamification HTTP API", () => {
   let token: string;
   let productId: string;
+  let userId: string;
 
   beforeEach(async () => {
-    ({ token, productId } = await setupUserAndProduct());
+    ({ token, productId, userId } = await setupUserAndProduct());
   });
 
   it("returns zero values for a new user's profile", async () => {
@@ -86,7 +105,9 @@ describe("gamification HTTP API", () => {
     });
   });
 
-  it("records a validated activity and returns authoritative values", async () => {
+  it("retires self-service product_scan and awards no XP", async () => {
+    // A client asserting "I scanned this" with a fresh event id used to mint
+    // unlimited XP. Rewards now come only from POST /api/analyze.
     const response = await recordActivity(
       jsonRequest(
         "http://localhost/api/gamification/activity",
@@ -94,14 +115,27 @@ describe("gamification HTTP API", () => {
         token,
       ),
     );
-    const body = (await response.json()) as { success: boolean; data: Record<string, number | string | boolean> };
-    expect(response.status).toBe(200);
-    expect(body.success).toBe(true);
+    const body = (await response.json()) as { success: boolean; error: { message: string } };
+    expect(response.status).toBe(403);
+    expect(body.success).toBe(false);
+    expect(body.error.message).toMatch(/scan_event_id/i);
+
+    const profile = await readProfile(token);
+    expect(profile.total_xp).toBe(0);
+    expect(profile.current_streak).toBe(0);
+  });
+
+  it("records a validated scan through the service that /api/analyze uses", async () => {
+    const result = await gamificationService.recordProductScan({
+      userId: userId,
+      productId,
+      eventId: "route-event-001",
+    });
     const firstXp = gamificationConfig.successfulScanXp + gamificationConfig.uniqueProductXp;
-    expect(body.data.xp_awarded).toBe(firstXp);
-    expect(body.data.total_xp).toBe(firstXp);
-    expect(body.data.current_streak).toBe(1);
-    expect(body.data.longest_streak).toBe(1);
+    expect(result.activity.xpAwarded).toBe(firstXp);
+    expect(result.profile.totalXp).toBe(firstXp);
+    expect(result.profile.currentStreak).toBe(1);
+    expect(result.profile.longestStreak).toBe(1);
   });
 
   it("does not accept a client-supplied XP field", async () => {
@@ -112,7 +146,8 @@ describe("gamification HTTP API", () => {
         token,
       ),
     );
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(403);
+    expect((await readProfile(token)).total_xp).toBe(0);
   });
 
   it("rejects an unauthenticated activity", async () => {
@@ -126,41 +161,28 @@ describe("gamification HTTP API", () => {
   });
 
   it("rejects an unknown product without creating progress", async () => {
-    const response = await recordActivity(
-      jsonRequest(
-        "http://localhost/api/gamification/activity",
-        { action_type: "product_scan", product_id: "not-a-real-product", event_id: "unknown-product-event" },
-        token,
-      ),
-    );
-    expect(response.status).toBe(404);
-    const profileResponse = await getProfile(
-      new NextRequest("http://localhost/api/gamification/profile", {
-        headers: { Authorization: `Bearer ${token}` },
+    await expect(
+      gamificationService.recordProductScan({
+        userId,
+        productId: "not-a-real-product",
+        eventId: "unknown-product-event",
       }),
-    );
-    const profile = (await profileResponse.json()) as { data: { total_xp: number } };
-    expect(profile.data.total_xp).toBe(0);
+    ).rejects.toThrow();
+    expect((await readProfile(token)).total_xp).toBe(0);
   });
 
   it("returns the existing result for a duplicate event id", async () => {
-    const first = await recordActivity(
-      jsonRequest(
-        "http://localhost/api/gamification/activity",
-        { action_type: "product_scan", product_id: productId, event_id: "same-route-event" },
-        token,
-      ),
-    );
-    const second = await recordActivity(
-      jsonRequest(
-        "http://localhost/api/gamification/activity",
-        { action_type: "product_scan", product_id: productId, event_id: "same-route-event" },
-        token,
-      ),
-    );
-    const firstBody = (await first.json()) as { data: { total_xp: number; idempotent: boolean } };
-    const secondBody = (await second.json()) as { data: { total_xp: number; idempotent: boolean } };
-    expect(secondBody.data.idempotent).toBe(true);
-    expect(secondBody.data.total_xp).toBe(firstBody.data.total_xp);
+    const first = await gamificationService.recordProductScan({
+      userId,
+      productId,
+      eventId: "same-route-event",
+    });
+    const second = await gamificationService.recordProductScan({
+      userId,
+      productId,
+      eventId: "same-route-event",
+    });
+    expect(second.idempotent).toBe(true);
+    expect(second.profile.totalXp).toBe(first.profile.totalXp);
   });
 });

@@ -10,6 +10,7 @@ import { config } from "@/lib/config";
 import { AppError, ErrorCodes } from "@/lib/errors";
 import { jsonError } from "@/lib/http";
 import { REMOTE_ADDR_HEADER } from "@/lib/rate-limit";
+import { assertProductionConfig } from "@/lib/server/production-config";
 
 /**
  * Web-standards adapter that mounts the FoodGuard Next.js API route handlers
@@ -161,6 +162,9 @@ app.onError((error, c) => jsonError(error, c.req.header("x-request-id") ?? "unha
 export default app;
 
 if (process.env.NODE_ENV !== "test") {
+  // Refuse to serve traffic on mock providers / a missing auth secret, so a
+  // misconfigured deploy fails here instead of returning fake data with a 200.
+  assertProductionConfig();
   const port = Number(process.env.PORT || 3001);
   // `serve` is awaited so the process stays alive.
   serve({ fetch: app.fetch, port }, () => {

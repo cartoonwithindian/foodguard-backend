@@ -8,25 +8,26 @@ import { parseNutritionTable } from "@/lib/nutrition/parse";
 import { decodeBarcodeFromImage, validateBarcode } from "@/lib/barcode";
 import { decodeBarcodeInNode } from "@/lib/barcode/node-decoder";
 import { lookupProductByBarcode } from "@/lib/product-lookup";
-import { searchByVector, searchByImageUrl } from "@/lib/visual-search";
-import { storeTempImage, deleteTempImage } from "@/lib/temp-images";
+import { searchByVector, searchSimilarByImage } from "@/lib/visual-search";
+import { storeTempImage } from "@/lib/temp-images";
 import { getStore } from "@/lib/store";
 
 export const runtime = "nodejs";
 
 /**
- * The visual search service searches by image URL (`/api/v1/search_by_url`),
- * so the photo buffer received here is exposed at a short-lived public
- * `GET /api/temp/:id` URL first, then handed to the service. `x-forwarded-*`
- * headers (set by the Render/Vercel proxying tiers) win over the request URL
- * so the temp URL is publicly fetchable even when the request itself went
- * through a gateway.
+ * The visual search service is called with the uploaded bytes as multipart
+ * form data, so it never has to reach back into this process. An earlier
+ * version instead hosted the photo at a short-lived `GET /api/temp/:id` URL and
+ * handed that URL over, which silently returned zero matches whenever this
+ * process was not publicly reachable (e.g. `localhost`).
  */
-function publicOrigin(request: Request): string {
-  const proto = request.headers.get("x-forwarded-proto");
-  const host = request.headers.get("x-forwarded-host");
-  if (proto && host) return `${proto}://${host}`;
-  return new URL(request.url).origin;
+
+/** Filename extension for an upload mime, used for the multipart filename. */
+function extFor(mimeType: string): string {
+  if (mimeType.includes("png")) return ".png";
+  if (mimeType.includes("webp")) return ".webp";
+  if (mimeType.includes("gif")) return ".gif";
+  return ".jpg";
 }
 
 /**
@@ -91,6 +92,13 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await image.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const blob = new Blob([buffer], { type: mimeType });
+
+    // Host the upload for a short window (10-minute TTL) at a stable,
+    // same-origin URL. The visual-search service fetches the absolute form,
+    // and the browser displays the relative form on the analysis page so the
+    // user sees the exact photo they scanned. The TTL sweep owns cleanup.
+    const tempId = storeTempImage(buffer, mimeType);
+    const tempImageUrl = `/api/temp/${tempId}`;
 
     // Pipeline results
     let detectedBarcodeValue: string | null = inputBarcode || null;
@@ -165,31 +173,25 @@ export async function POST(request: NextRequest) {
     // but no product could be matched (or no barcode at all), ask the visual
     // search service for top-K similar products so the caller can still
     // suggest candidates. Browser CLIP embeddings go to `search_by_vector`;
-    // otherwise the photo is hosted at a short-lived public URL and sent to
-    // `search_by_url`. Never throws and never blocks the scan on an
-    // unavailable service.
-    if (!productObj && blob) {
-      let tempId: string | null = null;
+    // otherwise the raw bytes are streamed to `search` as multipart.
+    //
+    // The bytes are uploaded directly rather than handing over a URL, because a
+    // URL can only work if this process is reachable from the visual-search
+    // service. That is true behind a public tunnel but false for `localhost`
+    // (and for any private/internal host), where the remote service would get
+    // an address it cannot fetch and the whole feature would silently return
+    // zero matches. Never throws and never blocks the scan.
+    if (!productObj && buffer) {
       try {
-        if (embedding) {
-          const vis = await searchByVector(embedding, 5);
-          if (vis.ok && vis.results.length > 0) {
-            similarProducts = vis.results.slice(0, 5);
-            sourcesSet.add("visual_search");
-          }
-        } else {
-          tempId = storeTempImage(buffer, mimeType);
-          const imageUrl = `${publicOrigin(request)}/api/temp/${tempId}`;
-          const vis = await searchByImageUrl(imageUrl, 5);
-          if (vis.ok && vis.results.length > 0) {
-            similarProducts = vis.results.slice(0, 5);
-            sourcesSet.add("visual_search");
-          }
+        const vis = embedding
+          ? await searchByVector(embedding, 5)
+          : await searchSimilarByImage(buffer, `upload${extFor(mimeType)}`, mimeType, 5);
+        if (vis.ok && vis.results.length > 0) {
+          similarProducts = vis.results.slice(0, 5);
+          sourcesSet.add("visual_search");
         }
       } catch (visErr) {
         console.error("[LabelRoute] Visual search error:", visErr);
-      } finally {
-        if (tempId) deleteTempImage(tempId);
       }
     }
 
@@ -254,6 +256,9 @@ export async function POST(request: NextRequest) {
         similarProducts,
         sources: Array.from(sourcesSet),
         productName: productName ?? null,
+        // Same-origin URL of the uploaded photo (10-minute TTL) so the UI can
+        // show the user the exact image they scanned.
+        imageUrl: tempImageUrl,
         // Legacy fields for backward compatibility
         rawText,
         ingredientsText,

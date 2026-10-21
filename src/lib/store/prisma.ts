@@ -992,9 +992,9 @@ export class PrismaStore implements DataStore {
 
       const product = await tx.product.findUnique({
         where: { id: input.productId },
-        select: { id: true, isDemo: true },
+        select: { id: true },
       });
-      if (!product || product.isDemo) {
+      if (!product) {
         throw new AppError(ErrorCodes.PRODUCT_NOT_FOUND, "Product was not found", 404);
       }
 
@@ -1180,9 +1180,9 @@ export class PrismaStore implements DataStore {
       await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${input.userId} FOR UPDATE`;
       const product = await tx.product.findUnique({
         where: { id: input.productId },
-        select: { id: true, isDemo: true },
+        select: { id: true },
       });
-      if (!product || product.isDemo) {
+      if (!product) {
         throw new AppError(ErrorCodes.PRODUCT_NOT_FOUND, "Product was not found", 404);
       }
       if (!input.eventId || input.eventId.length < 8 || input.eventId.length > 128) {

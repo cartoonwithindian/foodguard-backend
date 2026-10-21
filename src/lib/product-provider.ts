@@ -180,7 +180,12 @@ function curatedLookup(barcode: string): ProductLookupResult | null {
 
 export function getProductProvider(): ProductDataProvider {
   if (!instance) {
-    instance = config.productData.provider === "openfoodfacts" ? new OpenFoodFactsProvider() : new MockProductProvider();
+    // Prefer real data sources when DATABASE_URL is configured
+    // Default to OpenFoodFacts when no explicit mock preference
+    const useMock = config.productData.provider === "mock";
+    instance = useMock
+      ? new MockProductProvider()
+      : new OpenFoodFactsProvider();
   }
   return instance;
 }

@@ -112,6 +112,7 @@ export async function POST(request: NextRequest) {
       productSource: meta.productSource,
       webResearch: meta.webResearch,
       aiAnalysis: meta.aiAnalysis,
+      jevDecision: meta.jevDecision ?? null,
       gamification,
     });
   } catch (error) {

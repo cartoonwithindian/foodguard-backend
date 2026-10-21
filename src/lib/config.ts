@@ -148,6 +148,18 @@ export const config = {
     lookupCacheTtlSeconds: Number(process.env.FSSAI_LOOKUP_CACHE_TTL_SECONDS || 3600),
     timeoutMs: Number(process.env.FSSAI_TIMEOUT_MS || 10_000),
   },
+  // ── Jev decision layer (server-only) ──
+  // Bounded decision service evaluated AFTER the deterministic rule engine.
+  // Jev returns structured signals only — the application owns actions.
+  // Any failure (timeout / 5xx / malformed / disabled) falls back to the
+  // rule engine; the analysis never crashes or blocks on Jev.
+  jev: {
+    enabled: (process.env.JEV_ENABLED ?? "true") !== "false",
+    apiKey: process.env.JEV_API_KEY || "",
+    model: process.env.JEV_MODEL || "jev-latest",
+    baseUrl: (process.env.JEV_BASE_URL || "https://thejevai.com/v1").replace(/\/+$/, ""),
+    timeoutMs: Number(process.env.JEV_TIMEOUT_MS || 10_000),
+  },
   // Standalone FoodGuard Visual Product Search API (Python/FastAPI CLIP+FAISS).
   // The main app calls it over HTTP for visually-similar products when a
   // scanned barcode cannot be matched. When unreachable, similar-product

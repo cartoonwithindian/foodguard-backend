@@ -229,6 +229,21 @@ export type PersonalizedAnalysis = {
   summary: string;
 };
 
+// ── Jev decision layer ───────────────────────────────────────
+/** Normalized, thresholded Jev decision block (see lib/jev.ts). */
+export type JevDecisionInfo = {
+  concern_level: "low" | "moderate" | "high" | "insufficient";
+  confidence: number;
+  /** Noul evidence probability; null when Jev did not answer. */
+  evidence_sufficient: number | null;
+  explanation_priority: string | null;
+  status: "ready" | "review" | "insufficient_evidence";
+  decision_source: "jev" | "rule_engine";
+  model?: string;
+  /** Stable identifier of the question set used (Phase 24 metadata). */
+  question_version?: string;
+};
+
 // ── Alternatives ─────────────────────────────────────────────
 export type AlternativeReason = {
   factor: "similarity" | "lower_sodium" | "lower_saturated_fat" | "lower_sugar" | "fewer_additives" | "better_nutrition" | "lower_concern" | "better_ingredients";
@@ -497,6 +512,8 @@ export type FrontendAnalysisResult = {
     preferredCharacteristics: string[];
     unsupported: string[];
   };
+  /** Jev bounded-decision block (null when the layer is disabled). */
+  jevDecision?: JevDecisionInfo | null;
 };
 
 // ── Analyze endpoint extended payload ────────────────────────
@@ -550,6 +567,8 @@ export type AnalyzeMeta = {
     recommendation: string;
     confidence: number;
   };
+  /** Jev bounded-decision block (signals + decision_source, never raw JSON). */
+  jevDecision?: JevDecisionInfo;
 };
 
 // ── Web Research Types ──────────────────────────────────────

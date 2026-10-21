@@ -146,8 +146,8 @@ export async function recordAlternativeFeedback(input: {
   if (!alternative) {
     throw new AppError(ErrorCodes.PRODUCT_NOT_FOUND, "Alternative product could not be found", 404);
   }
-  // Only real database records may be alternatives (same rule as the engine).
-  if (alternative.isDemo || alternative.source === "web_search") {
+  // Only web_search sources are rejected (real products from database/API are always valid alternatives).
+  if (alternative.source === "web_search") {
     throw new AppError(ErrorCodes.VALIDATION_ERROR, "Alternative product is not a valid alternative", 400);
   }
 

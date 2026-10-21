@@ -6,6 +6,8 @@ import { AppError, ErrorCodes } from "@/lib/errors";
 import { enforceRateLimit, clientIp } from "@/lib/rate-limit";
 import type { ProductInfo, ProductCategory, NutritionFacts } from "@/types/domain";
 import { getStore } from "@/lib/store";
+import { normalizeProductImageUrl } from "@/lib/store/catalog";
+import { resolveProductImageUrl } from "@/lib/product-image-resolver";
 
 export const runtime = "nodejs";
 
@@ -42,7 +44,13 @@ function toProductInfo(lookup: ProductLookupResult): ProductInfo {
     category,
     country: null,
     servingSize: null,
-    imageUrl: lookup.imageUrl ?? null,
+    // Only absolute http(s) URLs are servable by the browser. Relative
+    // legacy paths (/products/*.png) point at assets that are not shipped,
+    // so they are replaced by a resolved real photo (or null) — never a
+    // guaranteed 404 in an <img> tag.
+    imageUrl:
+      normalizeProductImageUrl(lookup.imageUrl) ??
+      resolveProductImageUrl(lookup.name ?? "", lookup.brand ?? null),
     ingredientsRaw: lookup.ingredients ?? "",
     ingredientsNormalized: [],
     source: lookup.source,

@@ -132,6 +132,7 @@ function normalizeProduct(raw: RawProduct): ProductInfo {
     sourceUrl: "https://world.openfoodfacts.org",
     verified: false,
     productDataConfidence: PRODUCT_CONFIDENCE,
+    // Indian dataset products are real data, not demo
     isDemo: false,
   };
 }

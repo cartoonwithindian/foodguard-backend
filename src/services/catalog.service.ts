@@ -6,6 +6,11 @@ import {
 } from "@/lib/store/catalog";
 import type { CatalogFilterInput, CatalogPageResult, CatalogProductItem, DbHealthReport } from "@/lib/store/catalog";
 import { listAllIndianProducts } from "@/lib/india-dataset";
+import {
+  resolveProductImageUrl,
+  resolveProductImageUrlByBarcode,
+} from "@/lib/product-image-resolver";
+import { scoreCatalogMatch, tokenizeCatalogQuery } from "@/lib/search/catalog-match";
 import { logger } from "@/lib/logger";
 
 /** Stable identity key used to deduplicate across the live DB and the bundled
@@ -75,7 +80,11 @@ export async function listCatalog(input: CatalogFilterInput = {}): Promise<Catal
       barcode: product.barcode,
       category: classifyCatalogCategory(product.name),
       categoryLabel: product.category,
-      imageUrl: normalizeProductImageUrl(product.imageUrl),
+      imageUrl: normalizeProductImageUrl(
+        normalizeProductImageUrl(product.imageUrl) ??
+          resolveProductImageUrlByBarcode(product.barcode) ??
+          resolveProductImageUrl(product.name, product.brand),
+      ),
       packSize: null,
       price: null,
       source: product.source,
@@ -88,6 +97,7 @@ export async function listCatalog(input: CatalogFilterInput = {}): Promise<Catal
     });
   }
 
+  const searchTokens = tokenizeCatalogQuery(input.search ?? "");
   const datasetEntries = listAllIndianProducts();
   if (datasetEntries) {
     for (const entry of datasetEntries) {
@@ -103,7 +113,11 @@ export async function listCatalog(input: CatalogFilterInput = {}): Promise<Catal
         barcode: product.barcode,
         category: catKey,
         categoryLabel: categoryLabel(catKey),
-        imageUrl: normalizeProductImageUrl(product.imageUrl),
+        imageUrl: normalizeProductImageUrl(
+          normalizeProductImageUrl(product.imageUrl) ??
+            resolveProductImageUrlByBarcode(product.barcode) ??
+            resolveProductImageUrl(product.name, product.brand),
+        ),
         packSize: null,
         price: null,
         source: product.source,
@@ -117,10 +131,18 @@ export async function listCatalog(input: CatalogFilterInput = {}): Promise<Catal
     }
   }
 
-  const searchQuery = (input.search ?? "").trim();
-  if (searchQuery) {
-    const q = searchQuery.toLowerCase();
-    const filtered = items.filter((i) => i.name.toLowerCase().includes(q));
+  if (searchTokens.length > 0) {
+    // The whole query used to be matched as one literal substring against the
+    // name alone, so "low sugar products" matched nothing and brand/barcode
+    // hits from the store were thrown away.
+    const filtered = items.filter((item) => {
+      const { matched } = scoreCatalogMatch(searchTokens, {
+        name: item.name,
+        brand: item.brand,
+        barcode: item.barcode,
+      });
+      return matched > 0;
+    });
     items.length = 0;
     items.push(...filtered);
   }
@@ -131,7 +153,35 @@ export async function listCatalog(input: CatalogFilterInput = {}): Promise<Catal
     items.push(...filtered);
   }
 
+  // "Photos only": drop rows the resolver could not attach a photo to, so the
+  // grid never shows a wall of "No image" placeholders.
+  if (input.hasImage) {
+    const filtered = items.filter((i) => typeof i.imageUrl === "string" && i.imageUrl.length > 0);
+    items.length = 0;
+    items.push(...filtered);
+  }
+
   catalogItemSort(input.sort ?? "new", items);
+
+  // Relevance first when searching: products matching every term outrank
+  // single-term hits. Array#sort is stable, so the user's chosen sort stays
+  // as the tiebreaker within the same relevance band.
+  if (searchTokens.length > 0) {
+    const relevance = new Map<string, { matched: number; score: number }>();
+    for (const item of items) {
+      relevance.set(item.id, scoreCatalogMatch(searchTokens, {
+        name: item.name,
+        brand: item.brand,
+        barcode: item.barcode,
+      }));
+    }
+    items.sort((a, b) => {
+      const ra = relevance.get(a.id) ?? { matched: 0, score: 0 };
+      const rb = relevance.get(b.id) ?? { matched: 0, score: 0 };
+      if (rb.matched !== ra.matched) return rb.matched - ra.matched;
+      return rb.score - ra.score;
+    });
+  }
 
   const categories = new Map<string, { key: string; label: string; count: number }>();
   for (const item of items) {

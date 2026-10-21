@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
     const search = url.searchParams.get("search")?.trim() ?? "";
     const category = url.searchParams.get("category")?.trim() ?? "all";
     const sort = url.searchParams.get("sort") ?? "new";
+    const hasImage = url.searchParams.get("hasImage") === "true";
     const page = Math.max(parseInt(url.searchParams.get("page") ?? "1", 10) || 1, 1);
     const limit = Math.min(Math.max(parseInt(url.searchParams.get("limit") ?? "24", 10) || 24, 1), 50);
 
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
     }
 
     const offset = (page - 1) * limit;
-    const data = await listCatalog({ search, category, sort, offset, limit });
+    const data = await listCatalog({ search, category, sort, offset, limit, hasImage });
 
     return jsonSuccess(
       {

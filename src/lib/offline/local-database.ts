@@ -9,8 +9,8 @@
  */
 import type { IdentifiedProduct, ProductSource } from "@/types/identification";
 import { normalizeBarcode } from "@/types/identification";
-import { PRODUCT_SEED } from "@/data/seed/products";
-import { OFFLINE_PRODUCTS } from "@/data/offline-products";
+import { lookupIndianProductByBarcode, searchIndianProducts, getIndianDatasetStats, listAllIndianProducts } from "@/lib/india-dataset";
+import { logger } from "@/lib/logger";
 
 type OfflineEntry = {
   barcode: string;
@@ -22,7 +22,6 @@ type OfflineEntry = {
   source: string;
   confidence: number;
   verified: boolean;
-  isDemo: boolean;
 };
 
 const byBarcode = new Map<string, OfflineEntry>();
@@ -31,41 +30,37 @@ const all: OfflineEntry[] = [];
 function addEntry(entry: OfflineEntry): void {
   const clean = normalizeBarcode(entry.barcode);
   if (!clean) return;
-  const existing = byBarcode.get(clean);
-  if (existing && !existing.isDemo && entry.isDemo) return; // real data wins over demo
   byBarcode.set(clean, entry);
   all.push(entry);
 }
 
-for (const p of PRODUCT_SEED) {
-  addEntry({
-    barcode: p.barcode,
-    name: p.name,
-    brand: p.brand,
-    category: p.category,
-    country: p.country ?? "IN",
-    ingredientsRaw: p.ingredientsRaw ?? "",
-    source: p.source,
-    confidence: typeof p.confidence === "number" ? p.confidence : 0.8,
-    verified: Boolean(p.verified),
-    isDemo: Boolean(p.isDemo),
-  });
+// Load Indian products into the offline database
+async function loadIndianProductsIntoOfflineDb(): Promise<void> {
+  const indianProducts = await listAllIndianProducts();
+  if (indianProducts) {
+    for (const entry of indianProducts) {
+      addEntry({
+        barcode: entry.product.barcode,
+        name: entry.product.name,
+        brand: entry.product.brand ?? "",
+        category: entry.product.category,
+        country: entry.product.country ?? "",
+        ingredientsRaw: entry.product.ingredientsRaw,
+        source: entry.product.source,
+        confidence: entry.product.productDataConfidence,
+        verified: entry.product.verified,
+      });
+    }
+    logger.info("offline_db_populated", { count: indianProducts.length });
+  }
 }
 
-for (const p of OFFLINE_PRODUCTS) {
-  addEntry({
-    barcode: p.barcode,
-    name: p.name,
-    brand: p.brand,
-    category: p.category,
-    country: p.country ?? "IN",
-    ingredientsRaw: p.ingredientsRaw ?? "",
-    source: "indian_dataset",
-    confidence: 0.8,
-    verified: false,
-    isDemo: false,
-  });
-}
+// Initialize the offline database when the module imports
+loadIndianProductsIntoOfflineDb().then(() => {
+  logger.info("offline_db_initialized", { count: offlineProductCount() });
+}).catch((err) => {
+  logger.warn("offline_db_init_error", { error: String(err) });
+});
 
 function toIdentifiedProduct(entry: OfflineEntry, source: ProductSource): IdentifiedProduct {
   return {
@@ -79,7 +74,6 @@ function toIdentifiedProduct(entry: OfflineEntry, source: ProductSource): Identi
     source,
     sourceDetail: entry.source,
     confidence: Math.max(0, Math.min(1, entry.confidence)),
-    isDemo: entry.isDemo,
     verified: entry.verified,
     resolutionSource: "local_database",
   };

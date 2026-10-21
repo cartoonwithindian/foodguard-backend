@@ -68,6 +68,11 @@ import { AppError, ErrorCodes } from "@/lib/errors";
 import { xpService } from "@/gamification/services/xp.service";
 import { streakService } from "@/gamification/services/streak.service";
 import { cosineSimilarity, STOPWORDS } from "@/lib/embeddings";
+import {
+  matchesCatalogTerm,
+  scoreCatalogMatch,
+  tokenizeCatalogQuery,
+} from "@/lib/search/catalog-match";
 import type { DataStore, ProductSearchResult, UserPreferencesRecord, UserRecord } from "./types";
 import {
   preferencesToRecord,
@@ -97,6 +102,8 @@ type UserChallengeRow = {
 };
 
 function toProductInfo(seed: (typeof PRODUCT_SEED)[number], index: number): ProductInfo {
+  // isDemo is preserved from seed data; in real mode, providers set isDemo=false
+  // Only mark as demo when explicitly from demo data source
   return {
     id: `prod-${index + 1}`,
     barcode: seed.barcode,
@@ -147,9 +154,9 @@ function seedUser(
  * DATABASE_URL is configured (MOCK MODE). Not for production use.
  */
 export class InMemoryStore implements DataStore {
-  private products: ProductInfo[];
+  private products: ProductInfo[] = [];
   private nutritionByProduct = new Map<string, NutritionFacts>();
-  private ingredients: Map<string, IngredientRecord>;
+  private ingredients: Map<string, IngredientRecord> = new Map();
   private evidenceByIngredient = new Map<string, EvidenceRef[]>();
   private unknown: UnknownIngredientInfo[] = [];
   private users: Map<string, UserRecord>;
@@ -173,27 +180,31 @@ export class InMemoryStore implements DataStore {
   private counter = 0;
 
   constructor() {
-    this.products = PRODUCT_SEED.map(toProductInfo);
-    for (const p of this.products) {
-      const seed = PRODUCT_SEED.find((s) => s.barcode === p.barcode);
-      if (seed?.nutrition) {
-        this.nutritionByProduct.set(p.id, buildNutrition(seed.nutrition)!);
+    // When DATABASE_URL is configured, do NOT seed from demo data.
+    // The store will be populated from the database or external providers.
+    if (!config.databaseUrl) {
+      this.products = PRODUCT_SEED.map(toProductInfo);
+      for (const p of this.products) {
+        const seed = PRODUCT_SEED.find((s) => s.barcode === p.barcode);
+        if (seed?.nutrition) {
+          this.nutritionByProduct.set(p.id, buildNutrition(seed.nutrition)!);
+        }
       }
-    }
-    this.ingredients = new Map(INGREDIENT_SEED.map((i) => [i.id, i]));
-    for (const entry of EVIDENCE_SEED) {
-      const list = this.evidenceByIngredient.get(entry.ingredientId) ?? [];
-      list.push({
-        id: `ev-${entry.ingredientId}-${list.length + 1}`,
-        title: entry.title,
-        organization: entry.organization,
-        url: entry.url,
-        sourceType: entry.sourceType,
-        publicationDate: entry.publicationDate,
-        evidenceLevel: entry.evidenceLevel,
-        summary: entry.summary,
-      });
-      this.evidenceByIngredient.set(entry.ingredientId, list);
+      this.ingredients = new Map(INGREDIENT_SEED.map((i) => [i.id, i]));
+      for (const entry of EVIDENCE_SEED) {
+        const list = this.evidenceByIngredient.get(entry.ingredientId) ?? [];
+        list.push({
+          id: `ev-${entry.ingredientId}-${list.length + 1}`,
+          title: entry.title,
+          organization: entry.organization,
+          url: entry.url,
+          sourceType: entry.sourceType,
+          publicationDate: entry.publicationDate,
+          evidenceLevel: entry.evidenceLevel,
+          summary: entry.summary,
+        });
+        this.evidenceByIngredient.set(entry.ingredientId, list);
+      }
     }
     this.users = new Map<string, UserRecord>();
     if (config.seed.enabled) {
@@ -955,32 +966,36 @@ export class InMemoryStore implements DataStore {
 
   async searchProducts(query: string, category: ProductCategory | "all" = "all"): Promise<ProductSearchResult[]> {
     const q = query.toLowerCase().trim();
+    // Multi-word queries ("low sugar products") are scored per term. Treating
+    // the whole query as one substring meant such queries matched nothing.
+    const tokens = tokenizeCatalogQuery(query);
     const results: ProductSearchResult[] = [];
     for (const product of this.products) {
       if (category !== "all" && product.category !== category) continue;
       const name = product.name.toLowerCase();
       const brand = product.brand?.toLowerCase() ?? "";
       const raw = product.ingredientsRaw.toLowerCase();
-      if (q && !name.includes(q) && !brand.includes(q) && !product.barcode.includes(q) && !raw.includes(q)) continue;
       let rank = 0;
       const matchedOn: string[] = [];
       if (q) {
-        if (name.includes(q)) {
-          rank += 100;
-          matchedOn.push("name");
-        }
-        if (brand.includes(q)) {
-          rank += 60;
-          matchedOn.push("brand");
-        }
-        if (product.barcode.includes(q)) {
-          rank += 80;
+        // Keep the exact-phrase path as a bonus so a literal full-query match
+        // still outranks scattered term matches.
+        const phraseHit =
+          name.includes(q) || brand.includes(q) || product.barcode.includes(q) || raw.includes(q);
+        const scored = scoreCatalogMatch(tokens, {
+          name: product.name,
+          brand: product.brand,
+          barcode: product.barcode,
+          ingredients: product.ingredientsRaw,
+        });
+        if (scored.matched === 0) continue;
+        rank = scored.score + (phraseHit ? 150 : 0);
+        if (name.includes(q) || matchesCatalogTerm(product.name, tokens)) matchedOn.push("name");
+        if (brand.includes(q) || matchesCatalogTerm(product.brand, tokens)) matchedOn.push("brand");
+        if (product.barcode.includes(q) || tokens.some((t) => product.barcode.toLowerCase().includes(t))) {
           matchedOn.push("barcode");
         }
-        if (raw.includes(q)) {
-          rank += 30;
-          matchedOn.push("ingredient");
-        }
+        if (raw.includes(q) || tokens.some((t) => raw.includes(t))) matchedOn.push("ingredient");
       } else {
         rank = 50;
       }
@@ -1183,7 +1198,10 @@ export class InMemoryStore implements DataStore {
         throw new AppError(ErrorCodes.UNAUTHORIZED, "User not found", 401);
       }
       const product = this.products.find((candidate) => candidate.id === input.productId);
-      if (!product || product.isDemo) {
+      // Only reject demo products when running in mock mode without DATABASE_URL
+      // In real mode, all products from real data sources should be accepted
+      const isMockMode = !config.databaseUrl;
+      if (!product || (isMockMode && product.isDemo)) {
         throw new AppError(ErrorCodes.PRODUCT_NOT_FOUND, "Product was not found", 404);
       }
 
@@ -1261,9 +1279,32 @@ export class InMemoryStore implements DataStore {
       this.gamificationActivities.push(activity);
       this.gamificationProfiles.set(input.userId, profile);
 
-      // Module 2 reconciles after the scan XP and any challenge reward are
-      // applied, so `previous` correctly brackets the whole transaction and a
-      // level crossing from either source is reported once.
+      let challenges: ReturnType<typeof this.challengeViewsForUser> | null = null;
+      let completedChallenges: GamificationActivityResult["completedChallenges"];
+      // The authoritative profile after scan XP *and* any challenge reward, so
+      // Module 2 reconciles once over the real final total.
+      let finalProfile = profile;
+
+      if (challengeDefinitions.length > 0) {
+        this.syncChallengeDefinitions(challengeDefinitions);
+        const current = this.currentChallengeRows(input.userId, input.timestamp, user.timezone);
+        const outcome = this.evaluateCurrentChallenges(user, current, input.timestamp, rules);
+        finalProfile =
+          outcome.rewardXp > 0
+            ? this.applyChallengeReward(user, outcome.rewardXp, input.timestamp, rules)
+            : profile;
+        challenges = this.challengeViewsForUser(user, current, input.timestamp);
+        completedChallenges = outcome.completed.map(({ definition }) => ({
+          challenge_id: definition.id,
+          name: definition.title,
+          description: definition.description,
+          xp_reward: definition.rewardXp,
+        }));
+      }
+
+      // Module 2 reconciles last, after the challenge reward, so a level
+      // crossing caused by either source is reported exactly once and the
+      // `profile` and `level` XP figures in this response cannot disagree.
       const module2 = this.achievementStateFor(input.userId, rules, previous?.totalXp ?? 0);
       const events = {
         level: module2.level,
@@ -1272,32 +1313,23 @@ export class InMemoryStore implements DataStore {
           module2.newly_unlocked.includes(view.achievement_id),
         ),
       };
+      // An achievement payout may have raised XP again, so report the profile
+      // as it stands after Module 2 rather than a now-stale snapshot.
+      finalProfile =
+        this.gamificationProfiles.get(input.userId) ?? finalProfile;
 
-      if (challengeDefinitions.length > 0) {
-        this.syncChallengeDefinitions(challengeDefinitions);
-        const current = this.currentChallengeRows(input.userId, input.timestamp, user.timezone);
-        const outcome = this.evaluateCurrentChallenges(user, current, input.timestamp, rules);
-        const finalProfile =
-          outcome.rewardXp > 0
-            ? this.applyChallengeReward(user, outcome.rewardXp, input.timestamp, rules)
-            : profile;
-        const views = this.challengeViewsForUser(user, current, input.timestamp);
+      if (challenges) {
         return {
           activity: { ...activity },
           profile: { ...finalProfile },
           idempotent: false,
           ...events,
-          challenges: [...views.daily, ...views.weekly],
-          completedChallenges: outcome.completed.map(({ definition }) => ({
-            challenge_id: definition.id,
-            name: definition.title,
-            description: definition.description,
-            xp_reward: definition.rewardXp,
-          })),
+          challenges: [...challenges.daily, ...challenges.weekly],
+          completedChallenges,
         };
       }
 
-      return { activity: { ...activity }, profile: { ...profile }, idempotent: false, ...events };
+      return { activity: { ...activity }, profile: { ...finalProfile }, idempotent: false, ...events };
     });
   }
 

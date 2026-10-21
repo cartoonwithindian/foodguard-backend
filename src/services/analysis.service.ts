@@ -23,6 +23,9 @@ import { assessNutrition, nutrientLabel } from "@/lib/nutrition/analyze";
 import { scoreNutrition } from "@/lib/scoring";
 import { computeFoodGuardHealthScore } from "@/lib/scoring/engine";
 import { personalize } from "@/services/personalization.service";
+import { evaluateFoodProductDecision, resolveJevDecision } from "@/lib/jev";
+import type { JevStateInput } from "@/lib/jev";
+import type { JevDecisionInfo } from "@/types/domain";
 
 import type { EnhancedAlternative } from "@/services/recommendation.service";
 import { getStore } from "@/lib/store";
@@ -298,8 +301,6 @@ export async function runAnalysis(input: AnalyzeInput): Promise<{ frontend: Fron
     productSource = lookup.source;
     if (!product) {
       warnings.push(`Product with barcode ${input.barcode} was not found. Proceeding with provided label data.`);
-    } else if (product.isDemo) {
-      warnings.push("This product is from the bundled demo dataset and has not been verified against a retailer.");
     }
   }
 
@@ -673,6 +674,56 @@ export async function runAnalysis(input: AnalyzeInput): Promise<{ frontend: Fron
     logger.warn("health_analysis_failed", { error: String(error) });
   }
 
+  // ── 12b. Jev decision layer (bounded, server-side, optional) ──
+  // Facts (above) are already computed; Jev only classifies them into three
+  // structured signals. Any failure falls back to the deterministic rule
+  // engine via resolveJevDecision — this block can never crash the analysis.
+  // Skipped on paths that must not block on live internet calls (chat).
+  let jevDecision: JevDecisionInfo | undefined;
+  if (!input.skipWebResearch) {
+    try {
+      const jevInput: JevStateInput = {
+        analysisId: product?.id ?? "manual",
+        productName: product?.name ?? input.productName ?? "Unknown Product",
+        category: product?.category ?? "food",
+        ingredients: ingredientAnalysis.items.map((i) => ({
+          name: i.name,
+          assessment: i.assessment,
+        })),
+        allergens: allergenMatches.map((a) => a.allergen),
+        ruleEngine: {
+          score,
+          rating: scoreLabel,
+          assessment,
+          confidence,
+          needs_review: needsReview,
+          negative_factors: healthScore?.negative_factors ?? [],
+          missing_data: healthScore?.data_quality.missing_fields ?? [],
+          unresolved_ingredients: ingredientAnalysis.unresolvedCount,
+          has_nutrition: productNutrition !== null,
+          has_ingredients: ingredientsText.length > 0,
+        },
+        // Derived from the personalization actually applied — no identifiers.
+        user: personalization
+          ? {
+              goals: personalization.flags
+                .filter((f) => f.type === "health_goal_conflict")
+                .map((f) => f.preference),
+              avoid: personalization.flags
+                .filter((f) => f.type === "allergen_alert" || f.type === "preference_conflict")
+                .map((f) => f.ingredient ?? f.preference),
+            }
+          : null,
+      };
+      const evaluation = await evaluateFoodProductDecision(jevInput);
+      jevDecision = resolveJevDecision(evaluation, { assessment, confidence });
+    } catch (error) {
+      // Belt-and-braces: resolveJevDecision already maps failures; this
+      // guard only guarantees the pipeline proceeds without a decision.
+      logger.warn("jev_decision_layer_failed", { error: String(error) });
+    }
+  }
+
   // ── 13. Alternatives (Phase 1–4 pipeline + existing ranking) ──
   let alternatives: EnhancedAlternative[] = [];
   let alternativeCharacteristics: AlternativeCharacteristicInfo[] = [];
@@ -737,6 +788,7 @@ export async function runAnalysis(input: AnalyzeInput): Promise<{ frontend: Fron
     alternatives,
     alternativeCharacteristics,
     alternativeCriteria,
+    jevDecision,
     personalization,
     regulatory: null,
     regulatoryCompliance,
@@ -749,11 +801,20 @@ export async function runAnalysis(input: AnalyzeInput): Promise<{ frontend: Fron
 
   if (input.userId && frontendResult.id !== "manual") {
     try {
-      await store.addHistoryEntry(input.userId, {
-        productId: product?.id ?? null,
-        assessmentSnapshot: frontendResult,
-        source: input.barcode ? "barcode" : "label",
-      });
+      // Honor the user's scan-history privacy choice (profile → Privacy &
+      // data). The flag persists in sensitivityPreferences as
+      // "keepScanHistory=false"; absence of the flag means history is kept.
+      const prefs = await store.getUserPreferences(input.userId).catch(() => null);
+      const historyOptOut = prefs?.sensitivityPreferences?.includes("keepScanHistory=false") ?? false;
+      if (historyOptOut) {
+        logger.info("history_save_skipped_optout", { userId: input.userId });
+      } else {
+        await store.addHistoryEntry(input.userId, {
+          productId: product?.id ?? null,
+          assessmentSnapshot: frontendResult,
+          source: input.barcode ? "barcode" : "label",
+        });
+      }
     } catch (error) {
       logger.warn("history_save_failed", { userId: input.userId, error: String(error) });
     }
@@ -795,6 +856,7 @@ export async function runAnalysis(input: AnalyzeInput): Promise<{ frontend: Fron
       confidence: aiAnalysis.confidence,
     } : undefined,
     healthScore,
+    jevDecision,
   };
 
   return { frontend: frontendResult, meta };
@@ -821,6 +883,7 @@ function buildFrontendResult(params: {
   scoreLabel: string;
   needsReview: boolean;
   healthScore?: import("@/lib/scoring/engine").FoodGuardHealthScore;
+  jevDecision?: JevDecisionInfo;
 }): FrontendAnalysisResult {
   const name = params.product?.name ?? params.productName ?? "Custom Product";
   const brand = params.product?.brand ?? params.brand ?? (params.product ? "" : "Manual Entry");
@@ -828,14 +891,19 @@ function buildFrontendResult(params: {
 
   // Build the foodguardScore object for the frontend.
   const hs = params.healthScore;
+  // Components fall back to hard-coded defaults when their inputs are absent
+  // (see lib/scoring/components/nutrient-scorer.ts), so a component whose data
+  // is missing must not be advertised as "available". These statuses drive
+  // whether the UI is allowed to present the number as a real measurement.
+  const missingInput = new Set(hs?.data_quality.missing_fields ?? []);
   const foodguardScore = hs ? {
     final_score: hs.final_score,
     rating: hs.rating,
     confidence: hs.confidence,
     components: {
-      nutrient: { score: hs.components.nutrient.score, weight: hs.components.nutrient.weight, status: "available" as const },
-      ingredient_profile: { score: hs.components.ingredient_profile.score, weight: hs.components.ingredient_profile.weight, status: "available" as const },
-      ingredient_concern: { score: hs.components.ingredient_concern.score, weight: hs.components.ingredient_concern.weight, status: "available" as const },
+      nutrient: { score: hs.components.nutrient.score, weight: hs.components.nutrient.weight, status: missingInput.has("nutrition") ? ("insufficient" as const) : ("available" as const) },
+      ingredient_profile: { score: hs.components.ingredient_profile.score, weight: hs.components.ingredient_profile.weight, status: missingInput.has("ingredients") ? ("insufficient" as const) : ("available" as const) },
+      ingredient_concern: { score: hs.components.ingredient_concern.score, weight: hs.components.ingredient_concern.weight, status: missingInput.has("ingredients") ? ("insufficient" as const) : ("available" as const) },
       processing: { score: hs.components.processing.score, weight: hs.components.processing.weight, level: hs.components.processing.level, status: "derived" as const },
     },
     positive_factors: hs.positive_factors,
@@ -889,5 +957,6 @@ function buildFrontendResult(params: {
     alternatives: params.alternatives,
     alternativeCharacteristics: params.alternativeCharacteristics,
     alternativeCriteria: params.alternativeCriteria,
+    jevDecision: params.jevDecision ?? null,
   };
 }

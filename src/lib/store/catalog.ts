@@ -27,6 +27,12 @@ export type CatalogFilterInput = {
   sort?: string;
   offset?: number;
   limit?: number;
+  /**
+   * When true, only products that ended up with a usable image URL are kept.
+   * `imageUrl` is already resolved for every item by the time we filter, so
+   * this needs no extra work and keeps the counts/pagination honest.
+   */
+  hasImage?: boolean;
 };
 
 export type CatalogProductItem = {
@@ -79,6 +85,14 @@ export type DbHealthReport = {
  * empty strings) becomes null so the UI always falls back to its
  * placeholder instead of rendering a broken image.
  */
+/**
+ * URLs that are technically images but carry no product photography. Stores
+ * hand these out whenever a product has no real photo, so treating them as a
+ * valid image shows the user a grey "no image" tile that looks intentional.
+ */
+const PLACEHOLDER_IMAGE_PATTERN =
+  /placeholder|no[-_]?image|noimage|default[-_]?(image|product)|dummy|1x1|spacer|blank\.(png|jpe?g|gif)|transparent\.(png|gif)/i;
+
 export function normalizeProductImageUrl(
   value: string | null | undefined,
 ): string | null {
@@ -86,6 +100,7 @@ export function normalizeProductImageUrl(
   const trimmed = value.trim();
   if (!trimmed) return null;
   if (!/^https?:\/\/[^\s]+$/i.test(trimmed)) return null;
+  if (PLACEHOLDER_IMAGE_PATTERN.test(trimmed)) return null;
   return trimmed;
 }
 

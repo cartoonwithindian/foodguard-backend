@@ -1,6 +1,6 @@
 import { searchSimilarByImage } from "@/lib/visual-search";
 import { AppError, ErrorCodes } from "@/lib/errors";
-import { jsonError } from "@/lib/http";
+import { jsonError, readFormDataLimited } from "@/lib/http";
 import { enforceRateLimit, clientIp } from "@/lib/rate-limit";
 import { config } from "@/lib/config";
 
@@ -17,7 +17,10 @@ export async function POST(request: Request): Promise<Response> {
   try {
     await enforceRateLimit(`visualsearch:${clientIp(request)}`);
 
-    const formData = await request.formData();
+    const formData = await readFormDataLimited(
+      request,
+      config.limits.maxBodyMb * 1024 * 1024,
+    );
     const file = formData.get("image");
 
     if (!file || !(file instanceof File)) {

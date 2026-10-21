@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { jsonSuccess, jsonError } from "@/lib/http";
+import { AppError, ErrorCodes } from "@/lib/errors";
 import { evidenceDetail } from "@/services/product.service";
 
 export const runtime = "nodejs";
@@ -16,6 +17,9 @@ export async function GET(
   const requestId = crypto.randomUUID().slice(0, 8);
   try {
     const { barcode } = await params;
+    if (!/^\d{4,32}$/.test(barcode)) {
+      throw new AppError(ErrorCodes.VALIDATION_ERROR, "Invalid barcode format");
+    }
     const { product, evidence, perIngredient, evidenceStatus } = await evidenceDetail(barcode);
 
     const ingredientEvidence = perIngredient.map((entry) => ({

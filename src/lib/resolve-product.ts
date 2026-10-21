@@ -426,17 +426,21 @@ export async function resolveProductByPhoto(
       return { resolution: { status: "error", message, extracted }, extracted };
     }
 
+    // The API returns the standard envelope (`{ success, data, error, meta }`).
+    // Some older callers/tests supplied the unwrapped payload, so accept both.
+    const payload = (json as unknown as { data?: ScanLabelResponse }).data ?? json;
+
     // Fill extracted info
-    const barcodeValue = json.barcode?.value ?? null;
-    const ocrText = json.ocr?.text ?? json.rawText ?? "";
+    const barcodeValue = payload.barcode?.value ?? null;
+    const ocrText = payload.ocr?.text ?? payload.rawText ?? "";
     extracted.barcode = barcodeValue ?? undefined;
     extracted.ocrText = ocrText || undefined;
-    extracted.ingredientsText = json.ingredientsText ?? undefined;
-    extracted.nutrition = json.nutrition ?? null;
-    extracted.ocrConfidence = json.ocr?.confidence ?? undefined;
-    extracted.needsReview = json.ocr?.needsReview ?? false;
+    extracted.ingredientsText = payload.ingredientsText ?? undefined;
+    extracted.nutrition = payload.nutrition ?? null;
+    extracted.ocrConfidence = payload.ocr?.confidence ?? undefined;
+    extracted.needsReview = payload.ocr?.needsReview ?? false;
 
-    const nameGuess = guessProductName(ocrText, json.product?.name);
+    const nameGuess = guessProductName(ocrText, payload.product?.name);
     extracted.productName = nameGuess || undefined;
 
     // 1. Barcode detected on the photo -> resolve straight through barcode.

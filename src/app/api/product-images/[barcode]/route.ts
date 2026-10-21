@@ -14,7 +14,7 @@ export async function GET(
 ): Promise<Response> {
   const { barcode } = await params;
 
-  if (!barcode || barcode.length < 3) {
+  if (!barcode || barcode.length < 3 || barcode.length > 32) {
     return Response.json({ error: "Invalid barcode" }, { status: 400 });
   }
 

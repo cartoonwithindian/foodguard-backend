@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { analyzeSchema } from "@/schemas";
-import { jsonSuccess, jsonError } from "@/lib/http";
+import { jsonSuccess, jsonError, parseJsonBody } from "@/lib/http";
 import { enforceRateLimit, clientIp } from "@/lib/rate-limit";
 import { runAnalysis } from "@/services/analysis.service";
 import { getSession } from "@/lib/auth";
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
   const start = Date.now();
   try {
     await enforceRateLimit(`analyze:${clientIp(request)}`);
-    const body = await request.json();
+    const body = await parseJsonBody(request);
     const parsed = analyzeSchema.safeParse(body);
     if (!parsed.success) {
       return jsonError(parsed.error, requestId);
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       nutrition: input.nutrition,
       ocrText: input.ocrText,
       ocrConfidence: input.ocrConfidence,
-      imageAvailable: false,
+      imageAvailable: input.imageAvailable ?? false,
 // Identity comes ONLY from the verified session (anonymous scans are
       // unpersonalised) — never from the request body. Rewards use the same
       // session id, so a body-supplied userId can never redirect XP.

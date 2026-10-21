@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { jsonSuccess, jsonError } from "@/lib/http";
+import { jsonSuccess, jsonError, parseJsonBody } from "@/lib/http";
 import { compareSchema } from "@/schemas";
 import { compareProducts } from "@/services/product.service";
 
@@ -12,7 +12,7 @@ export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID().slice(0, 8);
   try {
-    const body = await request.json();
+    const body = await parseJsonBody(request);
     const parsed = compareSchema.safeParse(body);
     if (!parsed.success) return jsonError(parsed.error, requestId);
     const comparison = await compareProducts(parsed.data.productIds);

@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { jsonSuccess, jsonError } from "@/lib/http";
+import { jsonSuccess, jsonError, parseJsonBody } from "@/lib/http";
 import { requireAdmin } from "@/lib/auth";
 import { ingredientUpsertSchema } from "@/schemas";
 import { adminListIngredients, adminUpsertIngredient } from "@/services/admin.service";
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID().slice(0, 8);
   try {
     const admin = await requireAdmin(request);
-    const body = await request.json();
+    const body = await parseJsonBody(request);
     const parsed = ingredientUpsertSchema.safeParse(body);
     if (!parsed.success) return jsonError(parsed.error, requestId);
 

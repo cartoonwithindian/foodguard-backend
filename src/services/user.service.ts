@@ -31,19 +31,46 @@ export function isGuestEmail(email: string): boolean {
   );
 }
 
+/** True when the store rejected a write because of a unique constraint. */
+function isUniqueViolation(error: unknown): boolean {
+  return (
+    !!error &&
+    typeof error === "object" &&
+    (error as { code?: unknown }).code === "P2002"
+  );
+}
+
 export async function signup(input: { email: string; name: string; password: string; language?: "EN" | "HI"; timezone?: string }) {
   const store = getStore();
+  if (isGuestEmail(input.email)) {
+    throw new AppError(
+      ErrorCodes.AUTH_EMAIL_EXISTS,
+      "An account with this email already exists",
+      409,
+    );
+  }
   const existing = await store.getUserByEmail(input.email);
   if (existing) {
     throw new AppError(ErrorCodes.AUTH_EMAIL_EXISTS, "An account with this email already exists", 409);
   }
-  const user = await store.createUser({
-    email: input.email.toLowerCase(),
-    name: input.name,
-    passwordHash: await hashPassword(input.password),
-    language: input.language ?? "EN",
-    timezone: input.timezone,
-  });
+  let user;
+  try {
+    user = await store.createUser({
+      email: input.email.toLowerCase(),
+      name: input.name,
+      passwordHash: await hashPassword(input.password),
+      language: input.language ?? "EN",
+      timezone: input.timezone,
+    });
+  } catch (error) {
+    // The pre-check above is racy: two concurrent signups can both pass it and
+    // the unique index rejects the loser. Map that to the same 409 instead of
+    // leaking a driver error / returning 500.
+    if (isUniqueViolation(error)) {
+      throw new AppError(ErrorCodes.AUTH_EMAIL_EXISTS, "An account with this email already exists", 409);
+    }
+    throw error;
+  }
   const session: SessionUser = {
     id: user.id,
     email: user.email,
@@ -58,28 +85,23 @@ export async function login(input: { email: string; password: string; timezone?:
   const store = getStore();
   let user = await store.getUserByEmail(input.email.toLowerCase());
 
-  if (!user) {
-    // Auto-create unknown users on first login (demo convenience).
-    const name = input.email.split("@")[0] || input.email;
-    user = await store.createUser({
-      email: input.email.toLowerCase(),
-      name,
-      passwordHash: input.password ? await hashPassword(input.password) : null,
-      language: "EN",
-      timezone: input.timezone,
-    });
-  } else if (user.passwordHash) {
-    // Verify password for existing users with a stored hash.
-    const valid = await verifyPassword(input.password, user.passwordHash);
-    if (!valid) {
-      throw new AppError(ErrorCodes.AUTH_INVALID_CREDENTIALS, "Invalid email or password", 401);
-    }
+  // Login must never create accounts. Unknown emails and passwordless (guest)
+  // accounts both fail with the same 401 so login cannot be used to
+  // pre-register a victim's address or to take over a guest row by knowing its
+  // email. Guests keep the session token they were issued at creation.
+  if (!user || !user.passwordHash) {
+    throw new AppError(ErrorCodes.AUTH_INVALID_CREDENTIALS, "Invalid email or password", 401);
   }
+
+  const valid = await verifyPassword(input.password, user.passwordHash);
+  if (!valid) {
+    throw new AppError(ErrorCodes.AUTH_INVALID_CREDENTIALS, "Invalid email or password", 401);
+  }
+
   if (input.timezone && user.timezone !== input.timezone) {
     const updated = await store.updateUser(user.id, { timezone: input.timezone });
     if (updated) user = updated;
   }
-  // If user exists but has no passwordHash (e.g. guest account), allow login.
 
   const session: SessionUser = {
     id: user.id,

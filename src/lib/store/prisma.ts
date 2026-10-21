@@ -703,7 +703,7 @@ export class PrismaStore implements DataStore {
   }): Promise<UserRecord> {
     const row = await prisma.user.create({
       data: {
-        email: input.email,
+        email: input.email.toLowerCase(),
         name: input.name,
         passwordHash: input.passwordHash,
         role: input.role === "ADMIN" ? Role.ADMIN : Role.USER,

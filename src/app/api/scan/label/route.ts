@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { jsonSuccess, jsonError } from "@/lib/http";
+import { jsonSuccess, jsonError, readFormDataLimited } from "@/lib/http";
 import { enforceRateLimit, clientIp } from "@/lib/rate-limit";
 import { getOCRProvider, validateImageMime, maxImageBytes } from "@/lib/ocr";
 import { AppError, ErrorCodes } from "@/lib/errors";
@@ -39,10 +39,14 @@ export async function POST(request: NextRequest) {
   try {
     await enforceRateLimit(`scan:${clientIp(request)}`);
 
+    // Cap the raw multipart body before Node buffers it: `formData()` alone
+    // would accept everything the global middleware allows (and handlers used
+    // outside that middleware have no limit at all).
     let form: FormData;
     try {
-      form = await request.formData();
-    } catch {
+      form = await readFormDataLimited(request, maxImageBytes() + 1024 * 1024);
+    } catch (error) {
+      if (error instanceof AppError) throw error;
       throw new AppError(
         ErrorCodes.VALIDATION_ERROR,
         "Expected a multipart/form-data body with an image file (field 'image')"

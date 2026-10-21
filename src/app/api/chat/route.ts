@@ -11,7 +11,7 @@
 //  • Never exposes raw backend errors to the client.
 
 import { NextRequest } from "next/server";
-import { jsonSuccess, jsonError } from "@/lib/http";
+import { jsonSuccess, jsonError, parseJsonBody } from "@/lib/http";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { requireAuth } from "@/lib/auth";
 import { getStore } from "@/lib/store";
@@ -30,16 +30,9 @@ async function handlePost(request: NextRequest, requestId: string): Promise<Resp
   const user = await requireAuth(request);
   await enforceRateLimit(`chat:${user.id}`);
 
-  const rawText = await request.text();
-  if (rawText.length > MAX_REQUEST_BYTES) {
-    return jsonError({ code: "VALIDATION_ERROR", message: "Chat request body too large" }, requestId);
-  }
-  let parsedJson: unknown;
-  try {
-    parsedJson = JSON.parse(rawText);
-  } catch {
-    return jsonError({ code: "VALIDATION_ERROR", message: "Chat request body must be valid JSON" }, requestId);
-  }
+  // Bounded before JSON.parse: request.text() would buffer any body the
+  // global middleware allows, including oversized non-JSON payloads.
+  const parsedJson = await parseJsonBody(request, { maxBytes: MAX_REQUEST_BYTES });
   const parsed = chatRequestSchema.safeParse(parsedJson);
   if (!parsed.success) {
     return jsonError(parsed.error, requestId);

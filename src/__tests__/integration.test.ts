@@ -144,13 +144,12 @@ describe("authentication", () => {
     expect(logged.token).toBeDefined();
   });
 
-  // NOTE: This test documents a known design limitation.
-  // The login() function has TEST MODE that auto-creates unknown users,
-  // so wrong-password rejection is not enforced in mock mode.
-  // This is NOT a bug — it's intentional for hackathon demo convenience.
-  // Do not change production behavior to make this test pass.
-  it.skip("rejects a wrong password (blocked by TEST MODE auto-create)", async () => {
-    // When TEST MODE is eventually removed, this test should be .skip -> .only
-    await expect(login({ email: "auth-wrong@test.local", password: "WrongPass1" })).rejects.toThrow();
+  // Login never creates accounts and never accepts a wrong password. Unknown
+  // emails, guests (null password hash) and bad passwords all get the same 401.
+  it("rejects an unknown email without creating an account", async () => {
+    await expect(login({ email: "auth-wrong@test.local", password: "WrongPass1" })).rejects.toMatchObject({
+      code: "AUTH_INVALID_CREDENTIALS",
+      status: 401,
+    });
   });
 });

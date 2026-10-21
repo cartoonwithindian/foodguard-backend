@@ -107,15 +107,18 @@ export async function scanLabelClient(
     }
     
     const json = await response.json();
-    if (!json.success || !json.ocr) {
+    // Standard envelope; fall back to the unwrapped shape for older servers
+    // and existing tests.
+    const payload = json?.data ?? json;
+    if (!json.success || !payload?.ocr) {
       throw new AppError(ErrorCodes.OCR_FAILED, "Invalid server OCR response");
     }
-    
+
     return {
-      rawText: json.ocr.text,
-      confidence: json.ocr.confidence,
-      needsReview: json.ocr.needsReview,
-      provider: json.ocr.provider + "-fallback",
+      rawText: payload.ocr.text,
+      confidence: payload.ocr.confidence,
+      needsReview: payload.ocr.needsReview,
+      provider: payload.ocr.provider + "-fallback",
       fallbackUsed: true,
     };
   }

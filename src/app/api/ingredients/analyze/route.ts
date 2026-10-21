@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { jsonSuccess, jsonError } from "@/lib/http";
+import { jsonSuccess, jsonError, parseJsonBody } from "@/lib/http";
 import { ingredientAnalyzeSchema } from "@/schemas";
 import { analyzeIngredients } from "@/services/ingredient.service";
 import { enforceRateLimit, clientIp } from "@/lib/rate-limit";
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID().slice(0, 8);
   try {
     await enforceRateLimit(`ingredients:${clientIp(request)}`);
-    const body = await request.json();
+    const body = await parseJsonBody(request);
     const parsed = ingredientAnalyzeSchema.safeParse(body);
     if (!parsed.success) return jsonError(parsed.error, requestId);
 

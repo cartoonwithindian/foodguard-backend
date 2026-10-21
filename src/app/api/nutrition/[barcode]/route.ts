@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { jsonSuccess, jsonError } from "@/lib/http";
+import { AppError, ErrorCodes } from "@/lib/errors";
 import { nutritionDetail } from "@/services/product.service";
 import { assessNutrition, calculateNutritionConfidence, nutrientLabel, nutrientDisplayValue } from "@/lib/nutrition/analyze";
 import { normalizeNutritionFacts } from "@/lib/nutrition/units";
@@ -64,6 +65,9 @@ export async function GET(
   const requestId = crypto.randomUUID().slice(0, 8);
   try {
     const { barcode } = await params;
+    if (barcode.length > 32) {
+      throw new AppError(ErrorCodes.VALIDATION_ERROR, "Invalid barcode format");
+    }
     const { product, nutrition } = await nutritionDetail(barcode);
     const normalizedNutrition = normalizeNutritionFacts(nutrition);
 

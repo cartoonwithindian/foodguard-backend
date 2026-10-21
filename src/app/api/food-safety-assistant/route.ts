@@ -20,7 +20,7 @@
 
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { jsonSuccess, jsonError } from "@/lib/http";
+import { jsonSuccess, jsonError, parseJsonBody } from "@/lib/http";
 import { enforceRateLimit, clientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { assistantRequestSchema } from "@/schemas";
@@ -41,28 +41,10 @@ async function handle(request: NextRequest): Promise<Response> {
   const requestId = crypto.randomUUID().slice(0, 8);
   try {
     await enforceRateLimit(`assistant:${clientIp(request)}`);
-    const rawText = await request.text();
-    if (rawText.length > MAX_REQUEST_BYTES) {
-      return jsonError(
-        {
-          code: "VALIDATION_ERROR",
-          message: "Assistant request body too large",
-        },
-        requestId,
-      );
-    }
-    let parsedJson: unknown;
-    try {
-      parsedJson = JSON.parse(rawText);
-    } catch {
-      return jsonError(
-        {
-          code: "VALIDATION_ERROR",
-          message: "Assistant request body must be valid JSON",
-        },
-        requestId,
-      );
-    }
+    // Streamed cap before parsing; env can raise the limit but never past 8 MB.
+    const parsedJson = await parseJsonBody(request, {
+      maxBytes: Math.min(MAX_REQUEST_BYTES, 8 * 1024 * 1024),
+    });
     const parsed = assistantRequestSchema.safeParse(parsedJson);
     if (!parsed.success) {
       return jsonError(parsed.error, requestId);

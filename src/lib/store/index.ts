@@ -26,6 +26,9 @@ export function getStore(): DataStore {
 }
 
 export async function ensureDemoUsers(): Promise<void> {
+  // Demo accounts carry a published admin password. Never create them in
+  // production, even if SEED_DEMO_DATA was left enabled by mistake.
+  if (process.env.NODE_ENV === "production") return;
   if (!isMockMode() && config.seed.enabled) {
     try {
       // Lazy-load Prisma client
@@ -36,7 +39,7 @@ export async function ensureDemoUsers(): Promise<void> {
         const { hashPassword } = await import("@/lib/auth");
         const admin = await prisma.user.create({
           data: {
-            email: config.seed.adminEmail,
+            email: config.seed.adminEmail.toLowerCase(),
             name: "FoodGaurd Admin",
             passwordHash: await hashPassword(config.seed.adminPassword),
             role: "ADMIN",
@@ -44,7 +47,7 @@ export async function ensureDemoUsers(): Promise<void> {
         });
         await prisma.user.create({
           data: {
-            email: config.seed.userEmail,
+            email: config.seed.userEmail.toLowerCase(),
             name: "Demo User",
             passwordHash: await hashPassword(config.seed.userPassword),
             role: "USER",

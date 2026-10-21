@@ -82,9 +82,8 @@ function toProductInfo(seed: (typeof PRODUCT_SEED)[number], index: number): Prod
   };
 }
 
-// Precomputed bcrypt hashes of the documented demo passwords
-// (FoodGaurd@Admin1 / FoodGaurd@User1) so the demo accounts can
-// actually log in when running in MOCK MODE (no DATABASE_URL).
+// Precomputed bcrypt hashes for the opt-in (SEED_DEMO_DATA=true) mock-mode
+// demo accounts. Never seeded unless demo data is explicitly enabled.
 const DEMO_ADMIN_HASH = "$2b$10$TI1YSjnZtV4nu3n.UEJadOXncKTkxWe1X/p89qD7IKA7jvHOV7OpK";
 const DEMO_USER_HASH = "$2b$10$TI1YSjnZtV4nu3n.UEJadOH6tPfDEYUB4NchoX4ca5PvaGIpqe8Fa";
 
@@ -157,8 +156,8 @@ export class InMemoryStore implements DataStore {
     }
     this.users = new Map<string, UserRecord>();
     if (config.seed.enabled) {
-      const admin = seedUser(config.seed.adminEmail, "FoodGaurd Admin", "ADMIN", "EN", DEMO_ADMIN_HASH);
-      const user = seedUser(config.seed.userEmail, "Demo User", "USER", "EN", DEMO_USER_HASH);
+      const admin = seedUser(config.seed.adminEmail.toLowerCase(), "FoodGaurd Admin", "ADMIN", "EN", DEMO_ADMIN_HASH);
+      const user = seedUser(config.seed.userEmail.toLowerCase(), "Demo User", "USER", "EN", DEMO_USER_HASH);
       this.users.set(admin.id, admin);
       this.users.set(user.id, user);
     }
@@ -542,6 +541,13 @@ export class InMemoryStore implements DataStore {
     language?: "EN" | "HI";
     timezone?: string;
   }): Promise<UserRecord> {
+    // Mirror the Postgres unique index so mock-mode tests exercise the same
+    // conflict path as production (service catches `P2002`).
+    if (await this.getUserByEmail(input.email)) {
+      throw Object.assign(new Error("Unique constraint failed on the fields: (`email`)"), {
+        code: "P2002",
+      });
+    }
     const user: UserRecord = {
       id: this.nextId("usr"),
       email: input.email,

@@ -35,6 +35,7 @@ import type { LegalMetrologyResult } from "@/services/regulatory/legal-metrology
 import { researchIngredient, researchProduct, isWebResearchAvailable, shouldPerformWebResearch, needsWebResearch } from "@/services/web-research.service";
 import { enrichProductFromWeb, saveEnrichedProduct } from "@/services/web-product-enrichment";
 import { getAIProvider } from "@/lib/ai";
+import { fetchPublicUrl, readBytesLimited } from "@/lib/safe-fetch";
 import { normalizeNutritionFacts } from "@/lib/nutrition/units";
 import type { AIAnalysisExplanation } from "@/lib/ai";
 import { generateHealthFindings, validateFindings, buildAnalysisExplanationFromFindings } from "@/lib/health-analysis";
@@ -482,10 +483,17 @@ export async function runAnalysis(input: AnalyzeInput): Promise<{ frontend: Fron
   try {
     const lmAvailable = await isLegalMetrologyAvailable();
     if (lmAvailable && product?.imageUrl) {
-      // Fetch the product image and send to Legal Metrology API
-      const imageResponse = await fetch(product.imageUrl);
+      // Fetch the product image and send to Legal Metrology API. The URL came
+      // from a catalog/provider (and can be set through the admin image
+      // endpoint), so route it through the SSRF guard: private hosts,
+      // private-resolving DNS names and internal redirect targets are rejected.
+      const imageResponse = await fetchPublicUrl(product.imageUrl, { timeoutMs: 10_000 });
       if (imageResponse.ok) {
-        const buffer = Buffer.from(await imageResponse.arrayBuffer());
+        const bytes = await readBytesLimited(imageResponse, 10 * 1024 * 1024);
+        if (bytes === null) {
+          throw new Error("Product image exceeds the 10 MB limit");
+        }
+        const buffer = Buffer.from(bytes);
         const mime = imageResponse.headers.get("content-type") || "image/jpeg";
         legalMetrologyResult = await analyzeLegalMetrology({
           images: [{ buffer, filename: "product.jpg", mime }],

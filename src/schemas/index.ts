@@ -4,6 +4,15 @@ import { isValidTimezone } from "@/gamification/services/streak.service";
 
 export const barcodeSchema = z.string().trim().min(4).max(32).regex(/^\d+$/, "Barcode must be numeric");
 
+/** Accepts absolute http(s) URLs only (rejects javascript:, data:, file:, …). */
+export const httpUrlSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(2048)
+  .url()
+  .refine((value) => /^https?:\/\//i.test(value), "URL must use http or https");
+
 export const languageSchema = z.enum(["en", "hi"]).default("en");
 
 export const signupSchema = z.object({
@@ -50,6 +59,10 @@ export const analyzeSchema = z.object({
   nutrition: nutritionInputSchema,
   ocrText: z.string().max(20_000).optional(),
   ocrConfidence: z.number().min(0).max(1).optional(),
+  // Client hint: an image was uploaded for this scan. It carries no identity
+  // or scoring weight; it only lets the analysis pipeline know that image
+  // evidence exists. Declared here so zod does not strip it.
+  imageAvailable: z.boolean().optional(),
 // NOTE: no `userId`. Identity always comes from the verified session — a
   // body-supplied id let any caller write history into, and read the
   // preferences of, an arbitrary account. The field is not declared at all so
@@ -157,7 +170,7 @@ export const evidenceCreateSchema = z.object({
   ingredientId: z.string().min(1).max(80),
   title: z.string().trim().min(3).max(300),
   organization: z.string().trim().min(1).max(150),
-  url: z.string().url().max(500).optional(),
+  url: httpUrlSchema.optional(),
   sourceType: z.enum([
     "government",
     "regulator",
@@ -170,6 +183,11 @@ export const evidenceCreateSchema = z.object({
   publicationDate: z.string().max(20).optional(),
   evidenceLevel: z.enum(["high", "medium", "low"]),
   summary: z.string().trim().min(3).max(2000),
+});
+
+export const productImageUpdateSchema = z.object({
+  productId: z.string().trim().min(1).max(120),
+  imageUrl: httpUrlSchema,
 });
 
 export const resolveUnknownSchema = z.object({

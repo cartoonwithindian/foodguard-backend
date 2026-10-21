@@ -24,10 +24,9 @@ const BLOCKED_HOSTNAMES = new Set([
   "metadata.google.internal",
 ]);
 
-function isPrivateIPv4(host: string): boolean {
-  const octets = host.split(".").map(Number);
-  if (octets.length !== 4 || octets.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return false;
+function isPrivateIPv4(octets: number[]): boolean {
   const [a, b] = octets;
+  if (a === undefined) return true; // fail closed
   if (a === 0 || a === 10 || a === 127) return true; // "this network", private, loopback
   if (a === 169 && b === 254) return true; // link-local incl. cloud metadata
   if (a === 172 && b >= 16 && b <= 31) return true; // private
@@ -37,13 +36,91 @@ function isPrivateIPv4(host: string): boolean {
   return false;
 }
 
+/** Same test as {@link isPrivateIPv4} but for a dotted-quad string. */
+function isPrivateIPv4Text(host: string): boolean {
+  if (!/^\d{1,3}(?:\.\d{1,3}){3}$/.test(host)) return false;
+  return isPrivateIPv4(host.split(".").map(Number));
+}
+
+/** Two 16-bit groups -> the four IPv4 octets they encode. */
+function v4FromGroups(hi: number, lo: number): number[] {
+  return [(hi >> 8) & 255, hi & 255, (lo >> 8) & 255, lo & 255];
+}
+
+/**
+ * Expands any IPv6 textual form into its 8 numeric 16-bit groups.
+ * Handles `::` compression, an embedded dotted-quad tail, and a zone id.
+ * @returns null when the input is not a well-formed IPv6 literal.
+ */
+function expandIPv6(input: string): number[] | null {
+  let s = input.toLowerCase().replace(/^\[|\]$/g, "");
+  const zone = s.indexOf("%");
+  if (zone !== -1) s = s.slice(0, zone);
+  if (!s.includes(":")) return null;
+
+  // `::ffff:127.0.0.1` -> rewrite the dotted tail into two hex groups so the
+  // generic parser below can handle it. (WHATWG URL already normalises the
+  // dotted form to hex, so both spellings have to work.)
+  if (s.includes(".")) {
+    const cut = s.lastIndexOf(":");
+    if (cut < 0) return null;
+    const parts = s.slice(cut + 1).split(".");
+    if (parts.length !== 4 || parts.some((p) => !/^\d{1,3}$/.test(p))) return null;
+    const o = parts.map(Number);
+    if (o.some((n) => n < 0 || n > 255)) return null;
+    s = `${s.slice(0, cut + 1)}${((o[0] << 8) | o[1]).toString(16)}:${((o[2] << 8) | o[3]).toString(16)}`;
+  }
+
+  const halves = s.split("::");
+  if (halves.length > 2) return null;
+  const parse = (part: string) =>
+    part === "" ? [] : part.split(":").map((g) => (/^[0-9a-f]{1,4}$/.test(g) ? parseInt(g, 16) : NaN));
+
+  const head = parse(halves[0]);
+  const tail = halves.length === 2 ? parse(halves[1]) : [];
+  const words = [...head, ...tail];
+  if (words.some((w) => !Number.isInteger(w))) return null;
+
+  if (halves.length === 2) {
+    const fill = 8 - words.length;
+    if (fill < 1) return null; // "::" must stand for at least one group
+    return [...head, ...new Array<number>(fill).fill(0), ...tail];
+  }
+  return words.length === 8 ? words : null;
+}
+
+/**
+ * True when the literal is non-public. Every IPv6 form that *embeds* an IPv4
+ * address is unwrapped and re-checked, because each of them reaches the same
+ * socket: an attacker just has to pick a spelling the naive check misses.
+ *   - `::ffff:a.b.c.d` / `::ffff:7f00:1`  IPv4-mapped (hex and dotted)
+ *   - `::a.b.c.d`                          IPv4-compatible (deprecated)
+ *   - `2002:7f00:1::`                      6to4
+ *   - `64:ff9b::7f00:1`                    NAT64 well-known prefix
+ *   - `2001:0:...`                         Teredo
+ * Fails closed: an unparseable literal is treated as private.
+ */
 function isPrivateIPv6(host: string): boolean {
-  const h = host.replace(/^\[|\]$/g, "").toLowerCase();
-  if (h === "::" || h === "::1") return true; // unspecified / loopback
-  if (h.startsWith("fe80")) return true; // link-local
-  if (h.startsWith("fc") || h.startsWith("fd")) return true; // unique-local
-  const mapped = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/.exec(h);
-  if (mapped) return isPrivateIPv4(mapped[1]);
+  const g = expandIPv6(host);
+  if (!g) return true;
+  const [g0, g1, g2, g3, g4, g5, g6, g7] = g;
+
+  if (g0 === 0x2002) return isPrivateIPv4(v4FromGroups(g1, g2)); // 6to4
+  if (g0 === 0x2001 && g1 === 0x0000) return isPrivateIPv4(v4FromGroups(g6, g7)); // Teredo
+  if (g0 === 0x0064 && g1 === 0xff9b) return isPrivateIPv4(v4FromGroups(g6, g7)); // NAT64
+  if (g0 === 0x2001 && g1 === 0x0db8) return true; // documentation 2001:db8::/32
+  if (g0 === 0x2001 && g1 === 0x0002) return true; // benchmarking 2001:2::/48
+  if (g0 === 0x0100 && g1 === 0 && g2 === 0 && g3 === 0) return true; // 100::/64 discard
+  if (g0 === 0x3ffe) return true; // 6bone
+  if ((g0 & 0xfe00) === 0xfc00) return true; // fc00::/7 unique-local
+  if ((g0 & 0xfe00) === 0xfe00) return true; // fe00::/9 link-local + site-local
+  if ((g0 & 0xff00) === 0xff00) return true; // ff00::/8 multicast
+
+  const zeroPrefix = g0 === 0 && g1 === 0 && g2 === 0 && g3 === 0 && g4 === 0;
+  if (zeroPrefix && (g5 === 0 || g5 === 0xffff)) {
+    // Covers `::`, `::1`, ::a.b.c.d (compatible) and ::ffff:a.b.c.d (mapped).
+    return isPrivateIPv4(v4FromGroups(g6, g7));
+  }
   return false;
 }
 
@@ -83,7 +160,7 @@ export function assertPublicHttpUrl(raw: string, field = "url"): URL {
     );
   }
 
-  if (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(bare) && isPrivateIPv4(bare)) {
+  if (isPrivateIPv4Text(bare)) {
     throw new AppError(
       ErrorCodes.VALIDATION_ERROR,
       `${field} must point at a public host`,

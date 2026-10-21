@@ -2,6 +2,17 @@ import { z } from "zod";
 import type { ChatAssistantResponse } from "@/types/chat";
 import { logger } from "@/lib/logger";
 
+/**
+ * Model output is untrusted. Only absolute http(s) links may be surfaced to
+ * the client: `z.string().url()` also accepts schemes like `javascript:` or
+ * `data:`, which a UI rendering `<a href>` would execute.
+ */
+const httpUrl = z
+  .string()
+  .max(2048)
+  .url()
+  .refine((value) => /^https?:\/\//i.test(value), "URL must use http or https");
+
 export const ChatActionSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("view_product"),
@@ -21,7 +32,7 @@ export const ChatActionSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("view_regulation"),
     label: z.string().min(1).max(60),
-    payload: z.object({ url: z.string().url() }),
+    payload: z.object({ url: httpUrl }),
   }),
   z.object({
     type: z.literal("scan_another"),
@@ -37,7 +48,7 @@ export const ChatAssistantResponseSchema = z.object({
       z.object({
         title: z.string().min(1).max(200),
         source: z.string().min(1).max(100),
-        url: z.string().url().optional().nullable(),
+        url: httpUrl.optional().nullable(),
       }),
     )
     .max(6)

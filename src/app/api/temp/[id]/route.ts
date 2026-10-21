@@ -15,6 +15,17 @@ export async function GET(
   { params }: { params: Promise<Record<string, string>> },
 ): Promise<Response> {
   const { id } = await params;
+  if (!id || id.length > 64) {
+    return Response.json(
+      {
+        success: false,
+        data: null,
+        error: { code: "NOT_FOUND", message: "Temp image expired or not found" },
+        meta: { requestId: "temp-image" },
+      },
+      { status: 404 },
+    );
+  }
   const image = getTempImage(id);
   if (!image) {
     return Response.json(

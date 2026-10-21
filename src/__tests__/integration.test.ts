@@ -1,5 +1,18 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 
+vi.mock("@/lib/external/web-search-providers", () => ({
+  getAvailableProviders: () => ({
+    google: false, searxng: false, firecrawl: false,
+    openSearp: false, agentReach: false, duckduckgo: false,
+  }),
+  getSearchConfig: () => ({ primaryProvider: "duckduckgo", fallbackProviders: [], agentReachEnabled: false }),
+  webSearchWithFallback: vi.fn(async () => ({
+    results: [], totalResults: 0, searchQuery: "", performed: false,
+    provider: "mock", error: "Web research disabled in test environment",
+  })),
+  extractUrlContent: vi.fn(async () => ({ content: "", success: false, error: "Web research disabled in test environment" })),
+}));
+
 // Force mock mode before any module imports are evaluated.
 // vi.hoisted runs before import hoisting, so the env is set before
 // config.ts reads process.env.PRODUCT_DATA_PROVIDER.
@@ -82,7 +95,11 @@ describe("end-to-end analyze", () => {
   });
 
   it("detects allergens on the label", async () => {
-    const { meta } = await runAnalysis({ ingredientsText: "Sugar, Milk Solids. Contains milk.", productName: "Choco Bar" });
+    const { meta } = await runAnalysis({
+      ingredientsText: "Sugar, Milk Solids. Contains milk.",
+      productName: "Choco Bar",
+      skipAlternatives: true,
+    });
     expect(meta.allergens.some((a) => a.allergen === "milk" && a.type === "contains")).toBe(true);
   });
 });
@@ -127,13 +144,12 @@ describe("authentication", () => {
     expect(logged.token).toBeDefined();
   });
 
-  // NOTE: This test documents a known design limitation.
-  // The login() function has TEST MODE that auto-creates unknown users,
-  // so wrong-password rejection is not enforced in mock mode.
-  // This is NOT a bug — it's intentional for hackathon demo convenience.
-  // Do not change production behavior to make this test pass.
-  it.skip("rejects a wrong password (blocked by TEST MODE auto-create)", async () => {
-    // When TEST MODE is eventually removed, this test should be .skip -> .only
-    await expect(login({ email: "auth-wrong@test.local", password: "WrongPass1" })).rejects.toThrow();
+  // Login never creates accounts and never accepts a wrong password. Unknown
+  // emails, guests (null password hash) and bad passwords all get the same 401.
+  it("rejects an unknown email without creating an account", async () => {
+    await expect(login({ email: "auth-wrong@test.local", password: "WrongPass1" })).rejects.toMatchObject({
+      code: "AUTH_INVALID_CREDENTIALS",
+      status: 401,
+    });
   });
 });

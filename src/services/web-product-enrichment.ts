@@ -8,6 +8,7 @@
 
 import { config } from "@/lib/config";
 import { logger } from "@/lib/logger";
+import { fetchPublicUrl, readTextLimited } from "@/lib/safe-fetch";
 import { webSearchWithFallback } from "@/lib/external/web-search-providers";
 import { getStore } from "@/lib/store";
 import type { ProductInfo, NutritionFacts, NutrientValue, ProductCategory } from "@/types/domain";
@@ -80,15 +81,20 @@ const NUTRITION_PATTERNS = {
 
 // ── Page Fetching ──────────────────────────────────────────
 
+/** Pages we are willing to parse; anything larger is not a product page. */
+const MAX_PAGE_BYTES = 3 * 1024 * 1024;
+
 async function fetchPageContent(url: string, timeoutMs = 10000): Promise<string | null> {
   try {
-    const response = await fetch(url, {
+    // Search results are untrusted input: validate the URL, re-validate every
+    // redirect hop and reject hosts that resolve to private addresses.
+    const response = await fetchPublicUrl(url, {
+      timeoutMs,
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,text/plain;q=0.8",
         "Accept-Language": "en-US,en;q=0.9",
       },
-      signal: AbortSignal.timeout(timeoutMs),
     });
 
     if (!response.ok) {
@@ -101,7 +107,10 @@ async function fetchPageContent(url: string, timeoutMs = 10000): Promise<string 
       return null;
     }
 
-    const html = await response.text();
+    const html = await readTextLimited(response, MAX_PAGE_BYTES);
+    if (html === null) {
+      logger.debug("fetch_page_too_large", { url });
+    }
     return html;
   } catch (error) {
     logger.debug("fetch_page_error", { url, error: String(error) });

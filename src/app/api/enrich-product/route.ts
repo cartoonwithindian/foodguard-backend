@@ -19,7 +19,7 @@ import { logger } from "@/lib/logger";
 import { requireAdmin } from "@/lib/auth";
 import { enforceRateLimit, clientIp } from "@/lib/rate-limit";
 import { enrichProductSchema } from "@/schemas";
-import { jsonError } from "@/lib/http";
+import { jsonError, parseJsonBody } from "@/lib/http";
 
 export async function POST(request: NextRequest) {
   const requestId = request.headers.get("x-request-id") ?? "enrich-product";
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     await requireAdmin(request);
     await enforceRateLimit(`enrich:${clientIp(request)}`);
 
-    const parsed = enrichProductSchema.safeParse(await request.json().catch(() => null));
+    const parsed = enrichProductSchema.safeParse(await parseJsonBody(request));
     if (!parsed.success) return jsonError(parsed.error, requestId);
     const { productName, barcode, brand } = parsed.data;
 

@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
-import { jsonSuccess, jsonError } from "@/lib/http";
+import { jsonSuccess, jsonError, parseJsonBody } from "@/lib/http";
+import { enforceRateLimit, clientIp } from "@/lib/rate-limit";
 import { personalizedSchema } from "@/schemas";
 import { AppError, ErrorCodes } from "@/lib/errors";
 import { requireAuth } from "@/lib/auth";
@@ -20,14 +21,16 @@ export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID().slice(0, 8);
   try {
-    const body = await request.json();
+    // Authenticate and throttle before parsing a body: this endpoint runs the
+    // ingredient AI pipeline, and unauthenticated callers must not reach it.
+    const session = await requireAuth(request);
+    await enforceRateLimit(`personalized:${clientIp(request)}`);
+    const body = await parseJsonBody(request);
     const parsed = personalizedSchema.safeParse(body);
     if (!parsed.success) return jsonError(parsed.error, requestId);
-
-    const session = await requireAuth(request);
     const store = getStore();
     const { productId } = parsed.data;
-    // Session-only identity: a body-supplied userId would expose another
+// Session-only identity: a body-supplied userId would expose another
     // account's preferences through the personalised flags.
     const resolvedUserId = session.id;
 

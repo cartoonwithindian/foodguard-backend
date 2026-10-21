@@ -6,20 +6,23 @@
 
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { jsonSuccess, jsonError } from "@/lib/http";
+import { jsonSuccess, jsonError, parseJsonBody } from "@/lib/http";
+import { nutritionInputSchema } from "@/schemas";
 import { enforceRateLimit, clientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { FSSAIAnalyzer } from "@/services/regulatory/fssai";
 
 const analyzeSchema = z.object({
   product: z.object({
-    name: z.string().optional(),
-    category: z.string().optional(),
-    barcode: z.string().optional(),
+    name: z.string().trim().max(200).optional(),
+    category: z.string().trim().max(80).optional(),
+    barcode: z.string().trim().max(32).optional(),
   }).optional(),
-  ingredients: z.array(z.string()).optional(),
-  nutrition: z.any().optional(),
-  claims: z.array(z.string()).optional(),
+  // Bounded so an unauthenticated caller cannot push unbounded work/JSON into
+  // the analyzer (or use `nutrition: z.any()` as an arbitrary-payload sink).
+  ingredients: z.array(z.string().trim().min(1).max(300)).max(200).optional(),
+  nutrition: nutritionInputSchema,
+  claims: z.array(z.string().trim().min(1).max(200)).max(50).optional(),
   labelData: z.object({
     hasIngredientsList: z.boolean().optional(),
     hasNutritionInfo: z.boolean().optional(),
@@ -34,7 +37,7 @@ const analyzeSchema = z.object({
     hasCountryOfOrigin: z.boolean().optional(),
     hasMrp: z.boolean().optional(),
   }).optional(),
-  category: z.string().optional(),
+  category: z.string().trim().max(80).optional(),
 });
 
 export const runtime = "nodejs";
@@ -46,7 +49,7 @@ export async function POST(request: NextRequest) {
   try {
     await enforceRateLimit(`regulatory:${clientIp(request)}`);
     
-    const body = await request.json();
+    const body = await parseJsonBody(request);
     const parsed = analyzeSchema.safeParse(body);
     
     if (!parsed.success) {

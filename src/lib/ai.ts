@@ -456,9 +456,20 @@ let instance: AIProvider | null = null;
 
 export function getAIProvider(): AIProvider {
   if (!instance) {
-    // Use real provider when API key is configured (supports openai, gemini, etc.)
-    const useRealProvider = config.ai.apiKey && config.ai.provider !== "mock";
-    instance = useRealProvider ? new OpenAICompatibleProvider() : new MockAIProvider();
+    const testDefaultMock = process.env.NODE_ENV === "test" && !config.ai.provider;
+    const explicitMock = config.ai.provider === "mock";
+
+    if (testDefaultMock || explicitMock) {
+      instance = new MockAIProvider();
+    } else if (!config.ai.provider || !config.ai.apiKey) {
+      throw new AppError(
+        ErrorCodes.AI_PROVIDER_ERROR,
+        "AI provider is not configured. Set AI_PROVIDER and AI_API_KEY.",
+        500,
+      );
+    } else {
+      instance = new OpenAICompatibleProvider();
+    }
   }
   return instance;
 }

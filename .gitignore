@@ -66,3 +66,6 @@ bin/result*
 # webpack / build cache
 .next/cache/
 .cache/
+
+# Appwrite catalog export/import scratch output (NDJSON, can be ~30MB)
+tmp/

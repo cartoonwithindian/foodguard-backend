@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { jsonSuccess, jsonError } from "@/lib/http";
+import { jsonSuccess, jsonError, parseJsonBody } from "@/lib/http";
 import { requireAdmin } from "@/lib/auth";
 import { adminListUnknownIngredients, adminResolveUnknownIngredient } from "@/services/admin.service";
 import { resolveUnknownSchema } from "@/schemas";
@@ -30,7 +30,7 @@ export async function POST(
   try {
     const admin = await requireAdmin(request);
     const { id } = await params;
-    const body = await request.json();
+    const body = await parseJsonBody(request);
     const parsed = resolveUnknownSchema.safeParse(body);
     if (!parsed.success) return jsonError(parsed.error, requestId);
 

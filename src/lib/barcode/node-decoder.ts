@@ -11,6 +11,7 @@
 import "server-only";
 
 import { readBarcodes } from "zxing-wasm/reader";
+import { fetchPublicUrl, readBytesLimited } from "@/lib/safe-fetch";
 
 export interface NodeBarcodeResult {
   value: string;
@@ -74,9 +75,13 @@ export async function decodeBarcodeInNode(
         const base64 = imageSource.slice(imageSource.indexOf(",") + 1);
         buffer = Buffer.from(base64, "base64");
       } else {
-        const res = await fetch(imageSource);
+        // URL input is untrusted: validate it (and every redirect hop) and
+        // reject private/loopback targets before decoding.
+        const res = await fetchPublicUrl(imageSource, { timeoutMs: 10_000 });
         if (!res.ok) return null;
-        buffer = Buffer.from(await res.arrayBuffer());
+        const bytes = await readBytesLimited(res, 20 * 1024 * 1024);
+        if (bytes === null) return null;
+        buffer = Buffer.from(bytes);
       }
     } else {
       buffer = Buffer.from(await imageSource.arrayBuffer());

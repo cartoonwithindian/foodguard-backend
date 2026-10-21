@@ -3,7 +3,7 @@
 -- No level table: a level is a pure function of the existing lifetime XP
 -- total, so the stored XP stays the single source of truth and the two cannot
 -- drift apart.
-CREATE TABLE "AchievementDefinition" (
+CREATE TABLE IF NOT EXISTS "AchievementDefinition" (
     "achievementId" TEXT NOT NULL,
     "name"          TEXT NOT NULL,
     "description"   TEXT NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE "AchievementDefinition" (
     CONSTRAINT "AchievementDefinition_pkey" PRIMARY KEY ("achievementId")
 );
 
-CREATE TABLE "UserAchievement" (
+CREATE TABLE IF NOT EXISTS "UserAchievement" (
     "id"            TEXT NOT NULL,
     "userId"        TEXT NOT NULL,
     "achievementId" TEXT NOT NULL,
@@ -30,13 +30,13 @@ CREATE TABLE "UserAchievement" (
 
 -- Unlocking twice is impossible, so concurrent requests cannot pay the reward
 -- twice. This is the idempotency anchor for the whole unlock flow.
-CREATE UNIQUE INDEX "UserAchievement_userId_achievementId_key"
+CREATE UNIQUE INDEX IF NOT EXISTS "UserAchievement_userId_achievementId_key"
     ON "UserAchievement"("userId", "achievementId");
 
-CREATE INDEX "UserAchievement_userId_unlockedAt_idx"
+CREATE INDEX IF NOT EXISTS "UserAchievement_userId_unlockedAt_idx"
     ON "UserAchievement"("userId", "unlockedAt");
 
-CREATE INDEX "AchievementDefinition_conditionType_enabled_idx"
+CREATE INDEX IF NOT EXISTS "AchievementDefinition_conditionType_enabled_idx"
     ON "AchievementDefinition"("conditionType", "enabled");
 
 ALTER TABLE "UserAchievement"

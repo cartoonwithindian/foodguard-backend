@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import { jsonSuccess, jsonError } from "@/lib/http";
 import { AppError, ErrorCodes } from "@/lib/errors";
 import { getStore } from "@/lib/store";
+import { enforceRateLimit, clientIp } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 import { getEvidenceForIngredient } from "@/lib/evidence";
 import { getAIProvider } from "@/lib/ai";
 import { config } from "@/lib/config";
@@ -20,7 +22,12 @@ export async function GET(
 ) {
   const requestId = crypto.randomUUID().slice(0, 8);
   try {
+    // The AI explanation is an outbound model call per request; throttle it.
+    await enforceRateLimit(`ingredient:${clientIp(request)}`);
     const { id } = await params;
+    if (id.length > 80) {
+      throw new AppError(ErrorCodes.VALIDATION_ERROR, "Invalid ingredient id");
+    }
     const store = getStore();
     const record = await store.getIngredientById(id);
     if (!record) {
@@ -29,7 +36,8 @@ export async function GET(
 
     const evidence = await getEvidenceForIngredient(record.id);
     const url = new URL(request.url);
-    const language = url.searchParams.get("language") ?? "en";
+    const requestedLanguage = (url.searchParams.get("language") ?? "en").toLowerCase();
+    const language = requestedLanguage === "hi" ? "hi" : "en";
 
     let aiExplanation = "";
     if (config.ai.provider !== "mock") {
@@ -42,8 +50,14 @@ export async function GET(
           userLanguage: language,
         });
         aiExplanation = ai.explanation;
-      } catch {
-        // keep empty; frontend falls back to description
+      } catch (error) {
+        // Degrade gracefully (the client falls back to the stored description)
+        // but leave a trace so a broken AI integration is visible in logs.
+        logger.debug("ingredient_ai_explanation_failed", {
+          requestId,
+          ingredientId: record.id,
+          error: error instanceof Error ? error.message : String(error),
+        });
       }
     }
 

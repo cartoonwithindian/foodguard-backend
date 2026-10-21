@@ -1,0 +1,428 @@
+{
+  "repository": "cartoonwithindian/foodguard-backend",
+  "branch": "audit/foodguard-backend-remediation",
+  "baseCommit": "f9c2b98",
+  "auditedAt": "2026-10-21",
+  "verification": {
+    "typecheck": "pass",
+    "tests": "71 files, 1010 passed, 0 skipped",
+    "build": "pass",
+    "prismaValidate": "pass",
+    "migrateDeploy": "4 migrations applied to empty PostgreSQL 16",
+    "migrateDiff": "no difference detected",
+    "migrationReplay": "pre-existing updatedAt defaults removed; rerun idempotent (exit 0)",
+    "audit": "6 vulnerabilities: 2 critical, 3 high, 1 moderate (dev/build-only)",
+    "gitDiffCheck": "pass",
+    "productionSmoke": {
+      "health": 200,
+      "signup": 200,
+      "login": 200,
+      "duplicateSignup": 409,
+      "wrongPassword": 401,
+      "guestLogin": 401,
+      "malformedJson": 400,
+      "oversizedJson": 413,
+      "personalizedWithoutAuth": 401,
+      "adminWithoutToken": 401,
+      "visualSearchLocalhost": 400,
+      "visualSearchMetadataIp": 400
+    },
+    "notTested": [
+      "deployment PostgreSQL version",
+      "live third-party providers (LLM, Firecrawl, FSSAI, visual search)"
+    ],
+    "external": [
+      "frontend scan payload consumption (backend repo only; frontend not accessed)"
+    ]
+  },
+  "findings": [
+    {
+      "id": "FG-01",
+      "severity": "critical",
+      "status": "fixed",
+      "area": "ssrf",
+      "title": "Arbitrary outbound fetches from product enrichment, image analysis and barcode decoding",
+      "files": [
+        "src/lib/safe-fetch.ts",
+        "src/services/web-product-enrichment.ts",
+        "src/services/analysis.service.ts",
+        "src/lib/barcode/node-decoder.ts"
+      ],
+      "detail": "Caller-influenced URLs were fetched without blocking private, loopback, link-local or metadata ranges and without validating redirect hops.",
+      "remediation": "Added fetchPublicUrl (scheme allowlist, DNS checks, manual redirect re-validation, max 3 redirects, timeout) and readTextLimited byte caps; all three call sites migrated."
+    },
+    {
+      "id": "FG-02",
+      "severity": "critical",
+      "status": "fixed",
+      "area": "authentication",
+      "title": "Login auto-created accounts with attacker-chosen passwords",
+      "files": [
+        "src/services/user.service.ts"
+      ],
+      "detail": "Unknown emails were inserted with the supplied password and a session was returned; guest accounts with null password hashes were also loginable.",
+      "remediation": "Uniform 401 for unknown email, null hash and wrong password; login no longer creates users. Regression tests added."
+    },
+    {
+      "id": "FG-03",
+      "severity": "critical",
+      "status": "fixed",
+      "area": "authorization",
+      "title": "Admin role derived solely from JWT claim",
+      "files": [
+        "src/lib/auth.ts"
+      ],
+      "detail": "Demoted users retained admin access until token expiry and a forged/stale claim was trusted.",
+      "remediation": "requireAdmin re-reads the role from the store (401 unknown user, 403 non-admin); JWT verification pins HS256."
+    },
+    {
+      "id": "FG-04",
+      "severity": "high",
+      "status": "partially-fixed",
+      "area": "scan-contract",
+      "title": "Frontend reads scan response fields outside the data envelope",
+      "files": [
+        "src/app/api/scan/label/route.ts",
+        "src/lib/resolve-product.ts",
+        "src/lib/ocr-client.ts",
+        "src/__tests__/scan-label-contract.test.ts"
+      ],
+      "detail": "The route returns { success, data, error, meta } with scan fields under data. Shared client helpers in this repository read top-level barcode/ocr/ingredientsText, so successful scans appeared empty. Frontend consumption could not be inspected under the backend-only directive.",
+      "remediation": "Backend client helpers now prefer json.data and fall back to the legacy unwrapped shape. New contract test locks the envelope, payload keys and absence of top-level duplicates. Frontend confirmation remains external verification.",
+      "externalVerification": true
+    },
+    {
+      "id": "FG-05",
+      "severity": "high",
+      "status": "fixed",
+      "area": "input-validation",
+      "title": "Unbounded bodies and 500s on malformed JSON across public AI routes",
+      "files": [
+        "src/lib/http.ts",
+        "src/schemas/index.ts",
+        "src/app/api/analyze/route.ts",
+        "src/app/api/analysis/personalized/route.ts",
+        "src/app/api/regulatory/analyze/route.ts",
+        "src/app/api/ingredients/analyze/route.ts",
+        "src/app/api/products/compare/route.ts",
+        "src/app/api/history/route.ts",
+        "src/app/api/users/me/route.ts",
+        "src/app/api/users/me/preferences/route.ts",
+        "src/app/api/auth/login/route.ts",
+        "src/app/api/auth/signup/route.ts",
+        "src/app/api/admin/evidence/route.ts",
+        "src/app/api/admin/ingredients/route.ts",
+        "src/app/api/admin/reviews/[id]/resolve/route.ts"
+      ],
+      "detail": "request.json() throws on malformed input (500) and several schemas had no array/string bounds.",
+      "remediation": "parseJsonBody maps malformed JSON to 400 VALIDATION_ERROR; bounded schemas enforce array counts and per-item lengths."
+    },
+    {
+      "id": "FG-06",
+      "severity": "high",
+      "status": "fixed",
+      "area": "input-validation",
+      "title": "Admin product image accepted arbitrary URI schemes",
+      "files": [
+        "src/app/api/admin/product-image/route.ts",
+        "src/schemas/index.ts"
+      ],
+      "detail": "Any string was persisted as imageUrl (javascript:, data:, internal hosts).",
+      "remediation": "productImageUpdateSchema + httpUrlSchema restrict to bounded http(s) URLs."
+    },
+    {
+      "id": "FG-07",
+      "severity": "high",
+      "status": "fixed",
+      "area": "seeding",
+      "title": "Hardcoded demo credentials and unguarded demo user creation",
+      "files": [
+        "src/lib/store/index.ts",
+        "src/lib/store/memory.ts"
+      ],
+      "detail": "ensureDemoUsers contained known passwords and lacked a production guard; plaintext password hint was in a comment.",
+      "remediation": "Production early-return, credentials scrubbed from comments, demo emails normalized; seeding remains opt-in and non-admin."
+    },
+    {
+      "id": "FG-08",
+      "severity": "high",
+      "status": "partially-fixed",
+      "area": "dependencies",
+      "title": "Vulnerable dependencies",
+      "files": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "detail": "After npm audit fix and the esbuild override: 2 critical (vitest 3.2.7/tinypool), 1 moderate (@vitest/mocker), 3 high (@prisma/config/deepmerge-ts/prisma build-time chain). All dev/build-only; no runtime bundle exposure.",
+      "remediation": "Updated sharp, hono, transformers and adm-zip; pinned prisma CLI 6.19.3 to match the client; overrode esbuild 0.27.7 -> 0.28.1 (audit 11 -> 6). Clearing the remainder requires unreviewed majors (Vitest 5, Prisma 7); no safe non-major fix. Documented residual."
+    },
+    {
+      "id": "FG-09",
+      "severity": "high",
+      "status": "fixed",
+      "area": "output-sanitization",
+      "title": "Chat response URLs allowed non-http schemes",
+      "files": [
+        "src/services/chat/response-guard.ts"
+      ],
+      "detail": "z.string().url() accepts javascript:/data: URLs that a UI could render as clickable links.",
+      "remediation": "httpUrl refinement restricts sources and view_regulation payloads to http(s), max 2048 chars."
+    },
+    {
+      "id": "FG-10",
+      "severity": "high",
+      "status": "fixed",
+      "area": "input-validation",
+      "title": "Product-images route unbounded and leaky",
+      "files": [
+        "src/app/api/product-images/route.ts"
+      ],
+      "detail": "No limits on names/count/length, unvalidated language, raw DB internals on missing catalog.",
+      "remediation": "Zod bounds (1-50 names, 200 chars), rate limit, fileMustExist and standard error envelope; legacy success shape preserved."
+    },
+    {
+      "id": "FG-11",
+      "severity": "high",
+      "status": "fixed",
+      "area": "input-validation",
+      "title": "Alternatives silently ignored invalid preferences",
+      "files": [
+        "src/app/api/products/[id]/alternatives/route.ts"
+      ],
+      "detail": "Invalid POST bodies fell back to no preferences and returned 200, producing misleading rankings.",
+      "remediation": "Invalid or malformed bodies return 400; rate limiting added to POST and GET."
+    },
+    {
+      "id": "FG-12",
+      "severity": "high",
+      "status": "fixed",
+      "area": "abuse-prevention",
+      "title": "Expensive AI endpoints lacked rate limits",
+      "files": [
+        "src/app/api/product-images/route.ts",
+        "src/app/api/ingredients/[id]/route.ts",
+        "src/app/api/products/[id]/alternatives/route.ts"
+      ],
+      "detail": "Repeated AI/DB-catalog lookups could be driven without throttling.",
+      "remediation": "Rate limits added on the hardened paths; language input clamped to en/hi and AI failures logged."
+    },
+    {
+      "id": "FG-13",
+      "severity": "medium",
+      "status": "fixed",
+      "area": "database",
+      "title": "updatedAt DB default drift between migrations and schema",
+      "files": [
+        "prisma/migrations/20261021000000_fix_updated_at_defaults/migration.sql",
+        "prisma/schema.prisma"
+      ],
+      "detail": "Gamification migrations set DEFAULT CURRENT_TIMESTAMP while Prisma uses @updatedAt.",
+      "remediation": "Additive migration drops the defaults (no data change); verified with migrate deploy + migrate diff on PostgreSQL 16."
+    },
+    {
+      "id": "FG-14",
+      "severity": "medium",
+      "status": "fixed",
+      "area": "configuration",
+      "title": "Weak or missing AUTH_SECRET accepted in production",
+      "files": [
+        "src/lib/server/auth-secret.ts"
+      ],
+      "detail": "Production could run with a short or missing signing secret.",
+      "remediation": "Production requires >=32 chars and fails fast; development warns."
+    },
+    {
+      "id": "FG-15",
+      "severity": "medium",
+      "status": "fixed",
+      "area": "configuration",
+      "title": "Missing DATABASE_URL surfaced only at request time",
+      "files": [
+        "src/server.ts",
+        "src/lib/store/index.ts"
+      ],
+      "detail": "Store threw lazily, so a misconfigured production instance looked healthy until traffic arrived.",
+      "remediation": "Startup validation exits on missing DATABASE_URL/AUTH_SECRET and warns on missing CORS_ORIGINS/FSSAI_API_URL."
+    },
+    {
+      "id": "FG-16",
+      "severity": "medium",
+      "status": "fixed",
+      "area": "error-handling",
+      "title": "Prisma errors leaked driver messages as generic 500s",
+      "files": [
+        "src/lib/errors.ts"
+      ],
+      "detail": "Known request errors were treated as unknown errors, returning 500 with internals to logs/clients.",
+      "remediation": "P2002 -> generic 409 CONFLICT; other P#### -> generic 500 DATABASE_ERROR."
+    },
+    {
+      "id": "FG-17",
+      "severity": "medium",
+      "status": "fixed",
+      "area": "authentication",
+      "title": "Duplicate signup race returned 500",
+      "files": [
+        "src/services/user.service.ts",
+        "src/lib/store/memory.ts",
+        "src/lib/store/prisma.ts"
+      ],
+      "detail": "Concurrent or case-variant signups hit the unique constraint and surfaced as server errors.",
+      "remediation": "Unique violation mapped to 409 AUTH_EMAIL_EXISTS in both stores; emails lowercased on create."
+    },
+    {
+      "id": "FG-18",
+      "severity": "low",
+      "status": "fixed",
+      "area": "authentication",
+      "title": "Guest email namespace claimable via signup",
+      "files": [
+        "src/services/user.service.ts"
+      ],
+      "detail": "Signup accepted addresses matching the generated guest pattern.",
+      "remediation": "Signup rejects reserved guest addresses."
+    },
+    {
+      "id": "FG-19",
+      "severity": "low",
+      "status": "open",
+      "area": "authentication",
+      "title": "Access tokens lack iss/aud claims",
+      "files": [
+        "src/lib/auth.ts"
+      ],
+      "detail": "Tokens are valid for any service sharing the secret.",
+      "remediation": "Consider issuer/audience once multiple services share the secret."
+    },
+    {
+      "id": "FG-20",
+      "severity": "low",
+      "status": "open",
+      "area": "abuse-prevention",
+      "title": "Rate limiting is per-process",
+      "files": [
+        "src/lib/rate-limit.ts"
+      ],
+      "detail": "Horizontal scaling multiplies the effective limits.",
+      "remediation": "Use a shared store (Redis/Postgres) for multi-instance deployments."
+    },
+    {
+      "id": "FG-21",
+      "severity": "high",
+      "status": "fixed",
+      "area": "ssrf",
+      "title": "DNS rebinding survived the initial SSRF fix",
+      "files": [
+        "src/lib/safe-fetch.ts",
+        "src/__tests__/safe-fetch.test.ts"
+      ],
+      "detail": "URL validation and the subsequent connection resolved the hostname separately, so a rebinding hostname could pass validation and then connect to an internal address.",
+      "remediation": "Replaced the high-level fetch with node:http/https using a custom lookup that returns only DNS-validated addresses (IP pinned at socket level), preserving TLS SNI and disabling connection reuse; handles Node >=20.13 all:true lookup results. Redirects are re-validated. Tests prove the socket connects to the pinned address when the hostname later resolves elsewhere."
+    },
+    {
+      "id": "FG-22",
+      "severity": "high",
+      "status": "fixed",
+      "area": "resource-limits",
+      "title": "Binary fetches trusted Content-Length",
+      "files": [
+        "src/lib/safe-fetch.ts",
+        "src/services/analysis.service.ts",
+        "src/lib/barcode/node-decoder.ts"
+      ],
+      "detail": "Image/barcode downloads were bounded only by the declared Content-Length, which a server can omit or understate.",
+      "remediation": "Added readBytesLimited, which counts streamed bytes, and applied it to image analysis (10 MB) and remote barcode decoding (20 MB)."
+    },
+    {
+      "id": "FG-23",
+      "severity": "high",
+      "status": "fixed",
+      "area": "resource-limits",
+      "title": "Unbounded request bodies and form data on remaining routes",
+      "files": [
+        "src/lib/http.ts",
+        "src/app/api/chat/route.ts",
+        "src/app/api/food-safety-assistant/route.ts",
+        "src/app/api/product-images/route.ts",
+        "src/app/api/enrich-product/route.ts",
+        "src/app/api/scan/label/route.ts",
+        "src/app/api/visual-search/route.ts",
+        "src/app/api/visual-search-url/route.ts"
+      ],
+      "detail": "Handlers that bypassed the Hono global bodyLimit parsed unbounded JSON or multipart bodies.",
+      "remediation": "Added readRequestBytes, parseJsonBody({maxBytes}) (1 MB default, 413 PAYLOAD_TOO_LARGE) and readFormDataLimited; applied per-route caps (scan image cap + 1 MB, visual-search maxBodyMb, visual-search-url 16 KB). Global bodyLimit remains in server.ts."
+    },
+    {
+      "id": "FG-24",
+      "severity": "medium",
+      "status": "fixed",
+      "area": "input-validation",
+      "title": "Unbounded path and query identifiers",
+      "files": [
+        "src/app/api/evidence/[barcode]/route.ts",
+        "src/app/api/history/[id]/route.ts",
+        "src/app/api/ingredients/[id]/route.ts",
+        "src/app/api/product-images/[barcode]/route.ts",
+        "src/app/api/temp/[id]/route.ts",
+        "src/app/api/nutrition/[barcode]/route.ts",
+        "src/schemas/index.ts"
+      ],
+      "detail": "Several dynamic segments accepted arbitrarily long values; the evidence URL schema accepted non-http schemes.",
+      "remediation": "Bounded evidence barcode (digits 4-32), history id <=120, ingredient id <=80, product-image barcode 3-32, temp id <=64, nutrition barcode <=32; evidence url now uses httpUrlSchema."
+    },
+    {
+      "id": "FG-25",
+      "severity": "medium",
+      "status": "fixed",
+      "area": "authentication",
+      "title": "Personalized analysis parsed the body before authentication",
+      "files": [
+        "src/app/api/analysis/personalized/route.ts"
+      ],
+      "detail": "Unauthenticated callers could force request-body parsing and validation work before the 401 check.",
+      "remediation": "requireAuth and rate limiting now run before body parsing."
+    },
+    {
+      "id": "FG-26",
+      "severity": "medium",
+      "status": "fixed",
+      "area": "scan-contract",
+      "title": "In-repo scan clients contradicted the documented API envelope",
+      "files": [
+        "src/lib/resolve-product.ts",
+        "src/lib/ocr-client.ts",
+        "src/__tests__/scan-label-contract.test.ts"
+      ],
+      "detail": "Client helpers read top-level barcode/ocr/ingredientsText, while the route nests them under data.",
+      "remediation": "Both helpers now prefer json.data and fall back to the unwrapped shape. New contract test asserts the envelope and payload keys, and that top-level duplicates are absent."
+    },
+    {
+      "id": "FG-27",
+      "severity": "low",
+      "status": "fixed",
+      "area": "abuse-prevention",
+      "title": "Unbounded catalog search",
+      "files": [
+        "src/app/api/products/route.ts",
+        "src/app/api/products/search/route.ts"
+      ],
+      "detail": "Catalog list/search lacked rate limiting and accepted unbounded q/category/page values.",
+      "remediation": "Rate limits added; q <=120, category <=80, page <=10000."
+    }
+  ],
+  "residualRisk": [
+    "FG-04 frontend scan payload consumption is external; backend envelope is documented and tested.",
+    "FG-08 dev/build dependency advisories require Vitest and Prisma major upgrades.",
+    "Migrations verified on PostgreSQL 16 only; production server version unverified.",
+    "Live third-party providers were not called; validation/timeout/fail-closed paths are tested.",
+    "npm ci was not re-run after the final lockfile state; the existing install passed typecheck, tests and build."
+  ],
+  "recommendation": {
+    "decision": "GO for backend",
+    "conditions": [
+      "Run prisma migrate deploy against staging first.",
+      "Frontend owner confirms the scan data.* contract before a matching frontend release."
+    ],
+    "rationale": "No confirmed open critical or high backend code vulnerability remains. Residual high-severity items are dev/build dependency advisories and the externally unverified frontend consumer."
+  }
+}

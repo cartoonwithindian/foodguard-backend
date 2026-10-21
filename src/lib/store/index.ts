@@ -8,16 +8,17 @@ let instance: DataStore | null = null;
 /**
  * Returns the active data store.
  *  - PRODUCTION (DATABASE_URL set): PostgreSQL via Prisma (Supabase)
- *  - MOCK MODE (no DATABASE_URL): seeded in-memory store
+ *  - In-memory fixtures are available only to tests.
  */
 export function getStore(): DataStore {
   if (instance) return instance;
-  if (isMockMode()) {
-    logger.info("mock_mode_in_memory_store", { reason: "DATABASE_URL not set" });
+  if (process.env.NODE_ENV === "test") {
+    logger.info("test_fixture_store_active");
     instance = new InMemoryStore();
   } else {
-    // Lazy-load PrismaStore to avoid schema validation when using mock mode
-    
+    if (!config.databaseUrl) {
+      throw new Error("Product database is not configured. Set DATABASE_URL to a real database.");
+    }
     const mod = require("./prisma") as { PrismaStore: new () => DataStore };
     instance = new mod.PrismaStore();
   }
@@ -25,6 +26,9 @@ export function getStore(): DataStore {
 }
 
 export async function ensureDemoUsers(): Promise<void> {
+  // Demo accounts carry a published admin password. Never create them in
+  // production, even if SEED_DEMO_DATA was left enabled by mistake.
+  if (process.env.NODE_ENV === "production") return;
   if (!isMockMode() && config.seed.enabled) {
     try {
       // Lazy-load Prisma client
@@ -35,7 +39,7 @@ export async function ensureDemoUsers(): Promise<void> {
         const { hashPassword } = await import("@/lib/auth");
         const admin = await prisma.user.create({
           data: {
-            email: config.seed.adminEmail,
+            email: config.seed.adminEmail.toLowerCase(),
             name: "FoodGaurd Admin",
             passwordHash: await hashPassword(config.seed.adminPassword),
             role: "ADMIN",
@@ -43,7 +47,7 @@ export async function ensureDemoUsers(): Promise<void> {
         });
         await prisma.user.create({
           data: {
-            email: config.seed.userEmail,
+            email: config.seed.userEmail.toLowerCase(),
             name: "Demo User",
             passwordHash: await hashPassword(config.seed.userPassword),
             role: "USER",

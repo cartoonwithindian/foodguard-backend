@@ -5,20 +5,36 @@ import { signToken } from "@/lib/auth";
 import { POST, GET } from "@/app/api/chat/route";
 import { getStore } from "@/lib/store";
 
+vi.mock("@/lib/external/web-search-providers", () => ({
+  getAvailableProviders: () => ({
+    google: false, searxng: false, firecrawl: false,
+    openSearp: false, agentReach: false, duckduckgo: false,
+  }),
+  getSearchConfig: () => ({ primaryProvider: "duckduckgo", fallbackProviders: [], agentReachEnabled: false }),
+  webSearchWithFallback: vi.fn(async () => ({
+    results: [], totalResults: 0, searchQuery: "", performed: false,
+    provider: "mock", error: "Web research disabled in test environment",
+  })),
+  extractUrlContent: vi.fn(async () => ({ content: "", success: false, error: "Web research disabled in test environment" })),
+}));
+
 // Force mock mode for AI to prevent real API calls during tests
 const { savedAIEnv } = vi.hoisted(() => {
   const savedAIEnv = {
     AI_PROVIDER: process.env.AI_PROVIDER,
     AI_API_KEY: process.env.AI_API_KEY,
+    PRODUCT_DATA_PROVIDER: process.env.PRODUCT_DATA_PROVIDER,
   };
   process.env.AI_PROVIDER = "mock";
   process.env.AI_API_KEY = "";
+  process.env.PRODUCT_DATA_PROVIDER = "mock";
   return { savedAIEnv };
 });
 
 afterAll(() => {
   process.env.AI_PROVIDER = savedAIEnv.AI_PROVIDER ?? "mock";
   process.env.AI_API_KEY = savedAIEnv.AI_API_KEY ?? "";
+  process.env.PRODUCT_DATA_PROVIDER = savedAIEnv.PRODUCT_DATA_PROVIDER ?? "";
 });
 
 describe("chat orchestrator", () => {

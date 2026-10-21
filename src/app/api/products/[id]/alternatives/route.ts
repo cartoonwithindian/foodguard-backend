@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { jsonSuccess, jsonError } from "@/lib/http";
+import { jsonSuccess, jsonError, parseJsonBody } from "@/lib/http";
+import { enforceRateLimit, clientIp } from "@/lib/rate-limit";
 import { AppError, ErrorCodes } from "@/lib/errors";
 import { getStore } from "@/lib/store";
 import { findAlternativesForProduct } from "@/services/alternative-engine.service";
@@ -59,14 +60,17 @@ export async function POST(
       throw new AppError(ErrorCodes.PRODUCT_NOT_FOUND, "Product could not be found", 404);
     }
 
-    const body = await request.json().catch(() => ({}));
-    const parsed = preferencesSchema.safeParse(body);
-    const userPreferences = parsed.success
-      ? {
-          healthGoals: toHealthGoals(parsed.data.goals as PreferenceGoal[] | undefined),
-          avoidIngredients: parsed.data.avoidIngredients,
-        }
-      : null;
+    await enforceRateLimit(`alternatives:${clientIp(request)}`);
+    // An invalid preferences object must not be silently dropped: the caller
+    // would get a 200 whose ranking ignored what they asked for.
+    const parsed = preferencesSchema.safeParse((await parseJsonBody(request)) ?? {});
+    if (!parsed.success) {
+      return jsonError(parsed.error, requestId);
+    }
+    const userPreferences = {
+      healthGoals: toHealthGoals(parsed.data.goals as PreferenceGoal[] | undefined),
+      avoidIngredients: parsed.data.avoidIngredients,
+    };
 
     const nutrition = await store.getNutritionForProduct(product.id);
     const result = await findAlternativesForProduct({
@@ -107,6 +111,7 @@ export async function GET(
 ) {
   const requestId = crypto.randomUUID().slice(0, 8);
   try {
+    await enforceRateLimit(`alternatives:${clientIp(_request)}`);
     const { id } = await params;
     const store = getStore();
     const product = await store.getProductById(id);

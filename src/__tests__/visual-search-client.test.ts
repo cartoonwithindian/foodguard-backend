@@ -1,4 +1,11 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
+
+const { savedVisualSearchUrl } = vi.hoisted(() => {
+  const value = process.env.VISUAL_SEARCH_API_URL;
+  process.env.VISUAL_SEARCH_API_URL = "http://127.0.0.1:8001";
+  return { savedVisualSearchUrl: value };
+});
+
 import {
   searchByVector,
   searchSimilarByImage,
@@ -30,6 +37,11 @@ function stubVisualSearch(
 
 afterEach(() => {
   vi.unstubAllGlobals();
+});
+
+afterAll(() => {
+  if (savedVisualSearchUrl === undefined) delete process.env.VISUAL_SEARCH_API_URL;
+  else process.env.VISUAL_SEARCH_API_URL = savedVisualSearchUrl;
 });
 
 const BASE = "http://127.0.0.1:8001";

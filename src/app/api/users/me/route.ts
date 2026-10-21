@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { jsonSuccess, jsonError } from "@/lib/http";
+import { jsonSuccess, jsonError, parseJsonBody } from "@/lib/http";
 import { requireAuth } from "@/lib/auth";
 import { getMe, updateProfile } from "@/services/user.service";
 import { profilePatchSchema } from "@/schemas";
@@ -23,7 +23,7 @@ export async function PATCH(request: NextRequest) {
   const requestId = crypto.randomUUID().slice(0, 8);
   try {
     const session = await requireAuth(request);
-    const body = await request.json();
+    const body = await parseJsonBody(request);
     const parsed = profilePatchSchema.safeParse(body);
     if (!parsed.success) return jsonError(parsed.error, requestId);
     const me = await updateProfile(session, parsed.data);

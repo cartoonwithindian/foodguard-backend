@@ -29,7 +29,6 @@ import type { JevDecisionInfo } from "@/types/domain";
 
 import type { EnhancedAlternative } from "@/services/recommendation.service";
 import { getStore } from "@/lib/store";
-import { knownBarcodeText } from "@/lib/ocr";
 import { logger } from "@/lib/logger";
 import { buildRegulatoryCompliance, regulatoryComplianceUnavailable } from "@/services/regulatory/fssai/compliance";
 import type { FSSAIAnalysisResult } from "@/services/regulatory/fssai";
@@ -39,6 +38,7 @@ import type { LegalMetrologyResult } from "@/services/regulatory/legal-metrology
 import { researchIngredient, researchProduct, isWebResearchAvailable, shouldPerformWebResearch, needsWebResearch } from "@/services/web-research.service";
 import { enrichProductFromWeb, saveEnrichedProduct } from "@/services/web-product-enrichment";
 import { getAIProvider } from "@/lib/ai";
+import { fetchPublicUrl, readBytesLimited } from "@/lib/safe-fetch";
 import { normalizeNutritionFacts } from "@/lib/nutrition/units";
 import type { AIAnalysisExplanation } from "@/lib/ai";
 import { generateHealthFindings, validateFindings, buildAnalysisExplanationFromFindings } from "@/lib/health-analysis";
@@ -373,10 +373,6 @@ export async function runAnalysis(input: AnalyzeInput): Promise<{ frontend: Fron
     const parsed = parseIngredientText(product.ingredientsRaw);
     ingredientsText = parsed.listText ?? "";
   }
-  if (!ingredientsText && input.barcode && !input.imageAvailable) {
-    const canned = knownBarcodeText(input.barcode);
-    if (canned) ingredientsText = canned;
-  }
 
   // ── 3. Parse + normalize + analyze ingredients ──
   const parsedIngredients = parseIngredientText(ingredientsText);
@@ -488,10 +484,17 @@ export async function runAnalysis(input: AnalyzeInput): Promise<{ frontend: Fron
   try {
     const lmAvailable = await isLegalMetrologyAvailable();
     if (lmAvailable && product?.imageUrl) {
-      // Fetch the product image and send to Legal Metrology API
-      const imageResponse = await fetch(product.imageUrl);
+      // Fetch the product image and send to Legal Metrology API. The URL came
+      // from a catalog/provider (and can be set through the admin image
+      // endpoint), so route it through the SSRF guard: private hosts,
+      // private-resolving DNS names and internal redirect targets are rejected.
+      const imageResponse = await fetchPublicUrl(product.imageUrl, { timeoutMs: 10_000 });
       if (imageResponse.ok) {
-        const buffer = Buffer.from(await imageResponse.arrayBuffer());
+        const bytes = await readBytesLimited(imageResponse, 10 * 1024 * 1024);
+        if (bytes === null) {
+          throw new Error("Product image exceeds the 10 MB limit");
+        }
+        const buffer = Buffer.from(bytes);
         const mime = imageResponse.headers.get("content-type") || "image/jpeg";
         legalMetrologyResult = await analyzeLegalMetrology({
           images: [{ buffer, filename: "product.jpg", mime }],
@@ -517,11 +520,17 @@ export async function runAnalysis(input: AnalyzeInput): Promise<{ frontend: Fron
 
   // Always try web research when ingredients are missing but we have a product name
   const missingIngredients = !ingredientsText && product?.name;
-  const shouldResearch = shouldPerformWebResearch(
-    ingredientAnalysis.items,
-    !!regulatoryCompliance,
-    !!productNutrition,
-  );
+  const hasUnresolvedLabelText = ingredientAnalysis.unresolvedCount > 0;
+  const shouldResearch = hasUnresolvedLabelText
+    ? {
+        needed: false,
+        reasons: ["Unresolved label text is queued for review; no ingredient evidence is guessed or researched automatically"],
+      }
+    : shouldPerformWebResearch(
+        ingredientAnalysis.items,
+        !!regulatoryCompliance,
+        !!productNutrition,
+      );
 
   if (!input.skipWebResearch && isWebResearchAvailable() && (shouldResearch.needed || missingIngredients)) {
     logger.info("web_research_triggered", {
@@ -584,6 +593,7 @@ export async function runAnalysis(input: AnalyzeInput): Promise<{ frontend: Fron
       available: isWebResearchAvailable(),
       needed: shouldResearch.needed,
       reasons: shouldResearch.reasons,
+      unresolvedLabelText: hasUnresolvedLabelText,
     });
   }
 

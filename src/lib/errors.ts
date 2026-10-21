@@ -15,6 +15,7 @@ export const ErrorCodes = {
   UNKNOWN_ERROR: "UNKNOWN_ERROR",
   AUTH_INVALID_CREDENTIALS: "AUTH_INVALID_CREDENTIALS",
   AUTH_EMAIL_EXISTS: "AUTH_EMAIL_EXISTS",
+  CONFLICT: "CONFLICT",
   CONVERSATION_NOT_FOUND: "CONVERSATION_NOT_FOUND",
 } as const;
 
@@ -50,6 +51,7 @@ const STATUS_FOR_CODE: Record<ErrorCode, number> = {
   [ErrorCodes.UNKNOWN_ERROR]: 500,
   [ErrorCodes.AUTH_INVALID_CREDENTIALS]: 401,
   [ErrorCodes.AUTH_EMAIL_EXISTS]: 409,
+  [ErrorCodes.CONFLICT]: 409,
   [ErrorCodes.CONVERSATION_NOT_FOUND]: 404,
 };
 
@@ -64,6 +66,39 @@ export function errorToHttp(
         data: null,
         error: { code: error.code, message: error.message },
         meta: error.details ?? null,
+      },
+    };
+  }
+
+  // Prisma known request errors (P2002 unique violation etc.) are plain
+  // objects with `code` + `message`, so they would otherwise fall into the
+  // branch below and echo the raw driver message (table/column names) to the
+  // caller. Map the ones we understand to stable API errors and hide the rest.
+  if (
+    error &&
+    typeof error === "object" &&
+    typeof (error as { code?: unknown }).code === "string" &&
+    /^P\d{4}$/.test((error as { code: string }).code)
+  ) {
+    const code = (error as { code: string }).code;
+    if (code === "P2002") {
+      return {
+        status: 409,
+        body: {
+          success: false,
+          data: null,
+          error: { code: ErrorCodes.CONFLICT, message: "A record with these details already exists" },
+          meta: null,
+        },
+      };
+    }
+    return {
+      status: 500,
+      body: {
+        success: false,
+        data: null,
+        error: { code: ErrorCodes.DATABASE_ERROR, message: "A database error occurred" },
+        meta: null,
       },
     };
   }

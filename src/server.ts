@@ -88,13 +88,14 @@ if (configuredOrigins.length === 0) {
 app.use(
   "*",
   cors({
-    origin: (origin) => {
+origin: (origin) => {
       if (!origin) return undefined; // same-origin / non-browser client
       if (allowAnyOrigin) return origin;
       return allowedOrigins.has(origin) ? origin : undefined;
     },
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    // `Idempotency-Key` is read by the gamification activity routes.
+    // Idempotency-Key is read by the gamification activity routes so an HTTP
+    // retry of the same scan collapses onto one XP award.
     allowHeaders: ["Content-Type", "Authorization", "Idempotency-Key", "x-forwarded-for"],
     exposeHeaders: ["Content-Length"],
     maxAge: 86400,
@@ -159,7 +160,45 @@ app.onError((error, c) => jsonError(error, c.req.header("x-request-id") ?? "unha
 
 export default app;
 
+/**
+ * Fails fast on configuration that cannot work in production instead of
+ * surfacing it as a 500 on the first request (the store throws lazily when
+ * DATABASE_URL is missing, which otherwise looks like a healthy deployment
+ * until traffic arrives).
+ */
+function validateProductionConfig(): void {
+  if (process.env.NODE_ENV !== "production") return;
+
+  const errors: string[] = [];
+  if (!config.databaseUrl) {
+    errors.push("DATABASE_URL is required in production (PostgreSQL/Supabase connection string).");
+  }
+  if (!process.env.AUTH_SECRET || process.env.AUTH_SECRET.length < 32) {
+    errors.push("AUTH_SECRET must be set to at least 32 characters in production.");
+  }
+  if (errors.length > 0) {
+    console.error(`[foodguard-backend] invalid production configuration:\n- ${errors.join("\n- ")}`);
+    process.exit(1);
+  }
+
+  if (!process.env.CORS_ORIGINS) {
+    console.warn(
+      "[foodguard-backend] CORS_ORIGINS is not set in production — browser clients will be rejected.",
+    );
+  }
+  if (process.env.SEED_DEMO_DATA === "true") {
+    console.warn("[foodguard-backend] SEED_DEMO_DATA is ignored in production.");
+  }
+  if (!process.env.FSSAI_API_URL) {
+    console.warn(
+      "[foodguard-backend] FSSAI_API_URL is not set — defaulting to http://127.0.0.1:8000. " +
+        "Regulatory results will report SERVICE_UNAVAILABLE unless that service is reachable.",
+    );
+  }
+}
+
 if (process.env.NODE_ENV !== "test") {
+  validateProductionConfig();
   const port = Number(process.env.PORT || 3001);
   // `serve` is awaited so the process stays alive.
   serve({ fetch: app.fetch, port }, () => {

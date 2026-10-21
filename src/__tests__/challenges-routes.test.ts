@@ -6,8 +6,7 @@ import { GET as getCombinedChallenges } from "@/app/api/gamification/challenges/
 import { GET as getDailyChallenges } from "@/app/api/gamification/challenges/daily/route";
 import { GET as getWeeklyChallenges } from "@/app/api/gamification/challenges/weekly/route";
 import { POST as recordIngredientView } from "@/app/api/gamification/activity/ingredient-view/route";
-import { POST as recordProductScan } from "@/app/api/gamification/activity/route";
-import { getAchievementDefinition } from "@/gamification/achievements/config";
+import { gamificationService } from "@/gamification/services/gamification.service";
 import type { ProductInfo } from "@/types/domain";
 
 function productFixture(barcode: string, name: string): ProductInfo {
@@ -71,9 +70,10 @@ function request(url: string, body?: unknown, token?: string): NextRequest {
 describe("challenge HTTP API", () => {
   let token: string;
   let productIds: string[];
+  let userId: string;
 
   beforeEach(async () => {
-    ({ token, productIds } = await setup());
+    ({ token, productIds, userId } = await setup());
   });
 
   it("returns real zero-progress daily and weekly challenges for a new user", async () => {
@@ -146,38 +146,20 @@ describe("challenge HTTP API", () => {
   });
 
   it("does not award a challenge twice for a repeated scan event", async () => {
-    const first = await recordProductScan(
-      request(
-        "http://localhost/api/gamification/activity",
-        { action_type: "product_scan", product_id: productIds[0], event_id: "route-scan-once" },
-        token,
-      ),
-    );
-    const second = await recordProductScan(
-      request(
-        "http://localhost/api/gamification/activity",
-        { action_type: "product_scan", product_id: productIds[0], event_id: "route-scan-once" },
-        token,
-      ),
-    );
-    const firstBody = (await first.json()) as { data: { total_xp: number } };
-    const secondBody = (await second.json()) as { data: { total_xp: number; idempotent: boolean } };
-    expect(secondBody.data.idempotent).toBe(true);
-    // The first response is written before the Module 2 reconciliation that
-    // paid `first_scan`, so the repeat is the first read that sees the payout.
-    // It is paid once: a third identical request must not move the total again.
-    expect(secondBody.data.total_xp).toBe(
-      firstBody.data.total_xp + getAchievementDefinition("first_scan")!.rewardXp,
-    );
-    const third = await recordProductScan(
-      request(
-        "http://localhost/api/gamification/activity",
-        { action_type: "product_scan", product_id: productIds[0], event_id: "route-scan-once" },
-        token,
-      ),
-    );
-    const thirdBody = (await third.json()) as { data: { total_xp: number; idempotent: boolean } };
-    expect(thirdBody.data.idempotent).toBe(true);
-    expect(thirdBody.data.total_xp).toBe(secondBody.data.total_xp);
+    // Driven through the same service /api/analyze uses, since the self-service
+    // activity endpoint no longer records scans at all.
+    const first = await gamificationService.recordProductScan({
+      userId,
+      productId: productIds[0],
+      eventId: "route-scan-once",
+    });
+    const second = await gamificationService.recordProductScan({
+      userId,
+      productId: productIds[0],
+      eventId: "route-scan-once",
+    });
+    expect(second.idempotent).toBe(true);
+    expect(second.profile.totalXp).toBe(first.profile.totalXp);
+    expect(second.completedChallenges ?? []).toHaveLength(first.completedChallenges?.length ?? 0);
   });
 });

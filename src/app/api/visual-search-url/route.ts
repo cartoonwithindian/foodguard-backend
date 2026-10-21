@@ -1,7 +1,8 @@
 import { searchByImageUrl } from "@/lib/visual-search";
-import { assertPublicHttpUrl, clampInt } from "@/lib/url-guard";
+import { clampInt } from "@/lib/url-guard";
+import { assertPublicResolvableUrl } from "@/lib/safe-fetch";
 import { AppError, ErrorCodes } from "@/lib/errors";
-import { jsonError } from "@/lib/http";
+import { jsonError, parseJsonBody } from "@/lib/http";
 import { enforceRateLimit, clientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -21,7 +22,7 @@ export async function POST(request: Request): Promise<Response> {
   try {
     await enforceRateLimit(`visualsearch:${clientIp(request)}`);
 
-    const body = (await request.json().catch(() => null)) as {
+    const body = (await parseJsonBody(request, { maxBytes: 16 * 1024 })) as {
       image_url?: unknown;
       top_k?: unknown;
     } | null;
@@ -38,7 +39,9 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
 
-    assertPublicHttpUrl(body.image_url, "image_url");
+    // The visual-search service fetches this URL on our behalf, so reject
+    // private-resolving hosts here (not just private literals).
+    await assertPublicResolvableUrl(body.image_url, "image_url");
     const topK = clampInt(body.top_k, 10, 1, 50);
 
     const result = await searchByImageUrl(body.image_url, topK);

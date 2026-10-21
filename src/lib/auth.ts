@@ -4,6 +4,7 @@ import { config } from "@/lib/config";
 import { resolveAuthSecret } from "@/lib/server/auth-secret";
 import { AppError, ErrorCodes } from "@/lib/errors";
 import { logger } from "@/lib/logger";
+import { getStore } from "@/lib/store";
 
 export type UserRole = "USER" | "ADMIN";
 export type UserLanguage = "EN" | "HI";
@@ -45,7 +46,12 @@ export async function signToken(user: SessionUser): Promise<string> {
 
 export async function verifyToken(token: string): Promise<SessionUser | null> {
   try {
-    const { payload } = await jwtVerify(token, encoder.encode(AUTH_SECRET));
+    // Pin the algorithm: a token must be the exact HS256 shape we mint. This
+    // is defense-in-depth (jose already refuses `alg:none` for symmetric
+    // keys), but it keeps the check explicit if key handling ever changes.
+    const { payload } = await jwtVerify(token, encoder.encode(AUTH_SECRET), {
+      algorithms: ["HS256"],
+    });
     if (!payload.sub) return null;
     return {
       id: payload.sub,
@@ -80,9 +86,18 @@ export async function requireAuth(request: Request): Promise<SessionUser> {
 
 export async function requireAdmin(request: Request): Promise<SessionUser> {
   const session = await requireAuth(request);
-  if (session.role !== "ADMIN") {
-    logger.warn("forbidden_admin_access", { userId: session.id });
+  // Re-read the role from the database instead of trusting the JWT claim.
+  // Tokens live for 7 days, so a demoted or deleted admin would otherwise keep
+  // full admin API access until the token expired. Admin traffic is low, so
+  // the extra lookup is cheap.
+  const stored = await getStore().getUserById(session.id);
+  if (!stored) {
+    logger.warn("forbidden_admin_access", { userId: session.id, reason: "unknown_user" });
+    throw new AppError(ErrorCodes.UNAUTHORIZED, "Authentication required", 401);
+  }
+  if (stored.role !== "ADMIN") {
+    logger.warn("forbidden_admin_access", { userId: session.id, reason: "not_admin" });
     throw new AppError(ErrorCodes.FORBIDDEN, "Admin access required", 403);
   }
-  return session;
+  return { ...session, role: stored.role };
 }

@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { jsonSuccess, jsonError } from "@/lib/http";
+import { jsonSuccess, jsonError, parseJsonBody } from "@/lib/http";
 import { requireAuth } from "@/lib/auth";
 import { historyPostSchema } from "@/schemas";
 import { addHistoryEntry, listHistory } from "@/services/history.service";
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     // anonymous traffic but not a signed-up loop).
     await enforceRateLimit(`history-write:${clientIp(request)}`);
 
-    const body = await request.json();
+    const body = await parseJsonBody(request);
     const parsed = historyPostSchema.safeParse(body);
     if (!parsed.success) return jsonError(parsed.error, requestId);
 

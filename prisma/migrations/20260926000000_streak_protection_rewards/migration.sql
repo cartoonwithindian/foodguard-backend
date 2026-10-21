@@ -75,14 +75,35 @@ CREATE INDEX IF NOT EXISTS "UserReward_userId_earnedAt_idx"
 CREATE INDEX IF NOT EXISTS "UserReward_userId_rewardId_idx"
     ON "UserReward"("userId", "rewardId");
 
-ALTER TABLE "UserStreakProtection"
-    ADD CONSTRAINT "UserStreakProtection_userId_fkey"
-    FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'UserStreakProtection_userId_fkey'
+    ) THEN
+        ALTER TABLE "UserStreakProtection"
+            ADD CONSTRAINT "UserStreakProtection_userId_fkey"
+            FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;
 
-ALTER TABLE "StreakProtectionUsage"
-    ADD CONSTRAINT "StreakProtectionUsage_userId_fkey"
-    FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'StreakProtectionUsage_userId_fkey'
+    ) THEN
+        ALTER TABLE "StreakProtectionUsage"
+            ADD CONSTRAINT "StreakProtectionUsage_userId_fkey"
+            FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;
 
-ALTER TABLE "UserReward"
-    ADD CONSTRAINT "UserReward_userId_fkey"
-    FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'UserReward_userId_fkey'
+    ) THEN
+        ALTER TABLE "UserReward"
+            ADD CONSTRAINT "UserReward_userId_fkey"
+            FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;

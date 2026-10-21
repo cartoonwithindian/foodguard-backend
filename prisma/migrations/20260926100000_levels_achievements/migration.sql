@@ -39,11 +39,25 @@ CREATE INDEX IF NOT EXISTS "UserAchievement_userId_unlockedAt_idx"
 CREATE INDEX IF NOT EXISTS "AchievementDefinition_conditionType_enabled_idx"
     ON "AchievementDefinition"("conditionType", "enabled");
 
-ALTER TABLE "UserAchievement"
-    ADD CONSTRAINT "UserAchievement_userId_fkey"
-    FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'UserAchievement_userId_fkey'
+    ) THEN
+        ALTER TABLE "UserAchievement"
+            ADD CONSTRAINT "UserAchievement_userId_fkey"
+            FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;
 
-ALTER TABLE "UserAchievement"
-    ADD CONSTRAINT "UserAchievement_achievementId_fkey"
-    FOREIGN KEY ("achievementId") REFERENCES "AchievementDefinition"("achievementId")
-    ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'UserAchievement_achievementId_fkey'
+    ) THEN
+        ALTER TABLE "UserAchievement"
+            ADD CONSTRAINT "UserAchievement_achievementId_fkey"
+            FOREIGN KEY ("achievementId") REFERENCES "AchievementDefinition"("achievementId")
+            ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;

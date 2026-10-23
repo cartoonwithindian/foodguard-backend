@@ -37,6 +37,7 @@ import { preferencesToRecord, MAX_HISTORY_ENTRIES, MAX_HISTORY_LIST, MAX_SEARCH_
 import { EVIDENCE_SEED } from "@/data/seed/evidence";
 import type { ProductLookupResult } from "@/lib/product-provider";
 import { normalizeNutritionFacts } from "@/lib/nutrition/units";
+import { ingredientIndex } from "@/lib/ingredients";
 import { listRewardDefinitions, rewardsConfig } from "@/gamification/rewards/config";
 import { toRewardView, type EarnedMilestone } from "@/gamification/rewards/reward.engine";
 import {
@@ -137,6 +138,47 @@ function mapProduct(row: {
     verified: row.verified,
     productDataConfidence: row.productDataConfidence,
     isDemo: row.isDemo,
+  };
+}
+
+
+type IngredientRowWithAliases = {
+  id: string;
+  canonicalName: string;
+  insCode: string | null;
+  eNumber: string | null;
+  category: string;
+  description: string;
+  function: string;
+  assessment: string;
+  allergenStatus: string | null;
+  dietaryStatus: string[];
+  regulatoryStatus: string;
+  regulatoryNotes: string | null;
+  evidenceLevel: string;
+  isAdditive: boolean;
+  hindiName: string | null;
+  aliases: Array<{ alias: string; aliasType: string }>;
+};
+
+function mapIngredient(row: IngredientRowWithAliases): IngredientRecord {
+  return {
+    id: row.id,
+    canonicalName: row.canonicalName,
+    insCode: row.insCode ?? undefined,
+    eNumber: row.eNumber ?? undefined,
+    category: row.category,
+    description: row.description,
+    function: row.function,
+    assessment: row.assessment as IngredientRecord["assessment"],
+    allergenStatus: row.allergenStatus ?? undefined,
+    dietaryStatus: row.dietaryStatus,
+    regulatoryStatus: row.regulatoryStatus as IngredientRecord["regulatoryStatus"],
+    regulatoryNotes: row.regulatoryNotes ?? undefined,
+    evidenceLevel: row.evidenceLevel as IngredientRecord["evidenceLevel"],
+    isAdditive: row.isAdditive,
+    hindiName: row.hindiName ?? undefined,
+    aliases: row.aliases.map((a) => ({ alias: a.alias, type: a.aliasType })),
   };
 }
 
@@ -378,12 +420,37 @@ async function syncChallengeDefinitionsTx(
   tx: Prisma.TransactionClient,
   definitions: readonly ChallengeDefinition[],
 ): Promise<void> {
-  for (const definition of definitions) {
-    const row = challengeDefinitionToRow(definition);
-    await tx.challengeDefinition.upsert({
+  const rows = definitions.map(challengeDefinitionToRow);
+  const existing = await tx.challengeDefinition.findMany({
+    where: { challengeId: { in: rows.map((row) => row.challengeId) } },
+  });
+  const byId = new Map(existing.map((row) => [row.challengeId, row]));
+
+  // Same reasoning as the reward definitions: reads reconcile every request,
+  // so unconditional writes make concurrent dashboard calls contend for the
+  // same rows. Only write when something is actually missing or stale.
+  for (const row of rows) {
+    const current = byId.get(row.challengeId);
+    if (!current) {
+      await tx.challengeDefinition.create({ data: row });
+      continue;
+    }
+    if (
+      current.name === row.name &&
+      current.description === row.description &&
+      current.challengeType === row.challengeType &&
+      current.conditionType === row.conditionType &&
+      current.targetValue === row.targetValue &&
+      current.xpReward === row.xpReward &&
+      current.startRule === row.startRule &&
+      current.endRule === row.endRule &&
+      current.enabled === row.enabled
+    ) {
+      continue;
+    }
+    await tx.challengeDefinition.update({
       where: { challengeId: row.challengeId },
-      create: row,
-      update: {
+      data: {
         name: row.name,
         description: row.description,
         challengeType: row.challengeType,
@@ -411,27 +478,47 @@ async function ensureChallengeInstancesTx(
     data: { status: "expired" },
   });
 
+  const windows = definitions.map((definition) => ({
+    definition,
+    window: challengePeriodService.windowFor(now, timezone, definition.period),
+  }));
+  const existing = await tx.userChallenge.findMany({
+    where: {
+      userId,
+      OR: windows.map(({ definition, window }) => ({
+        challengeId: definition.id,
+        periodStart: window.startInstant,
+      })),
+    },
+  });
+  const byKey = new Map(
+    existing.map((row) => [`${row.challengeId}|${row.periodStart.getTime()}`, row]),
+  );
+
   const result: ChallengeInstance[] = [];
-  for (const definition of definitions) {
-    const window = challengePeriodService.windowFor(now, timezone, definition.period);
-    const row = await tx.userChallenge.upsert({
-      where: {
-        userId_challengeId_periodStart: {
+  for (const { definition, window } of windows) {
+    const key = `${definition.id}|${window.startInstant.getTime()}`;
+    const current = byKey.get(key);
+    let row: ChallengeUserRow;
+    if (!current) {
+      row = (await tx.userChallenge.create({
+        data: {
           userId,
           challengeId: definition.id,
           periodStart: window.startInstant,
+          periodEnd: window.endInstant,
+          status: "active",
         },
-      },
-      create: {
-        userId,
-        challengeId: definition.id,
-        periodStart: window.startInstant,
-        periodEnd: window.endInstant,
-        status: "active",
-      },
-      update: { periodEnd: window.endInstant },
-    });
-    result.push({ definition, row: row as ChallengeUserRow });
+      })) as ChallengeUserRow;
+    } else if (current.periodEnd.getTime() !== window.endInstant.getTime()) {
+      row = (await tx.userChallenge.update({
+        where: { id: current.id },
+        data: { periodEnd: window.endInstant },
+      })) as ChallengeUserRow;
+    } else {
+      row = current as ChallengeUserRow;
+    }
+    result.push({ definition, row });
   }
   return result;
 }
@@ -490,10 +577,15 @@ async function evaluateChallengeInstancesTx(
       activities: rows,
       currentStreakDays: profile.currentStreak,
     })[0];
-    const row = await tx.userChallenge.update({
-      where: { id: instance.row.id },
-      data: { progress: evaluation.progress },
-    });
+    // A read must not rewrite unchanged progress: doing so makes concurrent
+    // dashboard requests collide on the same rows for no reason.
+    const row =
+      instance.row.progress === evaluation.progress
+        ? instance.row
+        : await tx.userChallenge.update({
+            where: { id: instance.row.id },
+            data: { progress: evaluation.progress },
+          });
     const next: ChallengeInstance = { definition: instance.definition, row: row as ChallengeUserRow };
     if (!next.row.completed && evaluation.completed) {
       const finished = await tx.userChallenge.update({
@@ -684,21 +776,39 @@ export class PrismaStore implements DataStore {
     });
   }
 
-  // ── ingredients (knowledge base is versioned data in seed files) ──
+  // ── ingredients (DB rows, falling back to the bundled seed knowledge base) ──
+  // A fresh database has no `Ingredient` rows until an admin imports them, but
+  // the versioned seed files are the shipped knowledge base. Reading through to
+  // the in-memory index keeps ingredient analysis and detail pages working
+  // without a separate seeding step.
   async getIngredientById(id: string): Promise<IngredientRecord | null> {
-    void id;
-    return null;
+    const row = await prisma.ingredient.findUnique({
+      where: { id },
+      include: { aliases: true },
+    });
+    if (row) return mapIngredient(row);
+    return ingredientIndex.getById(id) ?? null;
   }
   async getIngredientByCanonical(name: string): Promise<IngredientRecord | null> {
-    void name;
-    return null;
+    const row = await prisma.ingredient.findUnique({
+      where: { canonicalName: name },
+      include: { aliases: true },
+    });
+    if (row) return mapIngredient(row);
+    return ingredientIndex.resolveByCanonical(name) ?? null;
   }
   async getIngredientByAlias(alias: string): Promise<IngredientRecord | null> {
-    void alias;
-    return null;
+    const row = await prisma.ingredientAlias.findFirst({
+      where: { alias: { equals: alias, mode: "insensitive" } },
+      include: { ingredient: { include: { aliases: true } } },
+    });
+    if (row) return mapIngredient(row.ingredient);
+    return ingredientIndex.resolveByAlias(alias) ?? null;
   }
   async listIngredients(): Promise<IngredientRecord[]> {
-    return [];
+    const rows = await prisma.ingredient.findMany({ include: { aliases: true } });
+    if (rows.length > 0) return rows.map(mapIngredient);
+    return ingredientIndex.all();
   }
 
   async upsertIngredient(record: IngredientRecord): Promise<void> {

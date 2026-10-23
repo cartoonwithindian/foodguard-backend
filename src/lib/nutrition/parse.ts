@@ -6,14 +6,14 @@ const NUTRIENT_KEYS: Array<{ key: string; patterns: RegExp[] }> = [
   { key: "energyKj", patterns: [/energy\s*\(?\s*kj/i] },
   { key: "protein", patterns: [/protein/i] },
   { key: "carbohydrates", patterns: [/carbohydrates?/i, /carbohydrates?\s*of\s*which/i] },
-  { key: "sugars", patterns: [/sugars?\s*\(?\s*of\s*which\s*\)?\s*:\s*(?!added)/i, /total\s*sugars?/i, /sugars?\s*[0-9]/i] },
+  { key: "sugars", patterns: [/sugars?\s*\(?\s*of\s*which\s*\)?\s*:\s*(?!added)/i, /total\s*sugars?/i, /\bsugars?\b/i] },
   { key: "addedSugars", patterns: [/added\s*sugars?/i] },
-  { key: "totalFat", patterns: [/total\s*fat/i, /fat\s*[0-9]/i] },
+  { key: "totalFat", patterns: [/total\s*fat/i, /\bfats?\b/i] },
   { key: "saturatedFat", patterns: [/of\s*which\s*saturates/i, /saturated\s*fat/i, /saturates?/i] },
   { key: "transFat", patterns: [/trans\s*fats?/i] },
   { key: "fiber", patterns: [/dietary\s*fibre/i, /dietary\s*fiber/i, /fibre/i, /fiber/i] },
   { key: "sodium", patterns: [/sodium/i] },
-  { key: "salt", patterns: [/salt\s*$/i, /^\s*salt/i] },
+  { key: "salt", patterns: [/\bsalt\b/i] },
 ];
 
 const PER_100G_RE = /per\s*100\s*(g|ml|g\s*\/\s*ml)/i;
@@ -30,16 +30,49 @@ function extractValue(line: string): { value: number; unit: string } | null {
   return { value, unit };
 }
 
-function parseLine(line: string): { key: string; value: number; unit: string } | null {
+type ParsedNutrient = { key: string; value: number; unit: string; index: number };
+
+/** Read the number right after a label, or the one the pattern consumed itself. */
+function valueNear(line: string, labelMatch: RegExpExecArray): { value: number; unit: string } | null {
+  // A pattern such as /energy\b[^a-z]*kcal/ already consumed its number;
+  // prefer that over the next nutrient's value later on the same line.
+  const own = /([\d.,]+)\s*(mg|g|kcal|kj|mcg|µg|ug|ml)\b/i.exec(labelMatch[0]);
+  if (own) return extractValue(own[0]);
+  return extractValue(line.slice(labelMatch.index + labelMatch[0].length));
+}
+
+/**
+ * Parse every nutrient label on a line, not just the first one. OCR often
+ * flattens a table into one line ("Fat 14 g Carbohydrate 52 g"); returning
+ * only the first match used to record the fat value as carbohydrate.
+ */
+function parseLine(line: string): ParsedNutrient[] {
+  const hits: ParsedNutrient[] = [];
   for (const entry of NUTRIENT_KEYS) {
     for (const pattern of entry.patterns) {
-      if (pattern.test(line)) {
-        const extracted = extractValue(line);
-        if (extracted) return { key: entry.key, ...extracted };
+      const match = pattern.exec(line);
+      if (!match) continue;
+      // "saturated fat 3 g" must not also count as total fat.
+      if (
+        entry.key === "totalFat" &&
+        /(saturated|trans)\s*fats?/i.test(line) &&
+        !/total\s*fat/i.test(line)
+      ) {
+        break;
       }
+      const extracted = valueNear(line, match);
+      if (!extracted) continue;
+      hits.push({ key: entry.key, ...extracted, index: match.index });
+      break;
     }
   }
-  return null;
+  hits.sort((a, b) => a.index - b.index);
+  const seen = new Set<string>();
+  return hits.filter((hit) => {
+    if (seen.has(hit.key)) return false;
+    seen.add(hit.key);
+    return true;
+  });
 }
 
 /**
@@ -66,8 +99,7 @@ export function parseNutritionTable(text: string): NutritionFacts | null {
     if (!line) continue;
     if (!/[\d.,]/.test(line)) continue;
 
-    const parsed = parseLine(line);
-    if (parsed) {
+    for (const parsed of parseLine(line)) {
       nutrients[parsed.key] = { value: parsed.value, unit: parsed.unit, confidence: 0.8 };
       sawValues = true;
     }

@@ -324,8 +324,12 @@ class FallbackOCRProvider implements OCRProvider {
 let instance: OCRProvider | null = null;
 
 function createOCRProvider(): OCRProvider {
+  // Local Tesseract is the safe default: a deployment that forgets
+  // OCR_PROVIDER should still read labels instead of failing every scan.
   const provider =
-    process.env.OCR_PROVIDER || config.ocr.provider || (process.env.NODE_ENV === "test" ? "mock" : "");
+    process.env.OCR_PROVIDER ||
+    config.ocr.provider ||
+    (process.env.NODE_ENV === "test" ? "mock" : "tesseract");
   const fallback = process.env.OCR_FALLBACK || config.ocr.fallback || "tesseract";
 
   switch (provider) {

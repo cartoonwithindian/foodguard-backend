@@ -39,14 +39,43 @@ export function rewardDefinitionRow(definition: ReturnType<typeof listRewardDefi
   };
 }
 
-/** Mirror the configured reward set into storage. Configuration only. */
+/**
+ * Mirror the configured reward set into storage. Configuration only.
+ *
+ * Reconciliation runs on every profile/challenge read, so writing all reward
+ * rows unconditionally made concurrent dashboard requests contend for the same
+ * rows and intermittently fail with a serialization conflict. Comparing first
+ * keeps the steady state read-only: rows are only written when they are
+ * missing or when the configuration actually changed.
+ */
 export async function syncRewardDefinitionsTx(tx: Prisma.TransactionClient): Promise<void> {
-  for (const definition of listRewardDefinitions()) {
-    const row = rewardDefinitionRow(definition);
-    await tx.rewardDefinition.upsert({
+  const definitions = listRewardDefinitions();
+  const rows = definitions.map(rewardDefinitionRow);
+  const existing = await tx.rewardDefinition.findMany({
+    where: { rewardId: { in: rows.map((row) => row.rewardId) } },
+  });
+  const byId = new Map(existing.map((row) => [row.rewardId, row]));
+
+  for (const row of rows) {
+    const current = byId.get(row.rewardId);
+    if (!current) {
+      await tx.rewardDefinition.create({ data: row });
+      continue;
+    }
+    if (
+      current.name === row.name &&
+      current.description === row.description &&
+      current.rewardType === row.rewardType &&
+      current.conditionType === row.conditionType &&
+      current.targetValue === row.targetValue &&
+      current.rewardValue === row.rewardValue &&
+      current.autoClaim === row.autoClaim
+    ) {
+      continue;
+    }
+    await tx.rewardDefinition.update({
       where: { rewardId: row.rewardId },
-      create: row,
-      update: {
+      data: {
         name: row.name,
         description: row.description,
         rewardType: row.rewardType,
